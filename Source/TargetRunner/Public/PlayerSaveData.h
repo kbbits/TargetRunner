@@ -22,6 +22,12 @@ public:
 		float TotalPlaytimeInRuns;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		float ResourceOneTotal;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		float ResourceTwoTotal;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float TargetsHit;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
@@ -47,6 +53,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float EnergyRegenRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		float ResourceOneSpent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		float ResourceTwoSpent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FName> ToolsUnlocked;
