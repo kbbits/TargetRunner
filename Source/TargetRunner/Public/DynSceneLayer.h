@@ -16,6 +16,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float MaxPicks;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Meta = (Tooltip = "If True, this layer contains 'enemy' entities. (affects quantity appearing) Default = false"))
+		bool EnemyLayer;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FDynSceneLayerItem> WeightedSceneryItems;
 

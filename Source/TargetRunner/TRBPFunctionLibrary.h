@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "DynSceneryBase.h"
 #include "DynSceneLayer.h"
+#include "DynSceneTemplate.h"
 #include "TRBPFunctionLibrary.generated.h"
 
 /**
@@ -18,8 +19,11 @@ class TARGETRUNNER_API UTRBPFunctionLibrary : public UBlueprintFunctionLibrary
 
 	public:
 	
+		//UFUNCTION(BlueprintCallable, Category = "DynScenery")
+		//	static TArray<FDynSceneLayerItemNames> EvaluateDynSceneTemplateToItemNames(FDynSceneLayer Layer, float PicksMultiplier, float EnemyPicksMultiplier);
+
 		UFUNCTION(BlueprintCallable, Category="DynScenery")
-			static TArray<FName> EvaluateDynSceneLayerToItemNames(FDynSceneLayer Layer, float NumMultiplier);
+			static TArray<FName> EvaluateDynSceneLayerToItemNames(FDynSceneLayer Layer, float PicksMultiplier, float EnemyPicksMultiplier);
 		
 		UFUNCTION(BlueprintCallable, Category = "DynScenery")
 			static FDynSceneLayerItem PickWeightedLayerItem(TArray<FDynSceneLayerItem> WeightedLayerItems);

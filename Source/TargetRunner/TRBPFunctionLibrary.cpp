@@ -3,12 +3,20 @@
 
 #include "TRBPFunctionLibrary.h"
 
-TArray<FName> UTRBPFunctionLibrary::EvaluateDynSceneLayerToItemNames(FDynSceneLayer Layer, float NumMultiplier=1.0) 
+//TArray<FDynSceneLayerItemNames> UTRBPFunctionLibrary::EvaluateDynSceneTemplateToItemNames(FDynSceneTemplate Template, float PicksMultiplier = 1.0, float EnemyPicksMultiplier = 1.0)
+//{
+//}
+
+TArray<FName> UTRBPFunctionLibrary::EvaluateDynSceneLayerToItemNames(FDynSceneLayer Layer, float PicksMultiplier=1.0, float EnemyPicksMultiplier=1.0) 
 {
 	TArray<FName> SceneryTemplateNames;
 	FDynSceneLayerItem curItem;
 	int32 itemCount;
-	int32 picks = FMath::RoundToInt(FMath::FRandRange(Layer.MinPicks, Layer.MaxPicks * NumMultiplier));
+	int32 picks;
+	if (Layer.EnemyLayer)
+		picks = FMath::RoundToInt(FMath::FRandRange(Layer.MinPicks * EnemyPicksMultiplier, Layer.MaxPicks * EnemyPicksMultiplier));
+	else
+		picks = FMath::RoundToInt(FMath::FRandRange(Layer.MinPicks * PicksMultiplier, Layer.MaxPicks * PicksMultiplier));
 
 	if (picks > 0) {
 		for (int32 p = 1; p <= picks; p++) {
