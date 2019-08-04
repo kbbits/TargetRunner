@@ -7,7 +7,7 @@
 //{
 //}
 
-TArray<FName> UTRBPFunctionLibrary::EvaluateDynSceneLayerToItemNames(FRandomStream RandStream, FDynSceneLayer Layer, float PicksMultiplier=1.0, float EnemyPicksMultiplier=1.0)
+TArray<FName> UTRBPFunctionLibrary::EvaluateDynSceneLayerToItemNames(UPARAM(ref) FRandomStream& RandStream, FDynSceneLayer Layer, float PicksMultiplier=1.0, float EnemyPicksMultiplier=1.0)
 {
 	TArray<FName> SceneryTemplateNames;
 	FDynSceneLayerItem curItem;
@@ -39,7 +39,7 @@ TArray<FName> UTRBPFunctionLibrary::EvaluateDynSceneLayerToItemNames(FRandomStre
 	return SceneryTemplateNames;
 }
 
-FDynSceneLayerItem UTRBPFunctionLibrary::PickWeightedLayerItem(FRandomStream RandStream, TArray<FDynSceneLayerItem> WeightedLayerItems)
+FDynSceneLayerItem UTRBPFunctionLibrary::PickWeightedLayerItem(UPARAM(ref) FRandomStream& RandStream, TArray<FDynSceneLayerItem> WeightedLayerItems)
 {
 	FDynSceneLayerItem Item;
 	float TotalWeight = 0;

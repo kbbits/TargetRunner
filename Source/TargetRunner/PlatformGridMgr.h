@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "PlatformBase.h"
+#include "PlatformGridRow.h"
 #include "Kismet/GameplayStatics.h"
 #include "PlatformGridMgr.generated.h"
 
@@ -17,8 +18,15 @@ public:
 	// Sets default values for this actor's properties
 	APlatformGridMgr();
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//	TArray<APlatformBase*> MyPlatforms;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//	TArray<FPlatformGridRow> PlatformGrid;
+	
+	// Rows are along grid x axis, columns (elements in each row) are grid Y axis
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TArray<APlatformBase*> MyPlatforms;
+		TMap<int, FPlatformGridRow> PlatformGridMap;
 
 protected:
 	// Called when the game starts or when spawned
@@ -30,5 +38,14 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void Setup();
+
+	UFUNCTION(BlueprintCallable)
+		void AddPlatformToGridMap(APlatformBase* platform);
+
+	UFUNCTION(BlueprintCallable)
+		APlatformBase* GetPlatformInGridMap(int X, int Y, bool& Found);
+
+	UFUNCTION(BlueprintCallable)
+		APlatformBase* RemovePlatformFromGridMap(int X, int Y, bool& Success);
 
 };

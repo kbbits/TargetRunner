@@ -33,9 +33,53 @@ void APlatformGridMgr::Setup()
 	for (AActor* TActor : FoundPlatforms)
 	{
 		APlatformBase* Platform = Cast<APlatformBase>(TActor);
-
-		if (Platform != nullptr) {
-			MyPlatforms.Add(Platform);
-		}
+		AddPlatformToGridMap(Platform);
 	}
+}
+
+void APlatformGridMgr::AddPlatformToGridMap(APlatformBase* Platform)
+{
+	if (Platform != nullptr) {
+		int row = Platform->GridX;
+		int col = Platform->GridY;
+		
+		if (!PlatformGridMap.Contains(row))
+		{
+			FPlatformGridRow newRow;
+			PlatformGridMap.Add(row, newRow);
+		}
+		PlatformGridMap[row].RowPlatforms.Add(col, Platform);
+
+		//if (!PlatformGrid.IsValidIndex(row))
+		//{
+		//	PlatformGrid.InsertDefaulted(row, 1);
+		//}
+		//if (PlatformGrid[row].Platforms.Num() < col)
+		//PlatformGrid[row].Platforms[col] = Platform;
+
+	}
+}
+
+APlatformBase * APlatformGridMgr::GetPlatformInGridMap(int X, int Y, bool& Found)
+{
+	Found = false;
+	if (PlatformGridMap.Contains(X)) {
+		if (PlatformGridMap[X].RowPlatforms.Contains(Y))
+		{
+			Found = true;
+			return PlatformGridMap[X].RowPlatforms[Y];
+		}	
+	}
+	return nullptr;
+}
+
+APlatformBase * APlatformGridMgr::RemovePlatformFromGridMap(int X, int Y, bool& Success)
+{
+	Success = false;
+	APlatformBase *Platform = GetPlatformInGridMap(X, Y, Success);
+	if (Success && Platform != nullptr) {
+		PlatformGridMap[X].RowPlatforms.Remove(Y);
+		Success = true;
+	}
+	return Platform;
 }
