@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "Engine/DataTable.h"
+#include "Engine/CompositeDataTable.h"
 #include "GoodsQuantity.h"
 #include "GoodsQuantityRange.h"
 #include "GoodsDropTable.h"
@@ -35,9 +36,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Goods")
 		TArray<FGoodsQuantity> EvaluateGoodsDropTable(UPARAM(ref) FRandomStream& RandStream, const FGoodsDropTable& GoodsTable, const float Level = 0);
 
+	// Evaluate the named drop table and return all Goods droppped.
+	UFUNCTION(BlueprintCallable, Category = "Goods")
+		TArray<FGoodsQuantity> EvaluateGoodsDropTableByName(UPARAM(ref) FRandomStream& RandStream, const FName& DropTableName, const float Level = 0);
+
 private:
 	// Our collection of DataTables, each containing GoodsDropTables rows
 	TArray<UDataTable*> DropTableLibrary;
+	//UCompositeDataTable DropTableLibraryComposite;  // TODO use composite data table instead.
 
 	// Find the GoodsDropTable data in the DropTableLibrary that has the given name.
 	const FGoodsDropTable* FindDropTableInLibrary(const FName DropTableName) const;

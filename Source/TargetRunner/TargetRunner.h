@@ -3,4 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Net/UnrealNetwork.h"
+#include "TrEnums.h"
 

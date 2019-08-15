@@ -15,17 +15,22 @@ bool UGoodsDropper::AddDropTableDataToLibrary(UDataTable* GoodsDropTableData)
 			return false;
 		}
 
+		//DropTableLibraryComposite.ParentTables.AddUnique(GoodsDropTableData);
 		DropTableLibrary.AddUnique(GoodsDropTableData);
 	}
 	return true;
 }
 
+/*
+*/
 bool UGoodsDropper::RemoveDropTableDataFromLibrary(UDataTable * GoodsDropTableData)
 {
 	int32 NumRemoved = DropTableLibrary.Remove(GoodsDropTableData);
 	return NumRemoved > 0;
 }
 
+/*
+*/
 void UGoodsDropper::ClearDropTableLibrary()
 {
 	DropTableLibrary.Empty();
@@ -56,6 +61,21 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTable(UPARAM(ref)FRandomS
 	return AllGoods;
 }
 
+TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTableByName(UPARAM(ref)FRandomStream & RandStream, const FName & DropTableName, const float Level)
+{
+	TArray<FGoodsQuantity> AllGoods;
+	const FGoodsDropTable* FoundDropTable = FindDropTableInLibrary(DropTableName);
+	if (FoundDropTable != nullptr)
+	{
+		AllGoods = EvaluateGoodsDropTable(RandStream, *FoundDropTable, Level);
+	}
+	else
+	{
+		AllGoods = TArray<FGoodsQuantity>();
+		// TODO: report missed drop table hit
+	}
+	return AllGoods;
+}
 
 /*
 */
@@ -73,7 +93,6 @@ const FGoodsDropTable* UGoodsDropper::FindDropTableInLibrary(const FName DropTab
 
 	return FoundDropTable;
 }
-
 
 /*
 */

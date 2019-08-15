@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/DataTable.h"
+#include "TrEnums.h"
 #include "PlayerSaveData.generated.h"
 
 USTRUCT(BlueprintType)
@@ -65,6 +66,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TMap<FName, float> HitCounts;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TMap<EAmmoType, float> AmmoInventory;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TMap<FName, float> GoodsInventory;
