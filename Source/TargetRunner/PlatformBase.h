@@ -16,9 +16,9 @@ public:
 	APlatformBase();
 
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, SaveGame, Meta = (ExposeOnSpawn = "true"))
-		int GridX;
+		int32 GridX;
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, SaveGame, Meta = (ExposeOnSpawn = "true"))
-		int GridY;
+		int32 GridY;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		bool bCanRemoveDynamic;

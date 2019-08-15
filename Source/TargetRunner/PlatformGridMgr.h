@@ -26,7 +26,7 @@ public:
 	
 	// Rows are along grid x axis, columns (elements in each row) are grid Y axis
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TMap<int, FPlatformGridRow> PlatformGridMap;
+		TMap<int32, FPlatformGridRow> PlatformGridMap;
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,9 +43,9 @@ public:
 		void AddPlatformToGridMap(APlatformBase* platform);
 
 	UFUNCTION(BlueprintCallable)
-		APlatformBase* GetPlatformInGridMap(int X, int Y, bool& Found);
+		APlatformBase* GetPlatformInGridMap(int32 X, int32 Y, bool& Found);
 
 	UFUNCTION(BlueprintCallable)
-		APlatformBase* RemovePlatformFromGridMap(int X, int Y, bool& Success);
+		APlatformBase* RemovePlatformFromGridMap(int32 X, int32 Y, bool& Success);
 
 };

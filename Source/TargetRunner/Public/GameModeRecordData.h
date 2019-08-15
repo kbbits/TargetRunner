@@ -12,7 +12,7 @@ struct FGameModeRecordData : public FTableRowBase
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TSubclassOf<AGameMode> GameModeClass;
+		FName GameModeClassName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float GameDifficulty;

@@ -16,6 +16,6 @@ public:
 	//	TArray<APlatformBase*> Platforms;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<int, APlatformBase*> RowPlatforms;
+		TMap<int32, APlatformBase*> RowPlatforms;
 	
 };

@@ -63,4 +63,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FName> ToolsUnlocked;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TMap<FName, float> HitCounts;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TMap<FName, float> GoodsInventory;
 };

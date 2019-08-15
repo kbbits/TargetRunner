@@ -40,8 +40,8 @@ void APlatformGridMgr::Setup()
 void APlatformGridMgr::AddPlatformToGridMap(APlatformBase* Platform)
 {
 	if (Platform != nullptr) {
-		int row = Platform->GridX;
-		int col = Platform->GridY;
+		int32 row = Platform->GridX;
+		int32 col = Platform->GridY;
 		
 		if (!PlatformGridMap.Contains(row))
 		{
@@ -60,7 +60,7 @@ void APlatformGridMgr::AddPlatformToGridMap(APlatformBase* Platform)
 	}
 }
 
-APlatformBase * APlatformGridMgr::GetPlatformInGridMap(int X, int Y, bool& Found)
+APlatformBase * APlatformGridMgr::GetPlatformInGridMap(int32 X, int32 Y, bool& Found)
 {
 	Found = false;
 	if (PlatformGridMap.Contains(X)) {
@@ -73,7 +73,7 @@ APlatformBase * APlatformGridMgr::GetPlatformInGridMap(int X, int Y, bool& Found
 	return nullptr;
 }
 
-APlatformBase * APlatformGridMgr::RemovePlatformFromGridMap(int X, int Y, bool& Success)
+APlatformBase * APlatformGridMgr::RemovePlatformFromGridMap(int32 X, int32 Y, bool& Success)
 {
 	Success = false;
 	APlatformBase *Platform = GetPlatformInGridMap(X, Y, Success);
