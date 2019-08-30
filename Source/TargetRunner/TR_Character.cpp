@@ -35,6 +35,6 @@ void ATR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 void ATR_Character::FellOutOfWorld(const class UDamageType& DmgType)
 {
 	OnFellOutOfWorld();
-	Super::FellOutOfWorld(DmgType);
+	//Super::FellOutOfWorld(DmgType);
 }
 
