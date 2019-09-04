@@ -16,7 +16,7 @@ class TARGETRUNNER_API ATR_GameMode : public AGameMode
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float PlatformSize;
-	
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	//	float PlatformSize;
+		
 };
