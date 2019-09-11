@@ -17,6 +17,9 @@ public:
 		FText DisplayName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		float MaxLevelCompleted;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float TotalRunsPlayed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
