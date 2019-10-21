@@ -1,5 +1,5 @@
 # TargetRunner
 
-First Person, multiplayer target shooting.
+VR and First Person multiplayer target shooting.
 
-Created with UnrealEngine 4.22
+UnrealEngine 4.23
