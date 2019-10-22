@@ -2,6 +2,7 @@
 
 
 #include "TR_ActorAttributeComponent.h"
+#include "..\Public\TR_ActorAttributeComponent.h"
 
 // Sets default values for this component's properties
 UTR_ActorAttributeComponent::UTR_ActorAttributeComponent()
@@ -27,6 +28,8 @@ void UTR_ActorAttributeComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 	// Don't do anything when we're not active
 	if (!IsActive()){ return; }
+	// Don't do anything if recharge is paused
+	if (bRechargePaused) { return; }
 
 	float oldCurrentValue = CurrentValue;
 
@@ -113,5 +116,12 @@ bool UTR_ActorAttributeComponent::DeltaValue(const float ToDeduct = 1, const boo
 	// Set the current value to the new clamped value
 	CurrentValue = FMath::Clamp(NewValue, MinValue, MaxValue);
 	return true;
+}
+
+// Sets the current value to max value and returns this value.
+float UTR_ActorAttributeComponent::ResetToMax()
+{
+	CurrentValue = MaxValue;
+	return CurrentValue;
 }
 

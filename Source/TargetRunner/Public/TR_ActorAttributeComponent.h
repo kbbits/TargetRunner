@@ -15,7 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttrMinimum);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttrMaximum);
 //DECLARE_EVENT(UTR_ActorAttributeComponent, FOnHitAttrMaximum);
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TARGETRUNNER_API UTR_ActorAttributeComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -44,6 +44,10 @@ public:
 	// Rate of attribute change (per second).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
 		float RechargeRate = 0;
+
+	// Rate of attribute change (per second).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
+		bool bRechargePaused = false;
 
 	// Hit minimum value event
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
@@ -77,4 +81,7 @@ public:
 	// Add the given amount from the current value of this attribute. Value can be negative.
 	UFUNCTION(BlueprintCallable, Category = "ActorAttributes")
 		bool DeltaValue(const float ToDeduct, const bool bAllowOverspill);
+
+	UFUNCTION(BlueprintCallable, Category = "ActorAttributes")
+		float ResetToMax();
 };
