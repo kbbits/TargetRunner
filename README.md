@@ -1,11 +1,10 @@
 # TargetRunner
+[Working title]
 
-VR and First Person multiplayer target shooting.
+VR and First Person multiplayer target shooting. Written in c++ and Blueprint. Tested with HTC Vive.
 UnrealEngine 4.23
-![Aerial view](./ProjectDoc/Images/big_view1.png)
 
-Written in c++ and Blueprint.
-Tested with HTC Vive.
+![FP view](./ProjectDoc/Images/tr_cap01.png)
 
 ## Narrative
 You are an agent responsible for locating and eliminating anomalies in the cyberspace of an ancient system called The Ether. Each time you run through a subsystem you send a sliver of yourself into your avatar. This allows you to operate within the Ether. This sliver, your Animus, is the internal energy of a soul that makes you, “you” and separates you from the endless hive mind of The Ether in which you operate. 
@@ -32,6 +31,7 @@ This project is part of my learning process and serves to demonstrate familiarit
  - Goods inventory actor component (ammo and pickup inventory)
  - VR HUD rendered to HMD stereo layer
 
+![Aerial view](./ProjectDoc/Images/big_view1.png)
 
 ## TODO 
 ### Functionality
@@ -57,5 +57,11 @@ This project is part of my learning process and serves to demonstrate familiarit
  - More sound assets
  - More FX and improve existing
  - Better UMG styling. i.e. any styling at all. :)
+
+ ![FP view](./ProjectDoc/Images/tr_cap02.png)
+
+ ![FP view](./ProjectDoc/Images/tr_cap03.png)
+
+ ![FP view](./ProjectDoc/Images/tr_cap04.png)
 
 
