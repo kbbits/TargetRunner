@@ -9,6 +9,13 @@
 #include "PlatformGridRow.h"
 #include "PlatformGridMgr.generated.h"
 
+UENUM(BlueprintType)
+enum class EInGrid : uint8
+{
+	NotInGrid 	UMETA(DisplayName = "Not In Grid"),
+	InGrid  	UMETA(DisplayName = "In Grid")
+};
+
 UCLASS()
 class TARGETRUNNER_API APlatformGridMgr : public AActor
 {
@@ -26,18 +33,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float GridCellWorldSize;
 
-	// The offset of the grid's origin. Default is origin at 0,0,0
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		FVector GridWorldOffset;
-
 	// Grid extents indicate the overall size of the grid. That is, the minimum and maxium valid grid coordinates.
 	// Min extents are negative, max extents are positive, origin is at 0,0.
+	// GridExtentMinX must be <= 0
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 GridExtentMinX;
+	// Must be >= 0
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 GridExtentMaxX;
+	// Must be <= 0
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 GridExtentMinY;
+	// Must be >= 0
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 GridExtentMaxY;
 
@@ -64,9 +71,35 @@ public:
 		void AddPlatformToGridMap(APlatformBase* platform);
 
 	UFUNCTION(BlueprintCallable)
-		APlatformBase* GetPlatformInGridMap(int32 X, int32 Y, bool& Found);
+		APlatformBase* GetPlatformInGridMap(const int32 X, const int32 Y, bool& Found);
+	UFUNCTION(BlueprintCallable)
+		APlatformBase* GetPlatformInGrid(const FVector2D Coords, bool& Found);
 
 	UFUNCTION(BlueprintCallable)
-		APlatformBase* RemovePlatformFromGridMap(int32 X, int32 Y, bool& Success);
+		APlatformBase* RemovePlatformFromGridMap(const int32 X, const int32 Y, bool& Success);
+	UFUNCTION(BlueprintCallable)
+		APlatformBase* RemovePlatformFromGrid(const FVector2D Coords, bool& Success);
 
+	// The total number of cells across the X axis of the grid.
+	UFUNCTION(BlueprintPure)
+		int32 GetGridWidthX();
+
+	// The total number of cells across the Y axis of the grid.
+	UFUNCTION(BlueprintPure)
+		int32 GetGridWidthY();
+
+	// Are the grid coordinates within the grid extents?
+	UFUNCTION(BlueprintPure);
+		bool IsInGrid(const FVector2D Coords);
+
+	// Switch on whether the grid coordinates are within the grid extents.
+	UFUNCTION(BlueprintCallable, meta = (ExpandEnumAsExecs = "InGrid"))
+		bool IsInGridSwitch(FVector2D Coords, EInGrid& InGrid);
+
+	// Each grid cell can also be identified by a number. The number of a given cell depends on the extents of the grid. 
+	// Cells are numbered starting at GridExtentMinX, GridExtentMinY, proceeding along the +Y axis, then up the +X axis.
+	// Resulting in cell 0 being at [GridExtentMinX, GridExtentMinY] and the highest cell number at [GridExtentMaxX, GridExtentMaxY].
+	UFUNCTION(BlueprintPure)
+		int32 GridCoordsToCellNumber(const FVector2D Coords);
+		
 };

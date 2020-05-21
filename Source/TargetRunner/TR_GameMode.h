@@ -19,5 +19,6 @@ public:
 	// Size of each grid cell in world units.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float GridCellSize;
+
 		
 };
