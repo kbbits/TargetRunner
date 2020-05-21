@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Math/Vector.h"
 #include "PlatformBase.h"
 #include "PlatformGridRow.h"
-#include "Kismet/GameplayStatics.h"
 #include "PlatformGridMgr.generated.h"
 
 UCLASS()
@@ -17,16 +17,37 @@ class TARGETRUNNER_API APlatformGridMgr : public AActor
 public:	
 	// Sets default values for this actor's properties
 	APlatformGridMgr();
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//	TArray<APlatformBase*> MyPlatforms;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//	TArray<FPlatformGridRow> PlatformGrid;
 	
 	// Rows are along grid x axis, columns (elements in each row) are grid Y axis
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<int32, FPlatformGridRow> PlatformGridMap;
+
+	// The size, in world units, of each grid cell.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		float GridCellWorldSize;
+
+	// The offset of the grid's origin. Default is origin at 0,0,0
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FVector GridWorldOffset;
+
+	// Grid extents indicate the overall size of the grid. That is, the minimum and maxium valid grid coordinates.
+	// Min extents are negative, max extents are positive, origin is at 0,0.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 GridExtentMinX;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 GridExtentMaxX;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 GridExtentMinY;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 GridExtentMaxY;
+
+	// The number of subdivisions along each X & Y axis that each cell is divided.
+	// Creating RoomCellSubdivision x RoomCellSubdivision total subcells in each cell.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 RoomCellSubdivision;
+
+	// A map of actor references initialized and used at runtime for efficiency.
+	TMap<FName, AActor*> GridActorCache;
 
 protected:
 	// Called when the game starts or when spawned

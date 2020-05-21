@@ -16,7 +16,8 @@ class TARGETRUNNER_API ATR_GameMode : public AGameMode
 
 public:
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-	//	float PlatformSize;
+	// Size of each grid cell in world units.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		float GridCellSize;
 		
 };

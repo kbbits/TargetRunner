@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "PlatformGridMgr.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 APlatformGridMgr::APlatformGridMgr()
@@ -42,7 +42,8 @@ void APlatformGridMgr::AddPlatformToGridMap(APlatformBase* Platform)
 	if (Platform != nullptr) {
 		int32 row = Platform->GridX;
 		int32 col = Platform->GridY;
-		
+		Platform->MyGridManager = this;
+
 		if (!PlatformGridMap.Contains(row))
 		{
 			FPlatformGridRow newRow;

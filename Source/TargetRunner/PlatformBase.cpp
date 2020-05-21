@@ -2,7 +2,9 @@
 
 
 #include "PlatformBase.h"
+#include "TR_GameMode.h"
 #include "UnrealNetwork.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 APlatformBase::APlatformBase()
@@ -16,6 +18,12 @@ APlatformBase::APlatformBase()
 void APlatformBase::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void APlatformBase::InitPlatformScale()
+{
+	//ATR_GameMode* = UGameplayStatics::GetGameMode<ATR_GameMode>(GetWorld());
+
 }
 
 // Called every frame

@@ -5,13 +5,13 @@
 #include "PlatformGridRow.generated.h"
 
 USTRUCT(BlueprintType)
-struct FPlatformGridRow : public FTableRowBase
+struct FRoomGridRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<int32, APlatformBase*> RowPlatforms;
-	
+		TMap<int32, APlatformBase*> RowRooms;
+
 };

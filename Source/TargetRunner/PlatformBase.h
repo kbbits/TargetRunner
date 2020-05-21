@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "PlatformBase.generated.h"
 
+class APlatformGridMgr;
+
 UCLASS()
 class TARGETRUNNER_API APlatformBase : public AActor
 {
@@ -23,9 +25,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		bool bCanRemoveDynamic;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		APlatformGridMgr* MyGridManager;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TMap<FName, AActor*> PlatformActorCache;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	void InitPlatformScale();
 
 public:	
 	// Called every frame

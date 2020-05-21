@@ -27,3 +27,12 @@ enum class ETRWeaponState : uint8
 	WeaponState_Reloading	UMETA(DisplayName = "Reloading"),
 	WeaponState_OutOfAmmo	UMETA(DisplayName = "OutOfAmmo")
 };
+
+UENUM(BlueprintType)
+enum class ETRWallState : uint8
+{
+	WallState_Unknown		UMETA(DisplayName = "Unknown"),
+	WallState_Blocked		UMETA(DisplayName = "Blocked"),
+	WallState_Open			UMETA(DisplayName = "Open"),
+	WallState_Random		UMETA(DisplayName = "Random")
+};

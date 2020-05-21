@@ -102,7 +102,6 @@ float UTR_ActorAttributeComponent::GetCurrentPercent()
 //							the min/max range to succeed and just set the value to the clamped range.
 //							If this is false a delta that would result in exceeding min/max range will return false and make no change to the current value.
 // Returns true if successful, false if delta was not applied to value.
-// As a convenience, this provides the current value after deducting in the RemainingValue out param.
 bool UTR_ActorAttributeComponent::DeltaValue(const float ToDeduct = 1, const bool bAllowOverspill = false)
 {
 	float NewValue = CurrentValue + ToDeduct;
