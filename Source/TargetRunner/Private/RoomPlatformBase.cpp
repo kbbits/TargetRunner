@@ -1,10 +1,9 @@
 
 #include "RoomPlatformBase.h"
-#include "PlatformGridMgr.h"
+#include "..\PlatformGridMgr.h"
 #include "TrEnums.h"
 #include "Math/Vector2D.h"
 #include "UnrealNetwork.h"
-#include "..\Public\RoomPlatformBase.h"
 
 // Sets default values
 ARoomPlatformBase::ARoomPlatformBase()
@@ -49,7 +48,7 @@ bool ARoomPlatformBase::CalculateWalls()
 		float FirstOffset = SubCellSize / 2;
 		FVector2D Offsets;
 		FVector2D WallDirection;
-		FRotator CurrentRotation = MyGridManager->GetActorRotation(); //+ FRotator(0.0, -90.0, 0.0);
+		FRotator CurrentRotation = FRotator(0.0, 0.0, 0.0); // GetActorRotation(); //+ FRotator(0.0, -90.0, 0.0);
 		FVector DefaultScale(1.0, 1.0, 1.0);
 
 		// Empty any previous transforms, size the array to hold what we need.

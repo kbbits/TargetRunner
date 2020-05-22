@@ -6,3 +6,5 @@
 #include "Net/UnrealNetwork.h"
 #include "TrEnums.h"
 
+//General Log
+DECLARE_LOG_CATEGORY_EXTERN(LogTRGame, Log, All);

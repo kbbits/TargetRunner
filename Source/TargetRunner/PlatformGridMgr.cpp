@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PlatformGridMgr.h"
+#include "RoomPlatformBase.h"
+#include "TargetRunner.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -22,7 +24,7 @@ void APlatformGridMgr::BeginPlay()
 void APlatformGridMgr::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 }
 
 void APlatformGridMgr::Setup()
@@ -34,6 +36,94 @@ void APlatformGridMgr::Setup()
 	{
 		APlatformBase* Platform = Cast<APlatformBase>(TActor);
 		AddPlatformToGridMap(Platform);
+	}
+}
+
+FTransform APlatformGridMgr::GetGridCellWorldTransform(const FVector2D& GridCoords)
+{
+	FVector CellLocation = GetActorLocation();
+	CellLocation += FVector(GridCoords.X * GridCellWorldSize, GridCoords.Y * GridCellWorldSize, 0.0).RotateAngleAxis(GetActorRotation().Yaw, FVector(0.0, 0.0, 1.0));
+	return FTransform(GetActorRotation(), CellLocation, FVector(1.0, 1.0, 1.0));
+}
+
+void APlatformGridMgr::GenerateGrid_Implementation()
+{
+	// Destroy old grid, if any
+	DestroyGrid();
+
+	bool bSuccessful;
+	//GridForgeClass = UGridForgeBase::StaticClass();
+	FRoomGridTemplate GridTemplate;
+	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
+	
+	GridTemplate.GridCellWorldSize = GridCellWorldSize;
+	GridTemplate.RoomCellSubdivision = RoomCellSubdivision;
+	GridTemplate.GridExtentMinX = GridExtentMinX;
+	GridTemplate.GridExtentMaxX = GridExtentMaxX;
+	GridTemplate.GridExtentMinY = GridExtentMinY;
+	GridTemplate.GridExtentMaxY = GridExtentMaxY;
+	GridForge->GenerateGridTemplate(GridTemplate, bSuccessful);
+
+	if (bSuccessful)
+	{
+		FRoomGridRow* GridRow;
+		FRoomTemplate* RoomTemplate;
+		ARoomPlatformBase* NewRoom;
+		FActorSpawnParameters SpawnParams;
+		FVector2D CurCell;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.Owner = this;
+
+		for (int row = GridExtentMinX; row <= GridExtentMaxX; row++)
+		{
+			if (GridTemplate.Grid.Contains(row))
+			{
+				GridRow = &GridTemplate.Grid[row];
+				if (GridRow != nullptr)
+				{
+					CurCell.X = row;
+					for (int col = GridExtentMinY; col <= GridExtentMaxY; col++)
+					{
+						if (GridRow->RowRooms.Contains(col))
+						{
+							CurCell.Y = col;
+							RoomTemplate = &GridRow->RowRooms[col];
+							NewRoom = GetWorld()->SpawnActor<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(CurCell), SpawnParams);
+							NewRoom->MyGridManager = this;
+							NewRoom->GridX = row;
+							NewRoom->GridY = col;
+							NewRoom->WallTemplate = RoomTemplate->WallTemplate;
+							AddPlatformToGridMap(NewRoom);
+							NewRoom->GenerateRoom();
+						}
+					}
+				}
+			}
+		}
+	} 
+	else
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("Grid generation failed with grid forge: %s"), *GetNameSafe(GridForge));
+	}
+}
+
+void APlatformGridMgr::DestroyGrid_Implementation()
+{
+	TArray<FPlatformGridRow> Rows;
+	TArray<APlatformBase*> Platforms;
+	PlatformGridMap.GenerateValueArray(Rows);	
+	for (FPlatformGridRow Row : Rows)
+	{
+		Row.RowPlatforms.GenerateValueArray(Platforms);
+		for (APlatformBase* Platform : Platforms)
+		{
+			if (IsValid(Platform))
+			{
+				Platform->Destroy();
+			}
+		}
+		Row.RowPlatforms.Empty();
+		Platforms.Empty();
 	}
 }
 

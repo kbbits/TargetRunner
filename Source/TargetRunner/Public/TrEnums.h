@@ -36,3 +36,11 @@ enum class ETRWallState : uint8
 	WallState_Open			UMETA(DisplayName = "Open"),
 	WallState_Random		UMETA(DisplayName = "Random")
 };
+
+UENUM(BlueprintType)
+enum class ETRFloorState : uint8
+{
+	FloorState_Unknown		UMETA(DisplayName = "Unknown"),
+	FloorState_Open			UMETA(DisplayName = "Open"),
+	FloorState_Blocked		UMETA(DisplayName = "Blocked")
+};

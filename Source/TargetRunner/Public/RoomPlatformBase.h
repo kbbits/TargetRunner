@@ -1,7 +1,7 @@
 #pragma once
 
 #include "TrEnums.h"
-#include "Core.h"
+#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "PlatformBase.h"
 #include "Math/TransformNonVectorized.h"

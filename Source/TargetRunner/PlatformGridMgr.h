@@ -6,7 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "Math/Vector.h"
 #include "PlatformBase.h"
+#include "RoomPlatformBase.h"
 #include "PlatformGridRow.h"
+#include "GridForgeBase.h"
+#include "RoomGridTemplate.h"
 #include "PlatformGridMgr.generated.h"
 
 UENUM(BlueprintType)
@@ -28,6 +31,9 @@ public:
 	// Rows are along grid x axis, columns (elements in each row) are grid Y axis
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<int32, FPlatformGridRow> PlatformGridMap;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	//	FRoomGridTemplate GridTemplate;
 
 	// The size, in world units, of each grid cell.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
@@ -52,9 +58,16 @@ public:
 	// Creating RoomCellSubdivision x RoomCellSubdivision total subcells in each cell.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 RoomCellSubdivision;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<UGridForgeBase> GridForgeClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<ARoomPlatformBase> RoomClass;
 
 	// A map of actor references initialized and used at runtime for efficiency.
-	TMap<FName, AActor*> GridActorCache;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+		TMap<FName, AActor*> GridActorCache;
 
 protected:
 	// Called when the game starts or when spawned
@@ -66,6 +79,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		void Setup();
+
+	UFUNCTION(BlueprintPure)
+		FTransform GetGridCellWorldTransform(const FVector2D& GridCoords);
+
+	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
+		void GenerateGrid();
+
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+		void DestroyGrid();
 
 	UFUNCTION(BlueprintCallable)
 		void AddPlatformToGridMap(APlatformBase* platform);
@@ -89,7 +111,7 @@ public:
 		int32 GetGridWidthY();
 
 	// Are the grid coordinates within the grid extents?
-	UFUNCTION(BlueprintPure);
+	UFUNCTION(BlueprintPure)
 		bool IsInGrid(const FVector2D Coords);
 
 	// Switch on whether the grid coordinates are within the grid extents.
