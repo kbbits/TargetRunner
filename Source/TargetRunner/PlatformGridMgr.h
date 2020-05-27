@@ -32,9 +32,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<int32, FPlatformGridRow> PlatformGridMap;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	//	FRoomGridTemplate GridTemplate;
-
 	// The size, in world units, of each grid cell.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float GridCellWorldSize;
@@ -54,16 +51,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 GridExtentMaxY;
 
+	// Location for player start
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FVector2D StartGridCoords;
+
+	// Location of level exit
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FVector2D ExitGridCoords;
+
 	// The number of subdivisions along each X & Y axis that each cell is divided.
 	// Creating RoomCellSubdivision x RoomCellSubdivision total subcells in each cell.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 RoomCellSubdivision;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TSubclassOf<UGridForgeBase> GridForgeClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TSubclassOf<ARoomPlatformBase> RoomClass;
+		FRandomStream GridRandStream;
 
 	// A map of actor references initialized and used at runtime for efficiency.
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -86,8 +88,14 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 		void GenerateGrid();
 
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	// Called by GenerateGrid. Subclasses should override this one.
+	virtual void GenerateGridImpl();
+
+	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 		void DestroyGrid();
+
+	// Called by DestroyGrid. Subclasses should override this one.
+	virtual void DestroyGridImpl();
 
 	UFUNCTION(BlueprintCallable)
 		void AddPlatformToGridMap(APlatformBase* platform);

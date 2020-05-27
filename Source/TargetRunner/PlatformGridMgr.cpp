@@ -10,21 +10,18 @@ APlatformGridMgr::APlatformGridMgr()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
 void APlatformGridMgr::BeginPlay()
 {
-	Super::BeginPlay();
-	
+	Super::BeginPlay();	
 }
 
 // Called every frame
 void APlatformGridMgr::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
 }
 
 void APlatformGridMgr::Setup()
@@ -51,80 +48,43 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 	// Destroy old grid, if any
 	DestroyGrid();
 
-	bool bSuccessful;
-	//GridForgeClass = UGridForgeBase::StaticClass();
-	FRoomGridTemplate GridTemplate;
-	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
-	
-	GridTemplate.GridCellWorldSize = GridCellWorldSize;
-	GridTemplate.RoomCellSubdivision = RoomCellSubdivision;
-	GridTemplate.GridExtentMinX = GridExtentMinX;
-	GridTemplate.GridExtentMaxX = GridExtentMaxX;
-	GridTemplate.GridExtentMinY = GridExtentMinY;
-	GridTemplate.GridExtentMaxY = GridExtentMaxY;
-	GridForge->GenerateGridTemplate(GridTemplate, bSuccessful);
+	UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid."), *this->GetName());
 
-	if (bSuccessful)
-	{
-		FRoomGridRow* GridRow;
-		FRoomTemplate* RoomTemplate;
-		ARoomPlatformBase* NewRoom;
-		FActorSpawnParameters SpawnParams;
-		FVector2D CurCell;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnParams.Owner = this;
+	GenerateGridImpl();
+}
 
-		for (int row = GridExtentMinX; row <= GridExtentMaxX; row++)
-		{
-			if (GridTemplate.Grid.Contains(row))
-			{
-				GridRow = &GridTemplate.Grid[row];
-				if (GridRow != nullptr)
-				{
-					CurCell.X = row;
-					for (int col = GridExtentMinY; col <= GridExtentMaxY; col++)
-					{
-						if (GridRow->RowRooms.Contains(col))
-						{
-							CurCell.Y = col;
-							RoomTemplate = &GridRow->RowRooms[col];
-							NewRoom = GetWorld()->SpawnActor<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(CurCell), SpawnParams);
-							NewRoom->MyGridManager = this;
-							NewRoom->GridX = row;
-							NewRoom->GridY = col;
-							NewRoom->WallTemplate = RoomTemplate->WallTemplate;
-							AddPlatformToGridMap(NewRoom);
-							NewRoom->GenerateRoom();
-						}
-					}
-				}
-			}
-		}
-	} 
-	else
-	{
-		UE_LOG(LogTRGame, Warning, TEXT("Grid generation failed with grid forge: %s"), *GetNameSafe(GridForge));
-	}
+void APlatformGridMgr::GenerateGridImpl()
+{
+	// TODO Implement for base class
 }
 
 void APlatformGridMgr::DestroyGrid_Implementation()
 {
-	TArray<FPlatformGridRow> Rows;
-	TArray<APlatformBase*> Platforms;
-	PlatformGridMap.GenerateValueArray(Rows);	
-	for (FPlatformGridRow Row : Rows)
+	DestroyGridImpl();
+}
+
+void APlatformGridMgr::DestroyGridImpl()
+{
+	TArray<int32> RowNums;
+	TArray<int32> PlatformNums;
+	PlatformGridMap.GenerateKeyArray(RowNums);
+
+	UE_LOG(LogTRGame, Warning, TEXT("Destroying %d rows."), RowNums.Num());
+	for (int32 Row : RowNums)
 	{
-		Row.RowPlatforms.GenerateValueArray(Platforms);
-		for (APlatformBase* Platform : Platforms)
+		PlatformGridMap.Find(Row)->RowPlatforms.GenerateKeyArray(PlatformNums);
+		for (int32 Col : PlatformNums)
 		{
+			APlatformBase* Platform = PlatformGridMap.Find(Row)->RowPlatforms[Col];
 			if (IsValid(Platform))
 			{
+				UE_LOG(LogTRGame, Warning, TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY);
 				Platform->Destroy();
 			}
 		}
-		Row.RowPlatforms.Empty();
-		Platforms.Empty();
+		PlatformGridMap.Find(Row)->RowPlatforms.Empty();
 	}
+	PlatformGridMap.Empty();
 }
 
 void APlatformGridMgr::AddPlatformToGridMap(APlatformBase* Platform)

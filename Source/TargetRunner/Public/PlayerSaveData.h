@@ -71,7 +71,7 @@ public:
 		TMap<FName, float> HitCounts;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<EAmmoType, float> AmmoInventory;
+		TMap<ETRAmmoType, float> AmmoInventory;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TMap<FName, float> GoodsInventory;

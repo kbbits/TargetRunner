@@ -48,10 +48,11 @@ bool ARoomPlatformBase::CalculateWalls()
 		float FirstOffset = SubCellSize / 2;
 		FVector2D Offsets;
 		FVector2D WallDirection;
+		FVector Margin;
 		FRotator CurrentRotation = FRotator(0.0, 0.0, 0.0); // GetActorRotation(); //+ FRotator(0.0, -90.0, 0.0);
 		FVector DefaultScale(1.0, 1.0, 1.0);
 
-		// Empty any previous transforms, size the array to hold what we need.
+		// Empty any previous transforms, size the array to hold what we will need.
 		WallSectionTransforms.Empty(MyGridManager->RoomCellSubdivision * 4);
 		// For each of the four walls: North(+X), East(+Y), South(-X), West(-Y)
 		for (int32 w = 0; w < 4; w++) {
@@ -60,21 +61,25 @@ bool ARoomPlatformBase::CalculateWalls()
 			case 0:
 				Offsets.Set(1.0, -1.0);
 				WallDirection.Set(0.0, 1.0);
+				Margin.Set(-50.0, 0.0, 0.0);
 				break;
 			case 1:
 				Offsets.Set(1.0, 1.0);
 				WallDirection.Set(-1.0, 0.0);
+				Margin.Set(0.0, -50.0, 0.0);
 				break;
 			case 2:
 				Offsets.Set(-1.0, 1.0);
 				WallDirection.Set(0.0, -1.0);
+				Margin.Set(50.0, 0.0, 0.0);
 				break;
 			case 3:
 				Offsets.Set(-1.0, -1.0);
 				WallDirection.Set(1.0, 0.0);
+				Margin.Set(0.0, 50.0, 0.0);
 				break;
 			}
-			FVector WallStartLocalLocation = FVector(Offsets.X * CellHalfSize, Offsets.Y * CellHalfSize, 0.0);
+			FVector WallStartLocalLocation = FVector(Offsets.X * CellHalfSize, Offsets.Y * CellHalfSize, 0.0) + Margin;
 			FVector SectionLocation(WallStartLocalLocation.X + ((SubCellSize / 2) * WallDirection.X), WallStartLocalLocation.Y + ((SubCellSize/2) * WallDirection.Y), 0.0);
 			for (int32 i = 0; i < MyGridManager->RoomCellSubdivision; i++)
 			{
@@ -82,13 +87,6 @@ bool ARoomPlatformBase::CalculateWalls()
 				WallSectionTransforms.Add(FTransform(CurrentRotation, SectionLocation, DefaultScale));
 				// Move section location to next
 				SectionLocation += FVector(SubCellSize * WallDirection.X, SubCellSize * WallDirection.Y, 0.0);
-				/*switch (WallTemplate[(w * MyGridManager->RoomCellSubdivision) + i])
-				{
-				case ETRWallState::WallState_Blocked:
-					break;
-				case ETRWallState::WallState_Open:
-					break;
-				}*/
 			}
 			CurrentRotation.Yaw += 90;
 		}

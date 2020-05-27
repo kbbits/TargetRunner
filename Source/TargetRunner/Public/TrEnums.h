@@ -1,46 +1,56 @@
 #pragma once
 
-UENUM(BlueprintType)		
-enum class EAmmoType : uint8
+UENUM(BlueprintType)
+enum class ETRDirection : uint8
 {
-	None 	UMETA(DisplayName = "None"),
-	Bomb 	UMETA(DisplayName = "Bomb"),
-	Sniper	UMETA(DisplayName = "Sniper")
+	North	UMETA(DisplayName = "North"),
+	East	UMETA(DisplayName = "East"),
+	South	UMETA(DisplayName = "South"),
+	West	UMETA(DisplayName = "West")
 };
 
 UENUM(BlueprintType)
 enum class ETRAmmoType : uint8
 {
-	AmmoType_None 	UMETA(DisplayName = "None"),
-	AmmoType_Goods 	UMETA(DisplayName = "Goods"),
-	AmmoType_Bomb 	UMETA(DisplayName = "Bomb"),
-	AmmoType_Sniper	UMETA(DisplayName = "Sniper")
+	None 	UMETA(DisplayName = "None"),
+	Goods 	UMETA(DisplayName = "Goods"),
+	Bomb 	UMETA(DisplayName = "Bomb"),
+	Sniper	UMETA(DisplayName = "Sniper")
 };
 
 
 UENUM(BlueprintType)
 enum class ETRWeaponState : uint8
 {
-	WeaponState_Idle		UMETA(DisplayName = "Idle"),
-	WeaponState_Firing		UMETA(DisplayName = "Firing"),
-	WeaponState_FireBusy	UMETA(DisplayName = "FireBusy"),
-	WeaponState_Reloading	UMETA(DisplayName = "Reloading"),
-	WeaponState_OutOfAmmo	UMETA(DisplayName = "OutOfAmmo")
+	Idle		UMETA(DisplayName = "Idle"),
+	Firing		UMETA(DisplayName = "Firing"),
+	FireBusy	UMETA(DisplayName = "FireBusy"),
+	Reloading	UMETA(DisplayName = "Reloading"),
+	OutOfAmmo	UMETA(DisplayName = "OutOfAmmo")
 };
 
 UENUM(BlueprintType)
 enum class ETRWallState : uint8
 {
-	WallState_Unknown		UMETA(DisplayName = "Unknown"),
-	WallState_Blocked		UMETA(DisplayName = "Blocked"),
-	WallState_Open			UMETA(DisplayName = "Open"),
-	WallState_Random		UMETA(DisplayName = "Random")
+	Unknown		UMETA(DisplayName = "Unknown"),
+	Empty		UMETA(DisplayName = "Empty"),
+	Blocked		UMETA(DisplayName = "Blocked"),
+	Open		UMETA(DisplayName = "Open"),
+	Door		UMETA(DisplayName = "Door"),
+	Random		UMETA(DisplayName = "Random")
 };
 
 UENUM(BlueprintType)
 enum class ETRFloorState : uint8
 {
-	FloorState_Unknown		UMETA(DisplayName = "Unknown"),
-	FloorState_Open			UMETA(DisplayName = "Open"),
-	FloorState_Blocked		UMETA(DisplayName = "Blocked")
+	Unknown		UMETA(DisplayName = "Unknown"),
+	Open		UMETA(DisplayName = "Open"),
+	Blocked		UMETA(DisplayName = "Blocked")
+};
+
+UENUM(BlueprintType)
+enum class ETRGridCellState : uint8
+{
+	Blocked		UMETA(DisplayName = "Blocked"),
+	Open		UMETA(DisplayName = "Open")
 };
