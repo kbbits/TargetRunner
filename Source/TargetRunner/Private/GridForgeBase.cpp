@@ -119,7 +119,7 @@ FRoomGridRow* UGridForgeBase::GetRoomRow(FRoomGridTemplate& RoomGridTemplate, co
 FRoomTemplate* UGridForgeBase::GetRoomNeighbor(FRoomGridTemplate& RoomGridTemplate, const FVector2D& Coords, const ETRDirection Direction)
 {
 	FRoomTemplate* Room = nullptr;
-	bool bFound;
+	bool bFound = false;
 	switch (Direction)
 	{
 	case ETRDirection::North:

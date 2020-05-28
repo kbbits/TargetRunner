@@ -4,6 +4,7 @@
 #include "RoomPlatformBase.h"
 #include "TargetRunner.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerStart.h"
 
 // Sets default values
 APlatformGridMgr::APlatformGridMgr()
@@ -16,6 +17,18 @@ APlatformGridMgr::APlatformGridMgr()
 void APlatformGridMgr::BeginPlay()
 {
 	Super::BeginPlay();	
+}
+
+void APlatformGridMgr::MovePlayerStarts()
+{
+	TArray<AActor*> PlayerStarts;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStarts);
+	for (AActor* TmpActor : PlayerStarts)
+	{
+		APlayerStart* PlayerStart = Cast<APlayerStart>(TmpActor);
+		PlayerStart->AddActorWorldOffset(GetGridCellWorldTransform(StartGridCoords).GetLocation());
+		PlayerStart->AddActorWorldRotation(FRotator(0.0, FMath::FRandRange(0.0, 360.0), 0.0));
+	}	
 }
 
 // Called every frame

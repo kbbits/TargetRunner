@@ -4,6 +4,7 @@
 
 #include "TargetRunner.h"
 #include "Kismet/GameplayStatics.h"
+#include "..\Public\RoomPlatformGridMgr.h"
 
 // Sets default values
 ARoomPlatformGridMgr::ARoomPlatformGridMgr()
@@ -36,7 +37,7 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 
 	bool bSuccessful;
 	//GridForgeClass = UGridForgeBase::StaticClass();
-	FRoomGridTemplate RoomGridTemplate;
+	
 	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
 	// TODO Seed this correctly - currently uses values added in editor.
 	//GridRandStream.GenerateNewSeed();
@@ -63,85 +64,27 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 
 		StartGridCoords = RoomGridTemplate.StartCells[0];
 		ExitGridCoords = RoomGridTemplate.EndCells[0];
-		// Create appropriate wall state arrays representing the used wall types, sized according to RoomCellSubdivision.
-		int32 CenterSubdivision = (RoomGridTemplate.RoomCellSubdivision / 2);
-		TArray<ETRWallState> DoorWall;
-		for (int i = 0; i < RoomGridTemplate.RoomCellSubdivision; i++)
+		
+		MovePlayerStarts();
+		if (bSpawnGridAfterGenerate)
 		{
-			if (i == CenterSubdivision) { DoorWall.Add(ETRWallState::Door); }
-			else { DoorWall.Add(ETRWallState::Blocked); }
-		}
-		TArray<ETRWallState> SolidWall;
-		for (int i = 0; i < RoomGridTemplate.RoomCellSubdivision; i++)
-		{
-			SolidWall.Add(ETRWallState::Blocked);
-		}
-		TArray<ETRWallState> EmptyWall;
-		for (int i = 0; i < RoomGridTemplate.RoomCellSubdivision; i++)
-		{
-			EmptyWall.Add(ETRWallState::Empty);
-		}
-
-		FRoomGridRow* GridRow;
-		FRoomTemplate* RoomTemplate;
-		ARoomPlatformBase* NewRoom;
-		FActorSpawnParameters SpawnParams;
-		FVector2D CurCoords;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnParams.Owner = this;
-
-		for (int32 row = GridExtentMinX; row <= GridExtentMaxX; row++)
-		{
-			if (RoomGridTemplate.Grid.Contains(row))
+			TArray<int32> RowNums;
+			TArray<int32> ColNums;
+			RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
+			for (int32 Row : RowNums)
 			{
-				GridRow = RoomGridTemplate.Grid.Find(row);
-				if (GridRow != nullptr)
+				ColNums.Empty(RoomGridTemplate.Grid.Find(Row)->RowRooms.Num());
+				RoomGridTemplate.Grid.Find(Row)->RowRooms.GenerateKeyArray(ColNums);
+				for (int32 Col : ColNums)
 				{
-					CurCoords.X = row;
-					for (int col = GridExtentMinY; col <= GridExtentMaxY; col++)
+					FRoomTemplate* Room = RoomGridTemplate.Grid.Find(Row)->RowRooms.Find(Col);
+					if (Room != nullptr)
 					{
-						if (GridRow->RowRooms.Contains(col))
-						{
-							CurCoords.Y = col;
-							RoomTemplate = GridRow->RowRooms.Find(col);
-							if (RoomTemplate != nullptr)
-							{
-								UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Spanwing room actor for X:%d Y:%d."), *this->GetName(), (int32)CurCoords.X, (int32)CurCoords.Y);
-								NewRoom = GetWorld()->SpawnActor<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(CurCoords), SpawnParams);
-								NewRoom->MyGridManager = this;
-								NewRoom->GridX = row;
-								NewRoom->GridY = col;
-								// Create wall template
-								NewRoom->WallTemplate.Empty(4 * RoomGridTemplate.RoomCellSubdivision);
-								TArray<ETRWallState> Walls;
-								Walls.Add(RoomTemplate->NorthWall);
-								Walls.Add(RoomTemplate->EastWall);
-								Walls.Add(RoomTemplate->SouthWall);
-								Walls.Add(RoomTemplate->WestWall);
-								// Append wall segments for each wall. 
-								for (ETRWallState WallState : Walls)
-								{
-									NewRoom->WallTemplate.Append(WallState == ETRWallState::Blocked ? SolidWall : (WallState == ETRWallState::Door ? DoorWall : EmptyWall));
-								}
-								AddPlatformToGridMap(NewRoom);
-								NewRoom->GenerateRoom();
-							}
-							else
-							{
-								UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Got null room at row X:%d Y:%d"), *this->GetName(), row, col);
-							}
-						}
-						else
-						{
-							UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Room not found in row X:%d Y:%d"), *this->GetName(), row, col);
-						}
+						SpawnRoom(FVector2D(Row, Col));
 					}
 				}
 			}
-			else 
-			{
-				UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Row %d not found in grid."), *this->GetName(), row);
-			}
+
 		}
 	} 
 	else
@@ -173,4 +116,90 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 		PlatformGridMap.Find(Row)->RowPlatforms.Empty();
 	}
 	PlatformGridMap.Empty();
+}
+
+void ARoomPlatformGridMgr::SpawnRoom(FVector2D GridCoords)
+{
+	// First remove any existing platform.
+	bool bSuccess;
+	APlatformBase* OldRoom = RemovePlatformFromGrid(GridCoords, bSuccess);
+	if (IsValid(OldRoom))
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("Destroying old room X:%d Y:%d."), OldRoom->GridX, OldRoom->GridY);
+		OldRoom->Destroy();
+	}
+
+	ARoomPlatformBase* NewRoom;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Owner = this;
+
+	UE_LOG(LogTRGame, Log, TEXT("%s SpawnRoom - Spanwing room actor for X:%d Y:%d."), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y);
+
+	// Create appropriate wall state arrays representing the used wall types, sized according to RoomCellSubdivision.
+	int32 CenterSubdivision = (RoomGridTemplate.RoomCellSubdivision / 2);
+	TArray<ETRWallState> DoorWall;
+	for (int i = 0; i < RoomGridTemplate.RoomCellSubdivision; i++)
+	{
+		if (i == CenterSubdivision) { DoorWall.Add(ETRWallState::Door); }
+		else { DoorWall.Add(ETRWallState::Blocked); }
+	}
+	TArray<ETRWallState> SolidWall;
+	for (int i = 0; i < RoomGridTemplate.RoomCellSubdivision; i++)
+	{
+		SolidWall.Add(ETRWallState::Blocked);
+	}
+	TArray<ETRWallState> EmptyWall;
+	for (int i = 0; i < RoomGridTemplate.RoomCellSubdivision; i++)
+	{
+		EmptyWall.Add(ETRWallState::Empty);
+	}
+
+	FRoomGridRow* GridRow = RoomGridTemplate.Grid.Find(GridCoords.X);
+	if (GridRow == nullptr) { UE_LOG(LogTRGame, Error, TEXT("%s - Could not find grid row %d"), *this->GetName(), (int32)GridCoords.X); }
+	FRoomTemplate* RoomTemplate = GridRow->RowRooms.Find(GridCoords.Y);
+	if (RoomTemplate == nullptr) { UE_LOG(LogTRGame, Error, TEXT("%s - Could not find room template at X:%d Y:%d"), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y); }
+
+	NewRoom = GetWorld()->SpawnActor<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(GridCoords), SpawnParams);
+	NewRoom->MyGridManager = this;
+	NewRoom->GridX = GridCoords.X;
+	NewRoom->GridY = GridCoords.Y;
+	// Create wall template
+	NewRoom->WallTemplate.Empty(4 * RoomGridTemplate.RoomCellSubdivision);
+	TArray<ETRWallState> Walls;
+	Walls.Add(RoomTemplate->NorthWall);
+	Walls.Add(RoomTemplate->EastWall);
+	Walls.Add(RoomTemplate->SouthWall);
+	Walls.Add(RoomTemplate->WestWall);
+	// Append wall segments for each wall. 
+	for (ETRWallState WallState : Walls)
+	{
+		NewRoom->WallTemplate.Append(WallState == ETRWallState::Blocked ? SolidWall : (WallState == ETRWallState::Door ? DoorWall : EmptyWall));
+	}
+	AddPlatformToGridMap(NewRoom);
+	NewRoom->GenerateRoom();
+}
+
+TArray<FRoomTemplate*> ARoomPlatformGridMgr::GetAllRoomTemplates()
+{
+	TArray<FRoomTemplate*> AllRooms;
+	TArray<int32> RowNums;
+	TArray<int32> ColNums;
+	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
+
+	for (int32 Row : RowNums)
+	{
+		ColNums.Empty(RoomGridTemplate.Grid.Find(Row)->RowRooms.Num());
+		RoomGridTemplate.Grid.Find(Row)->RowRooms.GenerateKeyArray(ColNums);
+		for (int32 Col : ColNums)
+		{
+			FRoomTemplate* Room = RoomGridTemplate.Grid.Find(Row)->RowRooms.Find(Col);
+			if (Room != nullptr)
+			{
+				AllRooms.Add(Room);
+			}
+		}
+	}
+
+	return AllRooms;
 }
