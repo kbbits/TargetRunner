@@ -21,7 +21,7 @@ public:
 	// Sets default values for this actor's properties
 	ATRProjectileExtractorBase();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resource Harvesting", meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Resource Extraction", meta = (ExposeOnSpawn = "true"))
 		TArray<FResourceRateFilter> ResourceExtractionRates;
 
 protected:
@@ -35,7 +35,7 @@ public:
 	// IExtractsResources interface functions
 
 	// Get this projectile's resource extraction rates
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Resource Harvesting")
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Resource Extraction")
 		TArray<FResourceRateFilter> GetExtractionRates();
 	virtual TArray<FResourceRateFilter> GetExtractionRates_Implementation();
 	

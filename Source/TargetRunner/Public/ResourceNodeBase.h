@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "UnrealNetwork.h"
 #include "ResourceType.h"
 #include "ResourceQuantity.h"
 #include "ResourceRateFilter.h"
@@ -30,7 +31,7 @@ public:
 		float BaseHealth;
 
 	// Current health of this node.  When health reaches 0 ResourcesOnDestroy will be extracted if damager implements IExtractsResources.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 		float CurrentHealth;
 
 	// The ResourceType of this node. This affects, for example, the damage done by sources that implement IDoesDamageByType interface.
@@ -75,12 +76,12 @@ public:
 	// IExtractableResource interface functions
 
 	// Gets the current quanties of resources available in this entity.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extractable Resources")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extractable Resource")
 		TArray<FResourceQuantity> GetResourceQuantities();
 	virtual TArray<FResourceQuantity> GetResourceQuantities_Implementation();
 
 	// Gets the current quanty of a resource available in this entity.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extractable Resources")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extractable Resource")
 		float GetResourceQuantity(const FResourceType ResourceType);
 	virtual float GetResourceQuantity_Implementation(const FResourceType ResourceType);
 

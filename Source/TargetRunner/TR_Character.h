@@ -4,31 +4,66 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/CapsuleComponent.h"
+#include "CollectsResources.h"
 #include "TR_Character.generated.h"
 
 UCLASS()
-class TARGETRUNNER_API ATR_Character : public ACharacter
+class TARGETRUNNER_API ATR_Character : public ACharacter, public ICollectsResources
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this character's properties
-	ATR_Character();
+	ATR_Character(const FObjectInitializer& OI);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UCapsuleComponent* ResourceCollectionVolume;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
+	// To get BP values
+	void PostInitProperties() override;
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	// Override this and return the scene component that we want to attach the ResourceCollectionVolume to.
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure)
+		USceneComponent* GetCollectorParentComponent();
+	virtual USceneComponent* GetCollectorParentComponent_Implementation();
+
+	// Collector overlap begin
+	UFUNCTION(BlueprintNativeEvent)
+		void OnCollectorOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnCollectorOverlapBegin_Implementation(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	// Collector overlap end function
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnCollectorOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 	void FellOutOfWorld(const class UDamageType& DmgType);
 
 	UFUNCTION(BlueprintImplementableEvent)
 		void OnFellOutOfWorld();
+
+	// ICollectsResources interface functions
+
+	// Returns true if this resource collector has a homing target, false otherwise.
+	// If it does have a homing target, the location is set in TargetLocation.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")
+		bool GetCollectionTargetLocation(FVector& TargetLocation);
+	virtual bool GetCollectionTargetLocation_Implementation(FVector& TargetLocation);
+
+	// Give this entity resource goods to collect.
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Resource Collecting")
+		void CollectResourceGoods(const TArray<FGoodsQuantity>& CollectedGoods);
 
 };

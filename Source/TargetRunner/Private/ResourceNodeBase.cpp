@@ -8,6 +8,7 @@
 // Sets default values
 AResourceNodeBase::AResourceNodeBase()
 {
+	bReplicates = true;
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -26,6 +27,13 @@ void AResourceNodeBase::BeginPlay()
 void AResourceNodeBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AResourceNodeBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AResourceNodeBase, CurrentHealth);
 }
 
 TArray<FResourceQuantity> AResourceNodeBase::GetResourceQuantities_Implementation()

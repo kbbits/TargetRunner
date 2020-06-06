@@ -2,14 +2,45 @@
 
 
 #include "TR_Character.h"
+#include "CollectableResource.h"
+#include "GoodsQuantity.h"
+#include "TargetRunner.h"
 
 // Sets default values
-ATR_Character::ATR_Character()
+ATR_Character::ATR_Character(const FObjectInitializer& OI) : Super(OI)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	ResourceCollectionVolume = OI.CreateDefaultSubobject<UCapsuleComponent>(this, FName("Resource Collector"));
+	ResourceCollectionVolume->SetupAttachment(GetCollectorParentComponent());
+	ResourceCollectionVolume->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+	ResourceCollectionVolume->InitCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.2, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	ResourceCollectionVolume->SetCollisionProfileName(TEXT("PickupOverlap"));
+	ResourceCollectionVolume->OnComponentBeginOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapBegin);
+	ResourceCollectionVolume->OnComponentEndOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapEnd);
 }
+
+void ATR_Character::PostInitProperties()
+{
+	Super::PostInitProperties();
+	if (ResourceCollectionVolume)
+	{
+		ResourceCollectionVolume->AttachToComponent(GetCollectorParentComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		ResourceCollectionVolume->SetCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.2, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	}
+}
+
+#if WITH_EDITOR
+void ATR_Character::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{	
+	if (ResourceCollectionVolume)
+	{
+		ResourceCollectionVolume->SetCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.2, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	}
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+}
+#endif
 
 // Called when the game starts or when spawned
 void ATR_Character::BeginPlay()
@@ -32,9 +63,53 @@ void ATR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 }
 
+USceneComponent* ATR_Character::GetCollectorParentComponent_Implementation()
+{
+	return GetRootComponent();
+}
+
+void ATR_Character::OnCollectorOverlapBegin_Implementation(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	//UE_LOG(LogTRGame, Log, TEXT("Collector overlapped (native)"));
+	TArray<FGoodsQuantity> CollectedGoods;
+	if (OtherActor && OtherActor != this)
+	{
+		// Try to Execute on C++ layer:
+		const auto& CollectableResource = Cast<ICollectableResource>(OtherActor);
+		if (CollectableResource) 
+		{ 
+			CollectableResource->Execute_GetResourceGoods(OtherActor, CollectedGoods);
+			CollectableResource->Execute_NotifyCollected(OtherActor);
+		}
+		else
+		{
+			// Else, Execute Interface on Blueprint layer instead:
+			if (OtherActor->GetClass()->ImplementsInterface(UCollectableResource::StaticClass()))
+			{
+				ICollectableResource::Execute_GetResourceGoods(OtherActor, CollectedGoods);
+				ICollectableResource::Execute_NotifyCollected(OtherActor);
+			}
+		}
+		if (CollectedGoods.Num() > 0)
+		{
+			Cast<ICollectsResources>(this)->Execute_CollectResourceGoods(this, CollectedGoods);
+		}
+	}	
+}
+
 void ATR_Character::FellOutOfWorld(const class UDamageType& DmgType)
 {
 	OnFellOutOfWorld();
 	//Super::FellOutOfWorld(DmgType);
+}
+
+bool ATR_Character::GetCollectionTargetLocation_Implementation(FVector& TargetLocation)
+{
+	if (IsValid(ResourceCollectionVolume))
+	{
+		TargetLocation = ResourceCollectionVolume->GetComponentLocation();
+		return true;
+	}
+	return false;
 }
 
