@@ -79,7 +79,7 @@ bool ARoomPlatformBase::CalculateWalls()
 				Margin.Set(0.0, 50.0, 0.0);
 				break;
 			}
-			FVector WallStartLocalLocation = FVector(Offsets.X * CellHalfSize, Offsets.Y * CellHalfSize, 0.0) + Margin;
+			FVector WallStartLocalLocation = FVector(Offsets.X * CellHalfSize, Offsets.Y * CellHalfSize, 0.0);
 			FVector SectionLocation(WallStartLocalLocation.X + ((SubCellSize / 2) * WallDirection.X), WallStartLocalLocation.Y + ((SubCellSize/2) * WallDirection.Y), 0.0);
 			for (int32 i = 0; i < MyGridManager->RoomCellSubdivision; i++)
 			{

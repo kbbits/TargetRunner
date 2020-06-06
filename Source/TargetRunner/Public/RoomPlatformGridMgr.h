@@ -31,8 +31,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ARoomPlatformBase> RoomClass;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 		FRoomGridTemplate RoomGridTemplate;
+
+	// These cells are not available to be part of the maze grid
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<FVector2D> BlackoutCells;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -42,11 +46,12 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
+		void SpawnRoom(FVector2D GridCoords);
+
 	virtual void GenerateGridImpl() override;
 
 	virtual void DestroyGridImpl() override;
 	
-	void SpawnRoom(FVector2D GridCoords);
-
 	TArray<FRoomTemplate*> GetAllRoomTemplates();
 };

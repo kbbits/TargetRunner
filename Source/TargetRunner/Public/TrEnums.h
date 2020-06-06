@@ -54,3 +54,22 @@ enum class ETRGridCellState : uint8
 	Blocked		UMETA(DisplayName = "Blocked"),
 	Open		UMETA(DisplayName = "Open")
 };
+
+UENUM(BlueprintType)
+enum class ETRResourceMatch : uint8
+{
+	None = 0		UMETA(DispalyName = "None"),
+	Category = 1	UMETA(DisplayName = "Category"),
+	Type = 2		UMETA(DisplayName = "Type"),
+	SubType	= 4		UMETA(DisplayName = "SubType"),
+	Exact = 128		UMETA(DisplayName = "Exact Match")
+};
+
+//UENUM(BlueprintType)
+//enum class ETRResourceCategory : uint8
+//{
+//	Mineral		UMETA(DisplayName = "Mineral"),
+//	Metal		UMETA(DisplayName = "Metal"),
+//	Vegetable	UMETA(DisplayName = "Vegetable"),
+//	Energy		UMETA(DisplayName = "Energy")
+//};

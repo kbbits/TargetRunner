@@ -40,6 +40,10 @@
 		{
 			"Name": "NiagaraExtras",
 			"Enabled": true
+		},
+		{
+			"Name": "FieldSystemPlugin",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [

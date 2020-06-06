@@ -21,13 +21,26 @@ void APlatformGridMgr::BeginPlay()
 
 void APlatformGridMgr::MovePlayerStarts()
 {
+	FVector InitialOffset(150.0, -200, 0.0);
+	int32 CurStart = 1;
 	TArray<AActor*> PlayerStarts;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStarts);
 	for (AActor* TmpActor : PlayerStarts)
 	{
 		APlayerStart* PlayerStart = Cast<APlayerStart>(TmpActor);
-		PlayerStart->AddActorWorldOffset(GetGridCellWorldTransform(StartGridCoords).GetLocation());
-		PlayerStart->AddActorWorldRotation(FRotator(0.0, FMath::FRandRange(0.0, 360.0), 0.0));
+		PlayerStart->SetActorLocationAndRotation(
+			GetGridCellWorldTransform(StartGridCoords).GetLocation() + InitialOffset, 
+			FRotator(0.0, FMath::FRandRange(0.0, 360.0), 0.0)
+		);
+		if (CurStart % 3 == 0) 
+		{	
+			InitialOffset.Set(150.0 - ((CurStart / 3) * 150.0), -200, 0.0);
+		}
+		else
+		{
+			InitialOffset += FVector(0.0, 200.0, 0.0);
+		}
+		CurStart++;
 	}	
 }
 

@@ -51,3 +51,16 @@ int32 ATR_GameMode::RandRangeGrid(const int32 Min, const int32 Max)
 {
 	return GridRandStream.RandRange(Min, Max);
 }
+
+void ATR_GameMode::ToolClassByName_Implementation(const FName ToolName, TSubclassOf<ATRToolBase>& ToolClass, bool& bValid)
+{
+	if (ToolClassMap.Contains(ToolName))
+	{
+		ToolClass = ToolClassMap.FindRef(ToolName);
+		bValid = IsValid(ToolClass);
+	}
+	else
+	{
+		bValid = false;
+	}
+}

@@ -2,25 +2,44 @@
 
 #pragma once
 
-#include "Engine/DataTable.h"
+//#include "Engine/DataTable.h"
 #include "GoodsQuantity.generated.h"
 
 USTRUCT(BlueprintType)
-struct FGoodsQuantity : public FTableRowBase
+struct FGoodsQuantity //: public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
-	// Default constructor
-	FGoodsQuantity();
-	// Initialized constructor
-	FGoodsQuantity(FName NewName, float NewQuantity);
-
-	// The internal name of the goods
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Name;
 
-	// Quantity of goods
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float Quantity;
+
+public:
+	FGoodsQuantity()
+	{
+		Name = FName();
+		Quantity = 0.0f;
+	}
+
+	FGoodsQuantity(const FName& NewName, const float NewQuantity)
+	{
+		Name = NewName;
+		Quantity = NewQuantity;
+	}
+
+	bool operator==(const FGoodsQuantity& Other) const
+	{
+		if (Name != Other.Name) return false;
+		if (Quantity != Other.Quantity) return false;
+		return true;
+	}
+
+	bool operator==(const FName& OtherName) const
+	{
+		if (Name != OtherName) return false;
+		return true;
+	}
 };

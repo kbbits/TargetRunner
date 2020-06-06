@@ -6,6 +6,7 @@
 #include "GameFramework/GameMode.h"
 #include "GoodsDropper.h"
 #include "PlatformGridMgr.h"
+#include "TRToolBase.h"
 #include "TR_GameMode.generated.h"
 
 /**
@@ -28,6 +29,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float LevelDifficulty;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TMap<FName, TSubclassOf<ATRToolBase>> ToolClassMap;
+
 	// The "parent" random stream - used to seed other streams.
 	// Seed this one for each new level. It will re-seed other streams as appropriate
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -42,7 +46,8 @@ public:
 protected:
 
 	// Used to generate the map grid
-	FRandomStream GridRandStream;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		FRandomStream GridRandStream;
 
 protected:
 	// Called when the game starts or when spawned
@@ -50,7 +55,7 @@ protected:
 
 public:
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		bool InitGridManager(APlatformGridMgr* GridManager);
 
 	UFUNCTION(BlueprintPure)
@@ -63,5 +68,8 @@ public:
 	// Get an int in range from the Grid Stream.
 	UFUNCTION(BlueprintCallable)
 		int32 RandRangeGrid(const int32 Min, const int32 Max);
+		
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure)
+		void ToolClassByName(const FName ToolName, TSubclassOf<ATRToolBase>& ToolClass, bool& bValid);
 				
 };

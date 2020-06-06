@@ -39,6 +39,15 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	//GridForgeClass = UGridForgeBase::StaticClass();
 	
 	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
+	if (GridForge)
+	{
+		GridForge->BlackoutCells = BlackoutCells;
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not construct GridForge."), *this->GetName());
+		return;
+	}
 	// TODO Seed this correctly - currently uses values added in editor.
 	//GridRandStream.GenerateNewSeed();
 	GridRandStream.Reset();
@@ -51,7 +60,12 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	RoomGridTemplate.GridExtentMaxX = GridExtentMaxX;
 	RoomGridTemplate.GridExtentMinY = GridExtentMinY;
 	RoomGridTemplate.GridExtentMaxY = GridExtentMaxY;
-	if (!bGenerateStartEnd)
+	if (bGenerateStartEnd)
+	{
+		RoomGridTemplate.StartCells.Empty();
+		RoomGridTemplate.EndCells.Empty();
+	}
+	else
 	{
 		RoomGridTemplate.StartCells.Add(StartGridCoords);
 		RoomGridTemplate.EndCells.Add(ExitGridCoords);
@@ -116,9 +130,19 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 		PlatformGridMap.Find(Row)->RowPlatforms.Empty();
 	}
 	PlatformGridMap.Empty();
+
+	RowNums.Empty(RoomGridTemplate.Grid.Num());
+	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
+	for (int32 Row : RowNums)
+	{
+		RoomGridTemplate.Grid.Find(Row)->RowRooms.Empty();
+	}
+	RoomGridTemplate.Grid.Empty();
+	RoomGridTemplate.StartCells.Empty();
+	RoomGridTemplate.EndCells.Empty();
 }
 
-void ARoomPlatformGridMgr::SpawnRoom(FVector2D GridCoords)
+void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 {
 	// First remove any existing platform.
 	bool bSuccess;
