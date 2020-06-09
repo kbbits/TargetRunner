@@ -75,4 +75,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TMap<FName, float> GoodsInventory;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TMap<FName, float> TotalGoodsCollected;
 };

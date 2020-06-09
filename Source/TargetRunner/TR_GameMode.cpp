@@ -3,18 +3,21 @@
 
 #include "TR_GameMode.h"
 
-ATR_GameMode::ATR_GameMode()
-	: Super()
+// Initializes rand streams and creates the GoodsDropper.
+ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI) 
+	: Super(OI)
 {
-	GoodsDropper = CreateDefaultSubobject<UGoodsDropper>(TEXT("GoodsDropper"));
+	GeneratorRandStream.Reset();
+	GridRandStream.Initialize(GeneratorRandStream.RandRange(1, 20000) * 10000);
+	GoodsDropper = OI.CreateDefaultSubobject<UGoodsDropper>(this, TEXT("GoodsDropper"));
 	if (IsValid(GoodsDropperTable)) { GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable); }
 }
+
 
 void ATR_GameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	//GeneratorRandStream.Reset();
-	GridRandStream.Initialize(GeneratorRandStream.RandRange(1, 20000) * 10000);
+	
 }
 
 bool ATR_GameMode::InitGridManager_Implementation(APlatformGridMgr* GridManager)

@@ -19,7 +19,7 @@ class TARGETRUNNER_API ATR_GameMode : public AGameMode
 
 public:
 	// Constructor for defaults
-	ATR_GameMode();
+	ATR_GameMode(const FObjectInitializer& OI);
 
 	// Size of each grid cell in world units.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
@@ -45,7 +45,7 @@ public:
 
 protected:
 
-	// Used to generate the map grid
+	// Used to generate the map grid. Note helper functions: FRandRangeGrid and RandRangeGrid
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		FRandomStream GridRandStream;
 
@@ -55,6 +55,7 @@ protected:
 
 public:
 
+	// Sets up grid extents and cell size.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		bool InitGridManager(APlatformGridMgr* GridManager);
 
