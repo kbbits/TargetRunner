@@ -18,9 +18,12 @@ public:
 	// Sets default values for this actor's properties
 	ATRProjectileBase();
 
+	// The basic damage this projectile will deal. Final damage calculated by DoesDamageByType logic.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
 		float BaseDamage;
 
+	// The effective damage rates of this projectile against given resource types. Expressed as a percent of base damage (0.0 - 1.0).
+	// Values > 1.0 are allowed. Calculated damage against a resource type not matching any filters will = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
 		TArray<FResourceRateFilter> BaseDamageRates;
 

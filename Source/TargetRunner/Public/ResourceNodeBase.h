@@ -22,56 +22,75 @@ public:
 	// Sets default values for this actor's properties
 	AResourceNodeBase();
 
-	// Root scene for the node
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		USceneComponent* RootScene;
-
+	
 	// Starting health for this node
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 		float BaseHealth;
 
 	// Current health of this node.  When health reaches 0 ResourcesOnDestroy will be extracted if damager implements IExtractsResources.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, ReplicatedUsing=OnRep_CurrentHealth)
 		float CurrentHealth;
 
 	// The ResourceType of this node. This affects, for example, the damage done by sources that implement IDoesDamageByType interface.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 		FResourceType NodeResourceType;
 
 	// Total resources that will be extracted as the node is damaged. 
 	// Amount extracted during each damage event is proportional to damage dealt as percent of node base health.
 	// ex: if a damage event does damage equal to 20% of the node's base health then 20% of the node's ResourcesByDamage will be extracted.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 		TArray<FResourceQuantity> ResourcesByDamage;
 
 	// Tracks remaining ResourceByDamage quantities.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_ResourcesByDamageCurrent)
 		TArray<FResourceQuantity> ResourcesByDamageCurrent;
 
 	// Resources that will be extracted when the node's health reaches 0.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 		TArray<FResourceQuantity> ResourcesOnDestroy;
+
+protected:
+	// Root scene for the node
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		USceneComponent* RootScene;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Calculates the amount of resources that should be extracted for a given amount of damage and extraction rates.
-	// If bReduceCurrent = true this will subtract extracted quantities from current quantities. If it is false it makes no changes to current resource quantities.
 	// Returns true if any resources were calculated to be extracted.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		bool ExtractedResourcesForDamage(const float Damage, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities, const bool bReduceCurrent = true);
-	virtual bool ExtractedResourcesForDamage_Implementation(const float Damage, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities, const bool bReduceCurrent = true);
+		bool ExtractedResourcesForDamage(const float Damage, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
+	virtual bool ExtractedResourcesForDamage_Implementation(const float Damage, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
+
+	// Reduces the current values in ResourcesForDamageCurrent.
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+		void ServerExtractResourcesForDamage(const TArray<FResourceQuantity>& ExtractQuantities);
+	virtual void ServerExtractResourcesForDamage_Implementation(const TArray<FResourceQuantity>& ExtractQuantities);
 
 	// Calculates the amount of resources that should be extracted upon destruction with the given extraction rates.
 	// Returns true if any resources were calculated to be extracted.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		bool ExtractedResourcesOnDestroy(const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
 	virtual bool ExtractedResourcesOnDestroy_Implementation(const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
+
+	// Replication notification
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void OnRep_CurrentHealth();
+	void OnRep_CurrentHealth_Implementation();
+
+	UFUNCTION()
+		virtual void OnRep_ResourcesByDamageCurrent();
+
+	// Use this function to set current health at runtime. Calls OnRep_CurrentHealth for server too.
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+		void ServerSetCurrentHealth(const float NewCurrentHealth);
+	virtual void ServerSetCurrentHealth_Implementation(const float NewCurrentHealth);
 
 	// IExtractableResource interface functions
 

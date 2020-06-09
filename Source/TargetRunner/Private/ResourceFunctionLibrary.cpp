@@ -23,7 +23,6 @@ ETRResourceMatch UResourceFunctionLibrary::ResourceFilterMatch(const FResourceTy
 		{
 			return ETRResourceMatch::Category;
 		}		
-		//if (ResourceTypeOne.GoodsNameOverride != ResourceTypeTwo.GoodsNameOverride) return ETRResourceMatch::SubType;
 	}
 	return ETRResourceMatch::None;
 }
@@ -122,9 +121,5 @@ TArray<FResourceQuantity> UResourceFunctionLibrary::AddResourceQuantities(const 
 
 FName UResourceFunctionLibrary::GetGoodsNameForResource(const FResourceType& ResourceType)
 {
-	if (!ResourceType.GoodsNameOverride.IsNone())
-	{
-		return ResourceType.GoodsNameOverride;
-	}	
 	return ResourceType.Type;
 }

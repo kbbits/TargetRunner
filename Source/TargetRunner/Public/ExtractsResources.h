@@ -26,7 +26,7 @@ class TARGETRUNNER_API IExtractsResources
 public:
 		
 	// Returns the resource extraction rates for resource types relevant to this entity
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Extraction")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extracts Resources")
 		TArray<FResourceRateFilter> GetExtractionRates();
 
 };

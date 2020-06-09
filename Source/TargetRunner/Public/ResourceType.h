@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "Engine/DataTable.h"
+//#include "Engine/DataTable.h"
 #include "ResourceType.generated.h"
 
 USTRUCT(BlueprintType)
-struct FResourceType : public FTableRowBase
+struct FResourceType //: public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -26,8 +26,8 @@ public:
 
 	// Optional. Usually the GoodsType related to a ResourceType is GoodsType.Name == ResourceType.Type
 	// Set this GoodsNameOverride to associate this ResourceType with a different Goods Type.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		FName GoodsNameOverride;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	//	FName GoodsNameOverride;
 
 public:
 	FResourceType()
@@ -35,7 +35,7 @@ public:
 		Category = FName();
 		Type = FName();
 		SubType = FName();
-		GoodsNameOverride = FName();
+		//GoodsNameOverride = FName();
 	}
 
 	FResourceType(const FName& ResourceCategory, const FName& ResourceType)
@@ -43,7 +43,7 @@ public:
 		Category = ResourceCategory;
 		Type = ResourceType;
 		SubType = FName();
-		GoodsNameOverride = FName();
+		//GoodsNameOverride = FName();
 	}
 
 	FResourceType(const FName& ResourceCategory, const FName& ResourceType, const FName& ResourceSubType)
@@ -51,10 +51,9 @@ public:
 		Category = ResourceCategory;
 		Type = ResourceType;
 		SubType = ResourceSubType;
-		GoodsNameOverride = FName();
+		//GoodsNameOverride = FName();
 	}
 
-	// Ignores GoodsNameOverride
 	bool operator==(const FResourceType& Other) const
 	{
 		if (Category != Other.Category) return false;
@@ -64,7 +63,6 @@ public:
 		return true;
 	}
 
-	// Ignores GoodsNameOverride
 	bool operator==(const FResourceType& Other)
 	{
 		if (Category != Other.Category) return false;
@@ -74,7 +72,6 @@ public:
 		return true;
 	}
 
-	// Ignores GoodsNameOverride
 	bool operator==(FResourceType& Other)
 	{
 		if (Category != Other.Category) return false;

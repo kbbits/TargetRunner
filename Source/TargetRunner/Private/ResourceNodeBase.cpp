@@ -34,6 +34,25 @@ void AResourceNodeBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AResourceNodeBase, CurrentHealth);
+	DOREPLIFETIME(AResourceNodeBase, ResourcesByDamageCurrent);
+}
+
+void AResourceNodeBase::OnRep_CurrentHealth_Implementation()
+{
+}
+
+void AResourceNodeBase::OnRep_ResourcesByDamageCurrent()
+{
+}
+
+void AResourceNodeBase::ServerSetCurrentHealth_Implementation(const float NewCurrentHealth)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		CurrentHealth = NewCurrentHealth;
+		// Replication will call this on clients. This is a direct call for server.
+		OnRep_CurrentHealth();
+	}	
 }
 
 TArray<FResourceQuantity> AResourceNodeBase::GetResourceQuantities_Implementation()
@@ -55,8 +74,7 @@ float AResourceNodeBase::GetResourceQuantity_Implementation(const FResourceType 
 	return QuantityTotal;	
 }
 
-
-bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float Damage, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities, const bool bReduceCurrent)
+bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float Damage, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities)
 {
 	ExtractedQuantities.Empty();
 	// If we have no resources by damage just return
@@ -86,10 +104,7 @@ bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float D
 				{
 					CurrentQuantity = ResourcesByDamageCurrent[i].Quantity;
 					if (ExtractedQuantity > CurrentQuantity) { ExtractedQuantity = CurrentQuantity; }
-					if (bReduceCurrent)
-					{
-						ResourcesByDamageCurrent[i].Quantity = ResourcesByDamageCurrent[i].Quantity - ExtractedQuantity;
-					}
+					
 					bFound = true;
 				}
 			}
@@ -99,6 +114,29 @@ bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float D
 	return ExtractedQuantities.Num() > 0;
 }
 
+void AResourceNodeBase::ServerExtractResourcesForDamage_Implementation(const TArray<FResourceQuantity>& ExtractQuantities)
+{
+	if (ExtractQuantities.Num() > 0 && GetLocalRole() == ROLE_Authority)
+	{
+		bool bFound = false;
+		bool bFoundAny = false;
+		for (FResourceQuantity Extracted : ExtractQuantities)
+		{
+			bFound = false;
+			for (int32 i = 0; !bFound && i < ResourcesByDamageCurrent.Num(); i++)
+			{
+				if (ResourcesByDamageCurrent[i].ResourceType == Extracted.ResourceType)
+				{
+					ResourcesByDamageCurrent[i].Quantity = ResourcesByDamageCurrent[i].Quantity - Extracted.Quantity;
+					bFound = true;
+					bFoundAny = true;
+				}
+			}
+		}
+		// Manually call OnRep so server gets it too.
+		if (bFoundAny) { OnRep_ResourcesByDamageCurrent(); }
+	}
+}
 
 bool AResourceNodeBase::ExtractedResourcesOnDestroy_Implementation(const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities)
 {

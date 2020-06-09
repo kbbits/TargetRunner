@@ -17,9 +17,6 @@ public:
 	// Sets default values for this actor's properties
 	ATRPickupBase(const FObjectInitializer& OI);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		USceneComponent* RootScene;
-
 	// Goods collected from this pickup
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 		TArray<FGoodsQuantity> PickupGoods;
@@ -27,6 +24,10 @@ public:
 	// If this pickup has already been collected - but still exists for some reason.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_Collected)
 		bool bCollected;
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		USceneComponent* RootScene;
 
 protected:
 	// Called when the game starts or when spawned
