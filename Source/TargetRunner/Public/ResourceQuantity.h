@@ -27,18 +27,6 @@ public:
 		Quantity = 0.0f;
 	}
 
-	FResourceQuantity(const FName& NewResourceCategory, const FName& NewResourceType, const float NewQuantity)
-	{
-		ResourceType = FResourceType(NewResourceCategory, NewResourceType);
-		Quantity = NewQuantity;
-	}
-
-	FResourceQuantity(const FName& NewResourceCategory, const FName& NewResourceType, const FName& NewResourceSubType, const float NewQuantity)
-	{
-		ResourceType = FResourceType(NewResourceCategory, NewResourceType, NewResourceSubType);
-		Quantity = NewQuantity;
-	}
-
 	FResourceQuantity(const FResourceType& NewType, const float NewQuantity)
 	{
 		ResourceType = NewType;

@@ -22,9 +22,10 @@ public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, SaveGame, Meta = (ExposeOnSpawn = "true"))
 		int32 GridY;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bCanRemoveDynamic;
 
+	// Only valid on server!
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		APlatformGridMgr* MyGridManager;
 

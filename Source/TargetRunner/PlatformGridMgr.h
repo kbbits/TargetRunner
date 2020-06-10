@@ -19,6 +19,9 @@ enum class EInGrid : uint8
 	InGrid  	UMETA(DisplayName = "In Grid")
 };
 
+
+// A validly poplulated PlatformGridMgr may only exist on the server.  The grid is not (currently) replicated.
+// Only PlatformBase actors that exist when FillGridFromExistingPlatforms() is called will be in the grid.
 UCLASS()
 class TARGETRUNNER_API APlatformGridMgr : public AActor
 {
@@ -29,45 +32,48 @@ public:
 	APlatformGridMgr();
 	
 	// Rows are along grid x axis, columns (elements in each row) are grid Y axis
+	// NOTE: On clients, oly PlatformBase actors that exist when FillGridFromExistingPlatforms() is called will be in the grid.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<int32, FPlatformGridRow> PlatformGridMap;
 
 	// The size, in world units, of each grid cell.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		float GridCellWorldSize;
 
 	// Grid extents indicate the overall size of the grid. That is, the minimum and maxium valid grid coordinates.
 	// Min extents are negative, max extents are positive, origin is at 0,0.
 	// GridExtentMinX must be <= 0
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 GridExtentMinX;
 	// Must be >= 0
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 GridExtentMaxX;
 	// Must be <= 0
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 GridExtentMinY;
 	// Must be >= 0
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 GridExtentMaxY;
 
-	// Location for player start
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	// Location for player starts
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		FVector2D StartGridCoords;
 
 	// Location of level exit
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		FVector2D ExitGridCoords;
 
 	// The number of subdivisions along each X & Y axis that each cell is divided.
 	// Creating RoomCellSubdivision x RoomCellSubdivision total subcells in each cell.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 RoomCellSubdivision;
 	
+	// Should only be used on server.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FRandomStream GridRandStream;
 
 	// A map of actor references initialized and used at runtime for efficiency.
+	// Only valid on server.
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 		TMap<FName, AActor*> GridActorCache;
 
@@ -81,8 +87,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Fills (or re-fills) the platform grid from existing platform actors.
 	UFUNCTION(BlueprintCallable)
-		void Setup();
+		void FillGridFromExistingPlatforms();
+
+	// To have the clients re-fill their platform grids.
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
+		void ClientFillGridFromExistingPlatforms();
 
 	UFUNCTION(BlueprintPure)
 		FTransform GetGridCellWorldTransform(const FVector2D& GridCoords);
@@ -106,6 +117,8 @@ public:
 		APlatformBase* GetPlatformInGridMap(const int32 X, const int32 Y, bool& Found);
 	UFUNCTION(BlueprintCallable)
 		APlatformBase* GetPlatformInGrid(const FVector2D Coords, bool& Found);
+	UFUNCTION(BlueprintCallable)
+		APlatformBase* GetPlatformNeighbor(const FVector2D& MyCoords, const ETRDirection DirectionToNeighbor);
 
 	UFUNCTION(BlueprintCallable)
 		APlatformBase* RemovePlatformFromGridMap(const int32 X, const int32 Y, bool& Success);

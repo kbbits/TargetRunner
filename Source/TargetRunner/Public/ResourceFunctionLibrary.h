@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "ResourceTypeData.h"
 #include "ResourceType.h"
 #include "ResourceRateFilter.h"
 #include "ResourceQuantity.h"
@@ -39,6 +40,12 @@ public:
 		static TArray<FResourceQuantity> AddResourceQuantities(const TArray<FResourceQuantity>& QuantitiesOne, const TArray<FResourceQuantity>& QuantitiesTwo);
 
 	// Helper to get the Goods.Name for the specified ResourceType
+	// If we change to support ResourceTypeData mapping to Goods.Name by something other than Type, we'll need to change this.
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
-		static FName GetGoodsNameForResource(const FResourceType& ResourceType);
+		static FName GoodsNameForResource(const FResourceType& ResourceType);
+
+	// Helper to convert a ResourceTypeData into a ResourceType
+	UFUNCTION(BlueprintPure, Category = "Resource Funtions")
+		static void ResourceTypeForData(const FResourceTypeData& ResourceData, FResourceType& ResourceType);
+
 };

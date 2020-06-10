@@ -119,7 +119,26 @@ TArray<FResourceQuantity> UResourceFunctionLibrary::AddResourceQuantities(const 
 	return TotalResources;
 }
 
-FName UResourceFunctionLibrary::GetGoodsNameForResource(const FResourceType& ResourceType)
+FName UResourceFunctionLibrary::GoodsNameForResource(const FResourceType& ResourceType)
 {
 	return ResourceType.Type;
+}
+
+void UResourceFunctionLibrary::ResourceTypeForData(const FResourceTypeData& ResourceData, FResourceType& ResourceType)
+{
+	if (!ResourceData.Code.IsNone())
+	{
+		TArray<FString> CodeStrings;
+		ResourceData.Code.ToString().ParseIntoArray(CodeStrings, TEXT("."), true);
+		ResourceType = FResourceType(
+			ResourceData.Code,												/* Code */
+			CodeStrings.IsValidIndex(0) ? FName(*CodeStrings[0]) : FName(), /* Category */
+			CodeStrings.IsValidIndex(1) ? FName(*CodeStrings[1]) : FName(), /* Type */
+			CodeStrings.IsValidIndex(2) ? FName(*CodeStrings[2]) : FName()  /* SubType */
+		);
+	}
+	else
+	{
+		ResourceType = FResourceType();
+	}
 }

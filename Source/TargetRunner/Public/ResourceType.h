@@ -13,10 +13,17 @@ struct FResourceType //: public FTableRowBase
 public:
 
 	// Required
+	// This should be set as the row name when resource data is loaded from the data table.
+	// It should be in format : Category.Type.SubType
+	//    ex: Metal.Copper  or  Metal.Copper.Oxidized
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FName Code;
+
+	// Required
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Category;
 
-	// Required - By default this will match the GoodsType.Name related to this resource. 
+	// Required - By default this must match the GoodsType.Name related to this resource. 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Type;
 
@@ -24,38 +31,42 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName SubType;
 
-	// Optional. Usually the GoodsType related to a ResourceType is GoodsType.Name == ResourceType.Type
-	// Set this GoodsNameOverride to associate this ResourceType with a different Goods Type.
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-	//	FName GoodsNameOverride;
-
 public:
 	FResourceType()
 	{
+		Code = FName();
 		Category = FName();
 		Type = FName();
 		SubType = FName();
-		//GoodsNameOverride = FName();
 	}
 
-	FResourceType(const FName& ResourceCategory, const FName& ResourceType)
+	FResourceType(const FName& _Code, const FName& _Category, const FName& _Type, const FName& _SubType)
 	{
-		Category = ResourceCategory;
-		Type = ResourceType;
-		SubType = FName();
-		//GoodsNameOverride = FName();
+		Code = _Code;
+		Category = _Category;
+		Type = _Type;
+		SubType = _SubType;
 	}
+		
+	//FResourceType(const FString& ResourceCode)
+	//{
+	//	TArray<FString> CodeStrings;
+	//	ResourceCode.ParseIntoArray(CodeStrings, TEXT("."), false);
+	//	Code = FName(*ResourceCode);
+	//	Category = CodeStrings.IsValidIndex(0) ? FName(*CodeStrings[0]) : FName();
+	//	Type = CodeStrings.IsValidIndex(1) ? FName(*CodeStrings[1]) : FName();
+	//	SubType = CodeStrings.IsValidIndex(2) ? FName(*CodeStrings[2]) : FName();
+	//}
 
-	FResourceType(const FName& ResourceCategory, const FName& ResourceType, const FName& ResourceSubType)
-	{
-		Category = ResourceCategory;
-		Type = ResourceType;
-		SubType = ResourceSubType;
-		//GoodsNameOverride = FName();
-	}
-
+	//FResourceType(const FName& ResourceCode)
+	//{
+	//	FResourceType(ResourceCode.ToString());
+	//}
+	
+		
 	bool operator==(const FResourceType& Other) const
 	{
+		if (Code != Other.Code) return false;
 		if (Category != Other.Category) return false;
 		if (Type != Other.Type) return false;
 		if (SubType != Other.SubType) return false;

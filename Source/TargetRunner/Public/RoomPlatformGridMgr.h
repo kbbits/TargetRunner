@@ -18,24 +18,24 @@ public:
 	ARoomPlatformGridMgr();
 	
 	// If true, new start and end coords will be generated when grid is generated.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		bool bGenerateStartEnd;
 
 	// For dev-time use. To auto-spawn the whole grid during GenerateGrid
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		bool bSpawnGridAfterGenerate;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn="true"))
 		TSubclassOf<UGridForgeBase> GridForgeClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		TSubclassOf<ARoomPlatformBase> RoomClass;
 	
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 		FRoomGridTemplate RoomGridTemplate;
 
 	// These cells are not available to be part of the maze grid
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 		TArray<FVector2D> BlackoutCells;
 	
 protected:
@@ -48,6 +48,9 @@ public:
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 		void SpawnRoom(FVector2D GridCoords);
+
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
+		void ClientUpdateRoomGridTemplate(const FRoomGridTemplate& UpdatedTemplate);
 
 	virtual void GenerateGridImpl() override;
 

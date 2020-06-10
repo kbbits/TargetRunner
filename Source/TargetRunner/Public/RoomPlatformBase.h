@@ -47,8 +47,10 @@ public:
 	UFUNCTION(BlueprintCallable, CallInEditor)
 		bool CalculateWalls();
 	
+	// Spawns the walls.
+	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		bool SpawnWalls();
+		void SpawnWalls();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

@@ -26,19 +26,7 @@ public:
 		ResourceTypeFilter = FResourceType();
 		Rate = 0.0f;
 	}
-
-	FResourceRateFilter(const FName& FilteredCategory, const FName& FilteredType, const float NewRate)
-	{
-		ResourceTypeFilter = FResourceType(FilteredCategory, FilteredType);
-		Rate = NewRate;
-	}
-
-	FResourceRateFilter(const FName& FilteredCategory, const FName& FilteredType, const FName& FilteredSubType, const float NewRate)
-	{
-		ResourceTypeFilter = FResourceType(FilteredCategory, FilteredType, FilteredSubType);
-		Rate = NewRate;
-	}
-
+		
 	FResourceRateFilter(const FResourceType& FilteredType, const float NewRate)
 	{
 		ResourceTypeFilter = FilteredType;

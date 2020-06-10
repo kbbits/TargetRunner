@@ -17,7 +17,7 @@ void UGridForgeManual::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStrea
 
 	Successful = false;
 
-	TArray<ETRWallState> DoorWall;
+	/*TArray<ETRWallState> DoorWall;
 	DoorWall.Add(ETRWallState::Blocked);
 	DoorWall.Add(ETRWallState::Open);
 	DoorWall.Add(ETRWallState::Blocked);
@@ -30,20 +30,19 @@ void UGridForgeManual::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStrea
 	TArray<ETRWallState> EmptyWall;
 	EmptyWall.Add(ETRWallState::Empty);
 	EmptyWall.Add(ETRWallState::Empty);
-	EmptyWall.Add(ETRWallState::Empty);
+	EmptyWall.Add(ETRWallState::Empty);*/
 
 	// Generate each cell in the grid
 	FRoomTemplate Room;
-	Room.WallTemplate.Append(DoorWall);
-	Room.WallTemplate.Append(SolidWall);
-	Room.WallTemplate.Append(SolidWall);
-	Room.WallTemplate.Append(SolidWall);
+	Room.NorthWall = ETRWallState::Door;
+	Room.EastWall = ETRWallState::Blocked;
+	Room.SouthWall = ETRWallState::Blocked;
+	Room.WestWall = ETRWallState::Blocked;
 	GetRoomRow(RoomGridTemplate, 0)->RowRooms.Add(0, Room);
-	Room.WallTemplate.Empty();
-	Room.WallTemplate.Append(SolidWall);
-	Room.WallTemplate.Append(SolidWall);
-	Room.WallTemplate.Append(EmptyWall);
-	Room.WallTemplate.Append(SolidWall);
+	Room.NorthWall = ETRWallState::Blocked;
+	Room.EastWall = ETRWallState::Blocked;
+	Room.SouthWall = ETRWallState::Empty;
+	Room.WestWall = ETRWallState::Blocked;
 	GetRoomRow(RoomGridTemplate, 1)->RowRooms.Add(0, Room);
 
 	Successful = true;

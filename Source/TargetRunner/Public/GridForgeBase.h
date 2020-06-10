@@ -35,7 +35,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TMap<int32, UGridTemplateCellRow*> GridTemplateCells;
 
-    // These cells are not available to be part of the maze grid
+    // These cells are not available to be part of the maze grid. Set these before generating grid.
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TArray<FVector2D> BlackoutCells;
 
@@ -57,10 +57,14 @@ protected:
 
     FRoomTemplate* GetRoomNeighbor(FRoomGridTemplate& RoomGridTemplate, const FVector2D& Coords, const ETRDirection Direction);
 
+    // Walls only "belong" to one room. If the neighbor has already determined the wall state (Blocked or Door), then we leave this one empty.
+    // Change logic in here to change which rooms "own" the filled (i.e. non Empty) wall states.
     ETRWallState GetWallStateFromNeighbor(const ETRWallState NeighborState, const bool bConnectedToNeighbor);
 
+    // Take our grid of cells and translate it to fill out the room grid in the RoomGridTemplate.
     void TranslateCellGridToRoomGrid(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate);
 
+    // Take a given grid cell and translte it to a RoomTemplate, then put that into the room grid in the RoomGridTemplate.
     void TranslateCellToRoom(UPARAM(ref) FRandomStream& RandStream, UGridTemplateCell* Cell, FRoomGridTemplate& RoomGridTemplate);
 
     // Grid cells related - for generating the base cell maze data.
@@ -86,5 +90,6 @@ protected:
     // If there are no start or end cells selected, select one of each and set it in the RoomTemplateGrid.
     void PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate);    
     
+    // Debug
     FString RoomToString(const FRoomTemplate& Room);
 };

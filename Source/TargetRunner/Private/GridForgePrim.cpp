@@ -68,10 +68,11 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 		}
 				
 		GetUnflaggedCellNeighbors(CurCoords.X, CurCoords.Y, NeighborCells);
-
+		
 		if (NeighborCells.Num() == 0)
 		{
 			ActiveCoords.Remove(CurCoords);
+			NextCoords = CurCoords;
 			UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Removing X:%d Y:%d from active."), (int32)CurCoords.X, (int32)CurCoords.Y);
 		}
 		else
@@ -82,18 +83,17 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 			CurCell->ConnectedCells.Add(NextCoords);
 			UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Connected current cell X:%d Y:%d to neighbor X:%d Y:%d. Total connections: %d"), CurCell->X, CurCell->Y, NextCell->X, NextCell->Y, CurCell->ConnectedCells.Num());
 			ConnectedCellCount++;
-			// Check if we found the end cell.
-			if (EndCoords == NextCoords)
-			{
-				// Stop creating more cells.
-				ActiveCoords.Empty();
-				bSuccessful = true;
-				UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Found end grid cell X:%d Y:%d"), (int32)NextCoords.X, (int32)NextCoords.Y);
-			}
-			else
-			{
-				ActiveCoords.Add(NextCoords);
-			}
+			ActiveCoords.Add(NextCoords);
+		}
+
+		// Check if we found the end cell.
+		// Putting this down here handles case when start == end and grid size is only one cell.
+		if (EndCoords == NextCoords)
+		{
+			// Stop creating more cells.
+			ActiveCoords.Empty();
+			bSuccessful = true;
+			UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Found end grid cell X:%d Y:%d"), (int32)NextCoords.X, (int32)NextCoords.Y);
 		}
 		CurCell = nullptr;
 	}

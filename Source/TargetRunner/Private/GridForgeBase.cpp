@@ -18,7 +18,7 @@ void UGridForgeBase::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream,
 
 	Successful = false;
 
-	TArray<ETRWallState> DoorWall; 
+	/*TArray<ETRWallState> DoorWall; 
 	DoorWall.Add(ETRWallState::Blocked);
 	DoorWall.Add(ETRWallState::Open);
 	DoorWall.Add(ETRWallState::Blocked);
@@ -31,7 +31,7 @@ void UGridForgeBase::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream,
 	TArray<ETRWallState> EmptyWall;
 	EmptyWall.Add(ETRWallState::Empty);
 	EmptyWall.Add(ETRWallState::Empty);
-	EmptyWall.Add(ETRWallState::Empty);
+	EmptyWall.Add(ETRWallState::Empty);*/
 
 	// Generate each cell in the grid
 	FRoomTemplate Room;
@@ -39,20 +39,11 @@ void UGridForgeBase::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream,
 	Room.EastWall = ETRWallState::Blocked;
 	Room.SouthWall = ETRWallState::Blocked;
 	Room.WestWall = ETRWallState::Blocked;
-	Room.WallTemplate.Append(DoorWall);
-	Room.WallTemplate.Append(SolidWall);
-	Room.WallTemplate.Append(SolidWall);
-	Room.WallTemplate.Append(SolidWall);
 	GetRoomRow(TemplateGrid, 0)->RowRooms.Add(0, Room);
-	Room.NorthWall = ETRWallState::Door;
+	Room.NorthWall = ETRWallState::Blocked;
 	Room.EastWall = ETRWallState::Blocked;
-	Room.SouthWall = ETRWallState::Blocked;
+	Room.SouthWall = ETRWallState::Empty;
 	Room.WestWall = ETRWallState::Blocked;
-	Room.WallTemplate.Empty();
-	Room.WallTemplate.Append(SolidWall);
-	Room.WallTemplate.Append(SolidWall);
-	Room.WallTemplate.Append(EmptyWall);
-	Room.WallTemplate.Append(SolidWall);
 	GetRoomRow(TemplateGrid, 1)->RowRooms.Add(0, Room);
 
 	Successful = true;
@@ -123,16 +114,16 @@ FRoomTemplate* UGridForgeBase::GetRoomNeighbor(FRoomGridTemplate& RoomGridTempla
 	switch (Direction)
 	{
 	case ETRDirection::North:
-		Room = GetRoom(RoomGridTemplate, Coords + FVector2D(1, 0), bFound);
+		Room = GetRoom(RoomGridTemplate, Coords + FVector2D(1.0f, 0.0f), bFound);
 		break;
 	case ETRDirection::East:
-		Room = GetRoom(RoomGridTemplate, Coords + FVector2D(0, 1), bFound);
+		Room = GetRoom(RoomGridTemplate, Coords + FVector2D(0.0f, 1.0f), bFound);
 		break;
 	case ETRDirection::South:
-		Room = GetRoom(RoomGridTemplate, Coords + FVector2D(-1, 0), bFound);
+		Room = GetRoom(RoomGridTemplate, Coords + FVector2D(-1.0f, 0.0f), bFound);
 		break;
 	case ETRDirection::West:
-		Room = GetRoom(RoomGridTemplate, Coords + FVector2D(0, -1), bFound);
+		Room = GetRoom(RoomGridTemplate, Coords + FVector2D(0.0f, -1.0f), bFound);
 	}
 	if (!bFound) { return nullptr; }
 	return Room;

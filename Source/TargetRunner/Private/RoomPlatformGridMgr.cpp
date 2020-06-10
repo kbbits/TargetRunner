@@ -14,6 +14,13 @@ ARoomPlatformGridMgr::ARoomPlatformGridMgr()
 
 }
 
+void ARoomPlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ARoomPlatformGridMgr, BlackoutCells);
+}
+
 // Called when the game starts or when spawned
 void ARoomPlatformGridMgr::BeginPlay()
 {
@@ -106,6 +113,12 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 		UE_LOG(LogTRGame, Warning, TEXT("Grid generation failed with grid forge: %s"), *GetNameSafe(GridForge));
 	}
 	GridForge->EmptyGridTemplateCells();
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// Update the clients' room grid template
+		ClientUpdateRoomGridTemplate(RoomGridTemplate);
+	}
 }
 
 void ARoomPlatformGridMgr::DestroyGridImpl()
@@ -140,6 +153,12 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 	RoomGridTemplate.Grid.Empty();
 	RoomGridTemplate.StartCells.Empty();
 	RoomGridTemplate.EndCells.Empty();
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// Update the clients' room grid template
+		ClientUpdateRoomGridTemplate(RoomGridTemplate);
+	}
 }
 
 void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
@@ -188,7 +207,7 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	NewRoom->MyGridManager = this;
 	NewRoom->GridX = GridCoords.X;
 	NewRoom->GridY = GridCoords.Y;
-	// Create wall template
+	// Create wall template, sized so each of the four walls gets [RoomCellSubdivision] entries.
 	NewRoom->WallTemplate.Empty(4 * RoomGridTemplate.RoomCellSubdivision);
 	TArray<ETRWallState> Walls;
 	Walls.Add(RoomTemplate->NorthWall);
@@ -202,6 +221,15 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	}
 	AddPlatformToGridMap(NewRoom);
 	NewRoom->GenerateRoom();
+}
+
+void ARoomPlatformGridMgr::ClientUpdateRoomGridTemplate_Implementation(const FRoomGridTemplate& UpdatedTemplate)
+{
+	// Multicast replication but only needed on clients.
+	if (GetLocalRole() < ROLE_Authority)
+	{
+		RoomGridTemplate = UpdatedTemplate;
+	}
 }
 
 TArray<FRoomTemplate*> ARoomPlatformGridMgr::GetAllRoomTemplates()

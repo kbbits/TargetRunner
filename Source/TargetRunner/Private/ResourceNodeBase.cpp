@@ -82,7 +82,7 @@ bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float D
 	// If no damage or extraction rates is empty just return
 	if (Damage <= 0 || ExtractionRates.Num() == 0) { return false; }
 
-	float DamagePercent = BaseHealth > 0 ? FMath::Clamp<float>(Damage / BaseHealth, 0.0, 1.0) : 0.0f;
+	float DamagePercent = BaseHealth > 0.0f ? FMath::Clamp<float>(Damage / BaseHealth, 0.0f, 1.0f) : 0.0f;
 	float CurrentQuantity;
 	float ExtractedQuantity;
 	bool bFound;
@@ -104,7 +104,6 @@ bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float D
 				{
 					CurrentQuantity = ResourcesByDamageCurrent[i].Quantity;
 					if (ExtractedQuantity > CurrentQuantity) { ExtractedQuantity = CurrentQuantity; }
-					
 					bFound = true;
 				}
 			}
@@ -114,9 +113,9 @@ bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float D
 	return ExtractedQuantities.Num() > 0;
 }
 
-void AResourceNodeBase::ServerExtractResourcesForDamage_Implementation(const TArray<FResourceQuantity>& ExtractQuantities)
+void AResourceNodeBase::ServerExtractResources_Implementation(const TArray<FResourceQuantity>& ExtractQuantities)
 {
-	if (ExtractQuantities.Num() > 0 && GetLocalRole() == ROLE_Authority)
+	if (ExtractQuantities.Num() > 0 && GetLocalRole() == ROLE_Authority) // Don't actually need auth check - function runs on server.
 	{
 		bool bFound = false;
 		bool bFoundAny = false;
@@ -127,7 +126,7 @@ void AResourceNodeBase::ServerExtractResourcesForDamage_Implementation(const TAr
 			{
 				if (ResourcesByDamageCurrent[i].ResourceType == Extracted.ResourceType)
 				{
-					ResourcesByDamageCurrent[i].Quantity = ResourcesByDamageCurrent[i].Quantity - Extracted.Quantity;
+					ResourcesByDamageCurrent[i].Quantity = FMath::Max(ResourcesByDamageCurrent[i].Quantity - Extracted.Quantity, 0.0f);
 					bFound = true;
 					bFoundAny = true;
 				}

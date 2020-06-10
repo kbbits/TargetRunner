@@ -63,6 +63,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// Calculates the amount of resources that should be extracted for a given amount of damage and extraction rates.
+	// Makes no changes to current resource quantities.
 	// Returns true if any resources were calculated to be extracted.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		bool ExtractedResourcesForDamage(const float Damage, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
@@ -70,8 +71,8 @@ public:
 
 	// Reduces the current values in ResourcesForDamageCurrent.
 	UFUNCTION(Server, Reliable, BlueprintCallable)
-		void ServerExtractResourcesForDamage(const TArray<FResourceQuantity>& ExtractQuantities);
-	virtual void ServerExtractResourcesForDamage_Implementation(const TArray<FResourceQuantity>& ExtractQuantities);
+		void ServerExtractResources(const TArray<FResourceQuantity>& ExtractQuantities);
+	virtual void ServerExtractResources_Implementation(const TArray<FResourceQuantity>& ExtractQuantities);
 
 	// Calculates the amount of resources that should be extracted upon destruction with the given extraction rates.
 	// Returns true if any resources were calculated to be extracted.

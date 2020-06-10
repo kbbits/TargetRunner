@@ -97,12 +97,11 @@ bool ARoomPlatformBase::CalculateWalls()
 	}
 }
 
-bool ARoomPlatformBase::SpawnWalls_Implementation()
+void ARoomPlatformBase::SpawnWalls_Implementation()
 {
 	// Override and implement in BP.
 
 
-	return true;
 }
 
 void ARoomPlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const

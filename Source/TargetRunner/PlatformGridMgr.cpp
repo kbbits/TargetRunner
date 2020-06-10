@@ -13,6 +13,21 @@ APlatformGridMgr::APlatformGridMgr()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
+void APlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridCellWorldSize, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMinX, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMinY, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMaxX, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMaxY, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(APlatformGridMgr, StartGridCoords, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(APlatformGridMgr, ExitGridCoords, COND_InitialOnly);
+	DOREPLIFETIME_CONDITION(APlatformGridMgr, RoomCellSubdivision, COND_InitialOnly);
+
+}
+
 // Called when the game starts or when spawned
 void APlatformGridMgr::BeginPlay()
 {
@@ -50,7 +65,7 @@ void APlatformGridMgr::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void APlatformGridMgr::Setup()
+void APlatformGridMgr::FillGridFromExistingPlatforms()
 {
 	TArray<AActor*> FoundPlatforms;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlatformBase::StaticClass(), FoundPlatforms);
@@ -59,6 +74,15 @@ void APlatformGridMgr::Setup()
 	{
 		APlatformBase* Platform = Cast<APlatformBase>(TActor);
 		AddPlatformToGridMap(Platform);
+	}
+}
+
+void APlatformGridMgr::ClientFillGridFromExistingPlatforms_Implementation()
+{
+	// Multicast replication but only the clients need to update.
+	if (GetLocalRole() < ROLE_Authority)
+	{
+		FillGridFromExistingPlatforms();
 	}
 }
 
@@ -77,6 +101,12 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 	UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid."), *this->GetName());
 
 	GenerateGridImpl();
+
+	if (GetLocalRole() == ROLE_Authority)
+	{	
+		// Have the clients update their grid maps
+		ClientFillGridFromExistingPlatforms();
+	}
 }
 
 void APlatformGridMgr::GenerateGridImpl()
@@ -87,6 +117,11 @@ void APlatformGridMgr::GenerateGridImpl()
 void APlatformGridMgr::DestroyGrid_Implementation()
 {
 	DestroyGridImpl();
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// Have the clients update their grid maps
+		ClientFillGridFromExistingPlatforms();
+	}
 }
 
 void APlatformGridMgr::DestroyGridImpl()
@@ -145,6 +180,28 @@ APlatformBase * APlatformGridMgr::GetPlatformInGridMap(const int32 X, const int3
 APlatformBase* APlatformGridMgr::GetPlatformInGrid(const FVector2D Coords, bool& Found)
 {
 	return GetPlatformInGridMap(static_cast<int32>(Coords.X), static_cast<int32>(Coords.Y), Found);
+}
+
+APlatformBase* APlatformGridMgr::GetPlatformNeighbor(const FVector2D& MyCoords, const ETRDirection DirectionToNeighbor)
+{
+	APlatformBase* Platform = nullptr;
+	bool bFound = false;
+	switch (DirectionToNeighbor)
+	{
+	case ETRDirection::North:
+		Platform = GetPlatformInGrid(MyCoords + FVector2D(1.0f, 0.0f), bFound);
+		break;
+	case ETRDirection::East:
+		Platform = GetPlatformInGrid(MyCoords + FVector2D(0.0f, 1.0f), bFound);
+		break;
+	case ETRDirection::South:
+		Platform = GetPlatformInGrid(MyCoords + FVector2D(-1.0f, 0.0f), bFound);
+		break;
+	case ETRDirection::West:
+		Platform = GetPlatformInGrid(MyCoords + FVector2D(0.0f, -1.0f), bFound);
+	}
+	if (!bFound) { return nullptr; }
+	return Platform;
 }
 
 APlatformBase * APlatformGridMgr::RemovePlatformFromGridMap(const int32 X, const int32 Y, bool& Success)
