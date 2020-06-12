@@ -4,11 +4,12 @@
 #include "RoomPlatformBase.h"
 #include "TargetRunner.h"
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework/PlayerStart.h"
+#include "TR_GameMode.h"
 
 // Sets default values
 APlatformGridMgr::APlatformGridMgr()
 {
+	bReplicates = true;
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -36,26 +37,43 @@ void APlatformGridMgr::BeginPlay()
 
 void APlatformGridMgr::MovePlayerStarts()
 {
-	FVector InitialOffset(150.0, -200, 0.0);
-	int32 CurStart = 1;
-	TArray<AActor*> PlayerStarts;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStarts);
-	for (AActor* TmpActor : PlayerStarts)
+	FVector Offset(150.0, -200, 32.0);
+	int32 MaxPlayerStarts = 4;
+	APlayerStart* PlayerStart;
+	FTransform SpawnTransform;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	// First, destroy any we'd already spawned.
+	for (APlayerStart* tmpPlayerStart : PlayerStarts)
 	{
-		APlayerStart* PlayerStart = Cast<APlayerStart>(TmpActor);
-		PlayerStart->SetActorLocationAndRotation(
-			GetGridCellWorldTransform(StartGridCoords).GetLocation() + InitialOffset, 
-			FRotator(0.0, FMath::FRandRange(0.0, 360.0), 0.0)
-		);
-		if (CurStart % 3 == 0) 
-		{	
-			InitialOffset.Set(150.0 - ((CurStart / 3) * 150.0), -200, 0.0);
-		}
-		else
+		tmpPlayerStart->Destroy();
+	}
+	PlayerStarts.Empty(MaxPlayerStarts);
+
+	//UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), PlayerStarts);
+	//for (AActor* TmpActor : PlayerStarts)
+	for (int32 CurStart = 1; CurStart <= MaxPlayerStarts; CurStart++)
+	{
+		SpawnTransform = GetGridCellWorldTransform(StartGridCoords);
+		SpawnTransform.AddToTranslation(Offset);
+		SpawnTransform.SetRotation(FRotator(0.0, FMath::FRandRange(0.0, 360.0), 0.0).Quaternion());
+		PlayerStart = GetWorld()->SpawnActor<APlayerStart>(APlayerStart::StaticClass(), SpawnTransform, SpawnParams);
+		if (PlayerStart)
 		{
-			InitialOffset += FVector(0.0, 200.0, 0.0);
+			PlayerStart->PlayerStartTag = FName(FString::Printf(TEXT("Player%d.RoomStart"), CurStart));
+			PlayerStarts.Add(PlayerStart);
+			if (CurStart % 3 == 0)
+			{
+				Offset.Set(150.0 - ((CurStart / 3) * 150.0), -200, 32.0);
+			}
+			else
+			{
+				Offset += FVector(0.0, 200.0, 0.0);
+			}
 		}
-		CurStart++;
+		PlayerStart = nullptr;
+		//CurStart++;
 	}	
 }
 
@@ -100,13 +118,23 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 
 	UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid."), *this->GetName());
 
-	GenerateGridImpl();
-
-	if (GetLocalRole() == ROLE_Authority)
-	{	
-		// Have the clients update their grid maps
-		ClientFillGridFromExistingPlatforms();
+	// TODO Seed this correctly - currently uses values added in editor.
+	//GridRandStream.GenerateNewSeed();
+	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
+	if (GameMode)
+	{
+		FRandomStream& GridRandStream = GameMode->GetGridStream();
+		GridRandStream.Reset();
+		UE_LOG(LogTRGame, Log, TEXT("GridRandStream seed: %d"), GridRandStream.GetInitialSeed());	
 	}
+	else
+	{
+		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode."), *this->GetName());
+		return;
+	}
+
+	GenerateGridImpl();
+	
 }
 
 void APlatformGridMgr::GenerateGridImpl()
@@ -119,6 +147,13 @@ void APlatformGridMgr::DestroyGrid_Implementation()
 	DestroyGridImpl();
 	if (GetLocalRole() == ROLE_Authority)
 	{
+		// Destroy any player starts we spawned.
+		for (APlayerStart* tmpPlayerStart : PlayerStarts)
+		{
+			tmpPlayerStart->Destroy();
+		}
+		PlayerStarts.Empty();
+
 		// Have the clients update their grid maps
 		ClientFillGridFromExistingPlatforms();
 	}

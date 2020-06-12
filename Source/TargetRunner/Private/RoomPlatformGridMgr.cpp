@@ -5,6 +5,7 @@
 #include "TargetRunner.h"
 #include "Kismet/GameplayStatics.h"
 #include "..\Public\RoomPlatformGridMgr.h"
+#include "TR_GameMode.h"
 
 // Sets default values
 ARoomPlatformGridMgr::ARoomPlatformGridMgr()
@@ -43,11 +44,18 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid."), *this->GetName());
 
 	bool bSuccessful;
-	//GridForgeClass = UGridForgeBase::StaticClass();
-	
+	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
+	if (GameMode == nullptr)
+	{
+		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode."), *this->GetName());
+		return;
+	}
+
+	FRandomStream& GridRandStream = GameMode->GetGridStream();
 	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
 	if (GridForge)
 	{
+		// TODO: Generate blackout cells.
 		GridForge->BlackoutCells = BlackoutCells;
 	}
 	else
@@ -55,10 +63,6 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not construct GridForge."), *this->GetName());
 		return;
 	}
-	// TODO Seed this correctly - currently uses values added in editor.
-	//GridRandStream.GenerateNewSeed();
-	GridRandStream.Reset();
-	UE_LOG(LogTRGame, Log, TEXT("GridRandStream seed: %d"), GridRandStream.GetInitialSeed());
 	
 	RoomGridTemplate.GridCellWorldSize = GridCellWorldSize;
 	RoomGridTemplate.RoomCellSubdivision = RoomCellSubdivision;
@@ -82,36 +86,19 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	if (bSuccessful)
 	{
 		UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid successful."), *this->GetName());
-
 		StartGridCoords = RoomGridTemplate.StartCells[0];
-		ExitGridCoords = RoomGridTemplate.EndCells[0];
-		
+		ExitGridCoords = RoomGridTemplate.EndCells[0];		
 		MovePlayerStarts();
 		if (bSpawnGridAfterGenerate)
-		{
-			TArray<int32> RowNums;
-			TArray<int32> ColNums;
-			RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
-			for (int32 Row : RowNums)
-			{
-				ColNums.Empty(RoomGridTemplate.Grid.Find(Row)->RowRooms.Num());
-				RoomGridTemplate.Grid.Find(Row)->RowRooms.GenerateKeyArray(ColNums);
-				for (int32 Col : ColNums)
-				{
-					FRoomTemplate* Room = RoomGridTemplate.Grid.Find(Row)->RowRooms.Find(Col);
-					if (Room != nullptr)
-					{
-						SpawnRoom(FVector2D(Row, Col));
-					}
-				}
-			}
-
+		{	
+			SpawnRooms();
 		}
 	} 
 	else
 	{
 		UE_LOG(LogTRGame, Warning, TEXT("Grid generation failed with grid forge: %s"), *GetNameSafe(GridForge));
 	}
+	// Clear the cell grid, just to be tidy.
 	GridForge->EmptyGridTemplateCells();
 
 	if (GetLocalRole() == ROLE_Authority)
@@ -221,6 +208,32 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	}
 	AddPlatformToGridMap(NewRoom);
 	NewRoom->GenerateRoom();
+}
+
+void ARoomPlatformGridMgr::SpawnRooms_Implementation()
+{
+	TArray<int32> RowNums;
+	TArray<int32> ColNums;
+	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
+	for (int32 Row : RowNums)
+	{
+		ColNums.Empty(RoomGridTemplate.Grid.Find(Row)->RowRooms.Num());
+		RoomGridTemplate.Grid.Find(Row)->RowRooms.GenerateKeyArray(ColNums);
+		for (int32 Col : ColNums)
+		{
+			FRoomTemplate* Room = RoomGridTemplate.Grid.Find(Row)->RowRooms.Find(Col);
+			if (Room != nullptr)
+			{
+				SpawnRoom(FVector2D(Row, Col));
+			}
+		}
+	}
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// Have the clients update their grid maps
+		ClientFillGridFromExistingPlatforms();
+	}
 }
 
 void ARoomPlatformGridMgr::ClientUpdateRoomGridTemplate_Implementation(const FRoomGridTemplate& UpdatedTemplate)

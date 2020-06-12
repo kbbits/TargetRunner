@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Math/Vector.h"
+#include "GameFramework/PlayerStart.h"
 #include "PlatformBase.h"
 #include "RoomPlatformBase.h"
 #include "PlatformGridRow.h"
@@ -20,8 +21,8 @@ enum class EInGrid : uint8
 };
 
 
-// A validly poplulated PlatformGridMgr may only exist on the server.  The grid is not (currently) replicated.
-// Only PlatformBase actors that exist when FillGridFromExistingPlatforms() is called will be in the grid.
+// A validly poplulated PlatformGridMgr may only exist on the server.  The grid is not (currently) directly replicated.
+// On clients, only PlatformBase actors that exist when FillGridFromExistingPlatforms() is called will be in the grid.
 UCLASS()
 class TARGETRUNNER_API APlatformGridMgr : public AActor
 {
@@ -55,11 +56,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 GridExtentMaxY;
 
-	// Location for player starts
+	// Location for player starts. Usually determined during grid generation.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		FVector2D StartGridCoords;
 
-	// Location of level exit
+	// Location of level exit. Usually determined during grid generation.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		FVector2D ExitGridCoords;
 
@@ -68,14 +69,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 RoomCellSubdivision;
 	
+	// TODO: Replace this with usage of the randstream in TR_GameMode.
 	// Should only be used on server.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FRandomStream GridRandStream;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//	FRandomStream GridRandStream;
 
 	// A map of actor references initialized and used at runtime for efficiency.
 	// Only valid on server.
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 		TMap<FName, AActor*> GridActorCache;
+
+protected:
+
+	TArray<APlayerStart*> PlayerStarts;
 
 protected:
 	// Called when the game starts or when spawned
@@ -101,7 +107,7 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 		void GenerateGrid();
 
-	// Called by GenerateGrid. Subclasses should override this one.
+	// Called by GenerateGrid. Native subclasses should override this one.
 	virtual void GenerateGridImpl();
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)

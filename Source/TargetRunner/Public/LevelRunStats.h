@@ -10,6 +10,10 @@ struct FLevelRunStats : public FTableRowBase
 	GENERATED_BODY()
 
 public:
+	// The seed (ID) related to this level.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 LevelSeed;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		bool ShownToPlayer;
 
@@ -24,11 +28,7 @@ public:
 	// Time played in the level run.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float LevelTime;
-
-	// Seed used to generate the level
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float LevelSeed;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FGoodsQuantity> GoodsEarned;
 };

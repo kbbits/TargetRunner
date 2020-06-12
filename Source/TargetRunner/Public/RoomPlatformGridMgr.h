@@ -25,16 +25,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		bool bSpawnGridAfterGenerate;
 	
+	// This is set by the GameMode during InitGridManager
+	// Can be setup manually for use in-editor.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn="true"))
 		TSubclassOf<UGridForgeBase> GridForgeClass;
 
+	// This is set by the GameMode during InitGridManager
+	// Can be set manually for use in-editor.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		TSubclassOf<ARoomPlatformBase> RoomClass;
 	
+	// A grid containing the temlates for the rooms. This is populated during grid generation.
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 		FRoomGridTemplate RoomGridTemplate;
 
-	// These cells are not available to be part of the maze grid
+	// These cells are not available to be part of the maze grid.
+	// These are determined during grid generation.
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 		TArray<FVector2D> BlackoutCells;
 	
@@ -46,8 +52,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
+	// Spanwn the room from the room template grid with the given coordinates.
+	UFUNCTION(Server, Reliable, BlueprintCallable)
 		void SpawnRoom(FVector2D GridCoords);
+
+	// Spawns all rooms in the room templat grid
+	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
+		void SpawnRooms();
 
 	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
 		void ClientUpdateRoomGridTemplate(const FRoomGridTemplate& UpdatedTemplate);
