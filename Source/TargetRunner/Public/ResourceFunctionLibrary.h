@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "ResourceTypeData.h"
+#include "ResourceTypeDataCollection.h"
 #include "ResourceType.h"
 #include "ResourceRateFilter.h"
 #include "ResourceQuantity.h"
@@ -47,5 +48,16 @@ public:
 	// Helper to convert a ResourceTypeData into a ResourceType
 	UFUNCTION(BlueprintPure, Category = "Resource Funtions")
 		static void ResourceTypeForData(const FResourceTypeData& ResourceData, FResourceType& ResourceType);
+
+	// Searches the data table and returns all ResourceTypeDatas where MinTier <= Resource.Tier <= MaxTier.
+	// Returns the number of resources found.
+	UFUNCTION(BlueprintPure, Category = "Resource Functions")
+		static int32 ResourceDataInTier(const UDataTable* ResourceDataTable, const float MinTier, const float MaxTier, TArray<FResourceTypeData>& ResourceData);
+
+	// Searches the data table and returns all ResourceTypeDatas where MinTier <= Resource.Tier <= MaxTier.
+	// Returns ResourceData as a map of Tier -> ResourceTypeDataCollection, which will contain resources of that tier.
+	// Returns the number of resources found.
+	UFUNCTION(BlueprintPure, Category = "Resource Functions")
+		static int32 ResourceDataByTier(const UDataTable* ResourceDataTable, const float MinTier, const float MaxTier, TMap<int32, FResourceTypeDataCollection>& ResourceDataByTier);
 
 };

@@ -9,6 +9,7 @@ bool UGoodsDropper::AddDropTableDataToLibrary(UDataTable* GoodsDropTableData)
 	TArray<FName> RowNames = GoodsDropTableData->GetRowNames();
 	if (RowNames.Num() > 0)
 	{
+		// Check that this is a table of FGoodsDropTable rows.
 		FGoodsDropTable* FirstTable = GoodsDropTableData->FindRow<FGoodsDropTable>(RowNames[0], "", false);
 		if (FirstTable == nullptr)
 		{

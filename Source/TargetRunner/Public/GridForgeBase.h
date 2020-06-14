@@ -17,6 +17,25 @@ class TARGETRUNNER_API UGridForgeBase : public UObject
     GENERATED_BODY()
 
 public:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        TMap<int32, UGridTemplateCellRow*> GridTemplateCells;
+
+    // These cells are not available to be part of the maze grid. Set these before generating grid.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        TArray<FVector2D> BlackoutCells;
+
+    int32 GridExtentMinX;
+    int32 GridExtentMaxX;
+    int32 GridExtentMinY;
+    int32 GridExtentMaxY;
+
+protected:
+
+#if WITH_EDITOR
+    const bool bEnableClassDebugLog = false;
+#endif
+
+public:
 
     UFUNCTION(BlueprintCallable)
         virtual void GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate, bool& Successful);
@@ -30,19 +49,6 @@ public:
 
     UFUNCTION(BlueprintCallable)
         void EmptyGridTemplateCells();
-
-public:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        TMap<int32, UGridTemplateCellRow*> GridTemplateCells;
-
-    // These cells are not available to be part of the maze grid. Set these before generating grid.
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        TArray<FVector2D> BlackoutCells;
-
-    int32 GridExtentMinX;
-    int32 GridExtentMaxX;
-    int32 GridExtentMinY;
-    int32 GridExtentMaxY;
 
 protected:
 
@@ -92,4 +98,9 @@ protected:
     
     // Debug
     FString RoomToString(const FRoomTemplate& Room);
+#if WITH_EDITOR
+    FORCEINLINE void DebugLog(const FString& LogString) { if (bEnableClassDebugLog) { UE_LOG(LogTRGame, Log, TEXT("%s"), *LogString); } };
+#else
+    FORCEINLINE void DebugLog(const FString& LogString) { };
+#endif
 };

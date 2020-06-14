@@ -72,7 +72,14 @@ bool ATR_GameMode::InitGridManager_Implementation()
 {
 	// Initializes our reference
 	GetGridManager();
-	if (GridManager == nullptr || !LevelTemplate.IsValid()) { return false; }
+	if (GridManager == nullptr) { 
+		UE_LOG(LogTRGame, Warning, TEXT("InitGridManager could not find any grid manager actors")); 
+		return false;
+	}
+	if (!LevelTemplate.IsValid()) { 
+		UE_LOG(LogTRGame, Warning, TEXT("InitGridManager invalid level tempate. LevelSeed: %d"), LevelTemplate.LevelSeed);
+		return false; 
+	}
 
 	FVector2D MinExtents;
 	FVector2D MaxExtents;
@@ -89,7 +96,9 @@ bool ATR_GameMode::InitGridManager_Implementation()
 	{
 		RoomGridManager->GridForgeClass = GetGridForgeClass();
 		RoomGridManager->RoomClass = GetRoomClass();
-	}	
+	}
+
+	UE_LOG(LogTRGame, Log, TEXT("InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)
 	return true;
 }
 

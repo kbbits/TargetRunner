@@ -41,7 +41,7 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	// Destroy old grid, if any
 	DestroyGrid();
 
-	UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid."), *this->GetName());
+	DebugLog(FString::Printf(TEXT("%s GenerateGrid - Generating grid. Extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), *this->GetName(), GridExtentMinX, GridExtentMinY, GridExtentMaxX, GridExtentMaxY));
 
 	bool bSuccessful;
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
@@ -85,7 +85,7 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 
 	if (bSuccessful)
 	{
-		UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid successful."), *this->GetName());
+		DebugLog(FString::Printf(TEXT("%s GenerateGrid - Generating grid successful."), *this->GetName()));
 		StartGridCoords = RoomGridTemplate.StartCells[0];
 		ExitGridCoords = RoomGridTemplate.EndCells[0];		
 		MovePlayerStarts();
@@ -114,7 +114,7 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 	TArray<int32> PlatformNums;
 	PlatformGridMap.GenerateKeyArray(RowNums);
 
-	UE_LOG(LogTRGame, Warning, TEXT("Destroying %d rows."), RowNums.Num());
+	DebugLog(FString::Printf(TEXT("Destroying %d rows."), RowNums.Num()));
 	for (int32 Row : RowNums)
 	{
 		PlatformGridMap.Find(Row)->RowPlatforms.GenerateKeyArray(PlatformNums);
@@ -123,7 +123,7 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 			APlatformBase* Platform = PlatformGridMap.Find(Row)->RowPlatforms[Col];
 			if (IsValid(Platform))
 			{
-				UE_LOG(LogTRGame, Warning, TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY);
+				DebugLog(FString::Printf(TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY));
 				Platform->Destroy();
 			}
 		}
@@ -155,7 +155,7 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	APlatformBase* OldRoom = RemovePlatformFromGrid(GridCoords, bSuccess);
 	if (IsValid(OldRoom))
 	{
-		UE_LOG(LogTRGame, Warning, TEXT("Destroying old room X:%d Y:%d."), OldRoom->GridX, OldRoom->GridY);
+		DebugLog(FString::Printf(TEXT("Destroying old room X:%d Y:%d."), OldRoom->GridX, OldRoom->GridY));
 		OldRoom->Destroy();
 	}
 
@@ -164,7 +164,7 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParams.Owner = this;
 
-	UE_LOG(LogTRGame, Log, TEXT("%s SpawnRoom - Spanwing room actor for X:%d Y:%d."), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y);
+	DebugLog(FString::Printf(TEXT("%s SpawnRoom - Spanwing room actor for X:%d Y:%d."), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y));
 
 	// Create appropriate wall state arrays representing the used wall types, sized according to RoomCellSubdivision.
 	int32 CenterSubdivision = (RoomGridTemplate.RoomCellSubdivision / 2);

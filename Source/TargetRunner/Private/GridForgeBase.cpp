@@ -177,7 +177,7 @@ void UGridForgeBase::TranslateCellGridToRoomGrid(UPARAM(ref)FRandomStream& RandS
 			if (bFound && ConnectedCell != nullptr && !ConnectedCell->bOnPath && !CellsToTranslate.Contains(ConnectedCell))
 			{
 				CellsToTranslate.Add(ConnectedCell);
-				UE_LOG(LogTRGame, Log, TEXT("GridForgeBase - Added cell to translate list X:%d Y:%d"), ConnectedCell->X, ConnectedCell->Y);
+				DebugLog(FString::Printf(TEXT("GridForgeBase - Added cell to translate list X:%d Y:%d"), ConnectedCell->X, ConnectedCell->Y));
 			}
 		}		
 	}
@@ -192,11 +192,11 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 	bool bConnected;
 	bool bFound;
 
-	UE_LOG(LogTRGame, Log, TEXT("GridForgeBase - TranslateCellToRoom X:%d Y:%d"), Cell->X, Cell->Y);
+	DebugLog(FString::Printf(TEXT("GridForgeBase - TranslateCellToRoom X:%d Y:%d"), Cell->X, Cell->Y));
 
 	if (Cell->bOnPath)
 	{
-		UE_LOG(LogTRGame, Log, TEXT("GridForgeBase - Cell already on path, so room is already created. Returning."));
+		DebugLog(TEXT("GridForgeBase - Cell already on path, so room is already created. Returning."));
 		return;
 	}
 	
@@ -209,7 +209,7 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 		bConnected = Cell->ConnectedCells.Contains(RoomCoords + FVector2D(1, 0));
 		NeighborWallState = ETRWallState::Empty;
 		if (TmpRoom != nullptr) { NeighborWallState = TmpRoom->SouthWall; }
-		else { UE_LOG(LogTRGame, Warning, TEXT("No north neighbor found.")); }
+		else { DebugLog(TEXT("No north neighbor found.")); }
 		Room->NorthWall = GetWallStateFromNeighbor(NeighborWallState, bConnected);
 				
 		// East
@@ -217,7 +217,7 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 		bConnected = Cell->ConnectedCells.Contains(RoomCoords + FVector2D(0, 1));
 		NeighborWallState = ETRWallState::Empty;
 		if (TmpRoom != nullptr) { NeighborWallState = TmpRoom->WestWall; }
-		else { UE_LOG(LogTRGame, Warning, TEXT("No east neighbor found.")); }
+		else { DebugLog(TEXT("No east neighbor found.")); }
 		Room->EastWall = GetWallStateFromNeighbor(NeighborWallState, bConnected);
 
 		// South 
@@ -225,7 +225,7 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 		bConnected = Cell->ConnectedCells.Contains(RoomCoords + FVector2D(-1, 0));
 		NeighborWallState = ETRWallState::Empty;
 		if (TmpRoom != nullptr) { NeighborWallState = TmpRoom->NorthWall; }
-		else { UE_LOG(LogTRGame, Warning, TEXT("No south neighbor found.")); }
+		else { DebugLog(TEXT("No south neighbor found.")); }
 		Room->SouthWall = GetWallStateFromNeighbor(NeighborWallState, bConnected);
 
 		// West
@@ -233,12 +233,12 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 		bConnected = Cell->ConnectedCells.Contains(RoomCoords + FVector2D(0, -1));
 		NeighborWallState = ETRWallState::Empty;
 		if (TmpRoom != nullptr) { NeighborWallState = TmpRoom->EastWall; }
-		else { UE_LOG(LogTRGame, Warning, TEXT("No west neighbor found.")); }
+		else { DebugLog(TEXT("No west neighbor found.")); }
 		Room->WestWall = GetWallStateFromNeighbor(NeighborWallState, bConnected);
 		
 		// Mark the cell as on the path, so we don't create a room for it again.
 		Cell->bOnPath = true;
-		UE_LOG(LogTRGame, Log, TEXT("Cell X:%d Y:%d translated to %s "), Cell->X, Cell->Y, *RoomToString(*Room));
+		DebugLog(FString::Printf(TEXT("Cell X:%d Y:%d translated to %s "), Cell->X, Cell->Y, *RoomToString(*Room)));
 	}
 }
 
@@ -297,7 +297,7 @@ UGridTemplateCell* UGridForgeBase::GetOrCreateCellXY(const int32 X, const int32 
 		}
 		CurRow->RowCells.Add(Y, NewCell);
 		FString StateName = UEnum::GetValueAsString<ETRGridCellState>(NewCell->CellState);
-		UE_LOG(LogTRGame, Log, TEXT("GridForgeBase - Created new cell X:%d Y:%d State:%s"), NewCell->X, NewCell->Y, *StateName);
+		DebugLog(FString::Printf(TEXT("GridForgeBase - Created new cell X:%d Y:%d State:%s"), NewCell->X, NewCell->Y, *StateName));
 	}
 	return CurRow->RowCells[Y];
 }
@@ -356,7 +356,7 @@ void UGridForgeBase::GetUnflaggedCellNeighbors(const int32 X, const int32 Y, TAr
 			}
 		}
 	}
-	UE_LOG(LogTRGame, Log, TEXT("GridForgeBase - GetUnflaggedCellNeighbors found %d neighbors of cell X:%d Y:%d"), NeighborCells.Num(), X, Y);
+	DebugLog(FString::Printf(TEXT("GridForgeBase - GetUnflaggedCellNeighbors found %d neighbors of cell X:%d Y:%d"), NeighborCells.Num(), X, Y));
 	TmpNeighbors.Empty();
 }
 
@@ -386,19 +386,19 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 	// End cell will be along X = GridExtentMaxX row - padding.
 	if (RoomGridTemplate.StartCells.Num() == 0)
 	{	
-		UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Picking start cell."));
+		DebugLog(TEXT("GridForgePrim - Picking start cell."));
 		// A percent chance to pad along grid extents.
-		PadX = WidthX > 7 ? WidthX / 5 : 0;
+		PadX = WidthX > 5 ? WidthX / 5 : 0;
 		PadY = WidthY / 5;
-		if (PadX > 0) { PadX = RandStream.RandRange(0, PadX); }
-		if (PadY > 0) { PadY = RandStream.RandRange(0, PadY); }
+		if (PadX > 0) { PadX = RandStream.FRandRange(0.0f, 1.0f) < 0.75f ? RandStream.RandRange(1, PadX) : 0; }
+		if (PadY > 0) { PadY = RandStream.FRandRange(0.0f, 1.0f) < 0.75f ? RandStream.RandRange(1, PadY) : 0; }
 
 		RemainingCellCount = 0;
 		while (RemainingCellCount <= 0)
 		{
 			PotentialCells.Empty();
 			UnavailableCellCount = 0;
-			UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Trying with padding X:%d Y:%d"), PadX, PadY);
+			DebugLog(FString::Printf(TEXT("GridForgePrim - Trying with padding X:%d Y:%d"), PadX, PadY));
 			// Create an array of cell availability.  True if cell is available, false if not.
 			for (int32 Y = RoomGridTemplate.GridExtentMinY + PadY; Y <= GridExtentMaxY - PadY; Y++)
 			{
@@ -437,8 +437,8 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 		int32 CurCellNumber = 0;
 		FVector2D StartCoords;
 
-		UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Using padding X:%d Y:%d. UnavailableCellCount:%d RemainingCellCount:%d"), PadX, PadY, UnavailableCellCount, RemainingCellCount);
-		UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Picked start cell %d"), PickedCellNumber);
+		DebugLog(FString::Printf(TEXT("GridForgePrim - Using padding X:%d Y:%d. UnavailableCellCount:%d RemainingCellCount:%d"), PadX, PadY, UnavailableCellCount, RemainingCellCount));
+		DebugLog(FString::Printf(TEXT("GridForgePrim - Picked start cell %d"), PickedCellNumber));
 
 		for (int32 Y = 0; Y <= WidthY - (2 * PadY); Y++)
 		{
@@ -447,7 +447,7 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 				if (CurCellNumber == PickedCellNumber)
 				{
 					StartCoords.Set(static_cast<float>(RoomGridTemplate.GridExtentMinX + PadX), static_cast<float>(RoomGridTemplate.GridExtentMinY + PadY + Y));
-					UE_LOG(LogTRGame, Log, TEXT("GridForgeBase - Found start cell X:%d Y:%d."), static_cast<int32>(StartCoords.X), static_cast<int32>(StartCoords.Y));
+					DebugLog(FString::Printf(TEXT("GridForgeBase - Found start cell X:%d Y:%d."), static_cast<int32>(StartCoords.X), static_cast<int32>(StartCoords.Y)));
 					break;
 				}
 				else { CurCellNumber++; }
@@ -461,7 +461,7 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 		//FVector2D StartCoords(StartX, StartY);
 
 		RoomGridTemplate.StartCells.Add(StartCoords);
-		UE_LOG(LogTRGame, Log, TEXT("GridForgeBase - using start cell X:%d Y:%d"), (int32)StartCoords.X, (int32)StartCoords.Y);
+		DebugLog(FString::Printf(TEXT("GridForgeBase - using start cell X:%d Y:%d"), (int32)StartCoords.X, (int32)StartCoords.Y));
 	}
 
 	if (RoomGridTemplate.EndCells.Num() == 0)
@@ -522,7 +522,7 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 				if (CurCellNumber == PickedCellNumber)
 				{
 					EndCoords.Set(RoomGridTemplate.GridExtentMaxX - PadX, RoomGridTemplate.GridExtentMinY + PadY + Y);
-					UE_LOG(LogTRGame, Log, TEXT("GridForge found end cell X:%d Y:%d."), (int32)EndCoords.X, (int32)EndCoords.Y);
+					DebugLog(FString::Printf(TEXT("GridForge found end cell X:%d Y:%d."), (int32)EndCoords.X, (int32)EndCoords.Y));
 					break;
 				}
 				else { CurCellNumber++; }
@@ -530,7 +530,7 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 		}
 
 		RoomGridTemplate.EndCells.Add(EndCoords);
-		UE_LOG(LogTRGame, Log, TEXT("GridForge using end cell X:%d Y:%d."), (int32)EndCoords.X, (int32)EndCoords.Y);
+		DebugLog(FString::Printf(TEXT("GridForge using end cell X:%d Y:%d."), (int32)EndCoords.X, (int32)EndCoords.Y));
 	}
 }
 

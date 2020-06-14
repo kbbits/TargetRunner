@@ -94,7 +94,7 @@ bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float D
 	{
 		if (UResourceFunctionLibrary::FindResourceRateFilter(ExtractionRates, CurResource.ResourceType, FoundRate, FoundSimilarity))
 		{
-			ExtractedQuantity = (CurResource.Quantity * DamagePercent) * FoundRate.Rate;
+			ExtractedQuantity = FMath::RoundHalfToZero((CurResource.Quantity * DamagePercent) * FoundRate.Rate);
 			if (ExtractedQuantity < 0.0f) { ExtractedQuantity = 0.0f; }
 
 			bFound = false;
@@ -154,7 +154,7 @@ bool AResourceNodeBase::ExtractedResourcesOnDestroy_Implementation(const TArray<
 	{
 		if (UResourceFunctionLibrary::FindResourceRateFilter(ExtractionRates, CurResource.ResourceType, FoundRate, FoundSimilarity))
 		{
-			ExtractedQuantity = CurResource.Quantity * FoundRate.Rate;
+			ExtractedQuantity = FMath::RoundHalfToZero(CurResource.Quantity * FoundRate.Rate);
 			if (ExtractedQuantity < 0.0f) { ExtractedQuantity = 0.0f; }
 			ExtractedQuantities.Add(FResourceQuantity(CurResource.ResourceType, ExtractedQuantity));
 		}

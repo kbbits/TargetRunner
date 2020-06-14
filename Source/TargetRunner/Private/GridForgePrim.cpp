@@ -7,7 +7,7 @@
 
 void UGridForgePrim::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate, bool& bSuccessful)
 {
-	UE_LOG(LogTRGame, Log, TEXT("%s - GenerateGridTemplate"), *this->GetName());
+	DebugLog(FString::Printf(TEXT("%s - GenerateGridTemplate"), *this->GetName()));
 
 	SetupFromRoomGridTemplate(RoomGridTemplate);
 	
@@ -64,7 +64,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 			CurCell = GetOrCreateCell(CurCoords);
 			if (CurCell == nullptr) { continue; }
 			ConnectedCellCount++;
-			UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - New active cell X:%d Y:%d Flagged:%s"), CurCell->X, CurCell->Y, CurCell->bFlagged ? TEXT("True") : TEXT("False"));
+			DebugLog(FString::Printf(TEXT("GridForgePrim - New active cell X:%d Y:%d Flagged:%s"), CurCell->X, CurCell->Y, CurCell->bFlagged ? TEXT("True") : TEXT("False")));
 		}
 				
 		GetUnflaggedCellNeighbors(CurCoords.X, CurCoords.Y, NeighborCells);
@@ -73,7 +73,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 		{
 			ActiveCoords.Remove(CurCoords);
 			NextCoords = CurCoords;
-			UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Removing X:%d Y:%d from active."), (int32)CurCoords.X, (int32)CurCoords.Y);
+			DebugLog(FString::Printf(TEXT("GridForgePrim - Removing X:%d Y:%d from active."), (int32)CurCoords.X, (int32)CurCoords.Y));
 		}
 		else
 		{
@@ -81,7 +81,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 			NextCell->bFlagged = true;
 			NextCoords = FVector2D(NextCell->X, NextCell->Y);
 			CurCell->ConnectedCells.Add(NextCoords);
-			UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Connected current cell X:%d Y:%d to neighbor X:%d Y:%d. Total connections: %d"), CurCell->X, CurCell->Y, NextCell->X, NextCell->Y, CurCell->ConnectedCells.Num());
+			DebugLog(FString::Printf(TEXT("GridForgePrim - Connected current cell X:%d Y:%d to neighbor X:%d Y:%d. Total connections: %d"), CurCell->X, CurCell->Y, NextCell->X, NextCell->Y, CurCell->ConnectedCells.Num()));
 			ConnectedCellCount++;
 			ActiveCoords.Add(NextCoords);
 		}
@@ -93,11 +93,11 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 			// Stop creating more cells.
 			ActiveCoords.Empty();
 			bSuccessful = true;
-			UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Found end grid cell X:%d Y:%d"), (int32)NextCoords.X, (int32)NextCoords.Y);
+			DebugLog(FString::Printf(TEXT("GridForgePrim - Found end grid cell X:%d Y:%d"), (int32)NextCoords.X, (int32)NextCoords.Y));
 		}
 		CurCell = nullptr;
 	}
-	UE_LOG(LogTRGame, Log, TEXT("GridForgePrim - Conneccted %d grid cells."), ConnectedCellCount);
+	DebugLog(FString::Printf(TEXT("GridForgePrim - Conneccted %d grid cells."), ConnectedCellCount));
 }
 
 FVector2D UGridForgePrim::PickCoord(UPARAM(ref) FRandomStream& RandStream, const TArray<FVector2D>& CoordArray)

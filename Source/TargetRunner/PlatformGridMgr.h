@@ -83,6 +83,10 @@ protected:
 
 	TArray<APlayerStart*> PlayerStarts;
 
+#if WITH_EDITOR
+	const bool bEnableClassDebugLog = false;
+#endif
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -152,5 +156,11 @@ public:
 	// Resulting in cell 0 being at [GridExtentMinX, GridExtentMinY] and the highest cell number at [GridExtentMaxX, GridExtentMaxY].
 	UFUNCTION(BlueprintPure)
 		int32 GridCoordsToCellNumber(const FVector2D Coords);
-		
+
+	// Debug
+#if WITH_EDITOR
+	FORCEINLINE void DebugLog(const FString& LogString) { if (bEnableClassDebugLog) { UE_LOG(LogTRGame, Log, TEXT("%s"), *LogString); } };
+#else
+	FORCEINLINE void DebugLog(const FString& LogString) { };
+#endif
 };

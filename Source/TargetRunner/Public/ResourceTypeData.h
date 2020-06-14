@@ -41,6 +41,9 @@ public:
 	//	FName GoodsNameOverride;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 Tier;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TSoftObjectPtr<UMaterialInterface> DefaultMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
@@ -50,6 +53,7 @@ public:
 	FResourceTypeData()
 	{
 		Code = FName();
+		Tier = 0;
 		//Category = FName();
 		//Type = FName();
 		//SubType = FName();
@@ -61,6 +65,7 @@ public:
 		if (OtherData)
 		{
 			Code = OtherData->Code;
+			Tier = OtherData->Tier;
 			//Category = OtherData->Category;
 			//Type = OtherData->Type;
 			//SubType = OtherData->SubType;

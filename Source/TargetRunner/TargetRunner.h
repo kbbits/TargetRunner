@@ -8,3 +8,5 @@
 
 //General Log
 DECLARE_LOG_CATEGORY_EXTERN(LogTRGame, Log, All);
+
+const int32 MAX_TIER = 10;

@@ -165,7 +165,7 @@ void APlatformGridMgr::DestroyGridImpl()
 	TArray<int32> PlatformNums;
 	PlatformGridMap.GenerateKeyArray(RowNums);
 
-	UE_LOG(LogTRGame, Warning, TEXT("Destroying %d rows."), RowNums.Num());
+	DebugLog(FString::Printf(TEXT("Destroying %d rows."), RowNums.Num()));
 	for (int32 Row : RowNums)
 	{
 		PlatformGridMap.Find(Row)->RowPlatforms.GenerateKeyArray(PlatformNums);
@@ -174,7 +174,7 @@ void APlatformGridMgr::DestroyGridImpl()
 			APlatformBase* Platform = PlatformGridMap.Find(Row)->RowPlatforms[Col];
 			if (IsValid(Platform))
 			{
-				UE_LOG(LogTRGame, Warning, TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY);
+				DebugLog(FString::Printf(TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY));
 				Platform->Destroy();
 			}
 		}

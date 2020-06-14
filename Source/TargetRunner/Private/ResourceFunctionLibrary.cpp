@@ -142,3 +142,43 @@ void UResourceFunctionLibrary::ResourceTypeForData(const FResourceTypeData& Reso
 		ResourceType = FResourceType();
 	}
 }
+
+int32 UResourceFunctionLibrary::ResourceDataInTier(const UDataTable* ResourceDataTable, const float MinTier, const float MaxTier, TArray<FResourceTypeData>& ResourceData)
+{
+	TArray<FName> RowNames = ResourceDataTable->GetRowNames();
+	FResourceTypeData* PickedRow = nullptr;
+	int32 FoundCnt = 0;
+	for (FName RowName : RowNames)
+	{
+		PickedRow = ResourceDataTable->FindRow<FResourceTypeData>(RowName, "", false);
+		if (PickedRow == nullptr) {
+			UE_LOG(LogTRGame, Error, TEXT("%s - ResourcesDataInTier - ResourceDataTable does not contain ResourceTypeData rows."));
+			break;
+		}
+		if (MinTier <= PickedRow->Tier && PickedRow->Tier <= MaxTier)
+		{
+			ResourceData.Add(PickedRow);
+			FoundCnt++;
+		}
+	}
+	return FoundCnt;
+}
+
+int32 UResourceFunctionLibrary::ResourceDataByTier(const UDataTable* ResourceDataTable, const float MinTier, const float MaxTier, TMap<int32, FResourceTypeDataCollection>& ResourceDataByTier)
+{
+	TArray<FResourceTypeData> TierResources;
+	int32 FoundCount = 0;
+	if (ResourceDataInTier(ResourceDataTable, MinTier, MaxTier, TierResources) > 0)
+	{
+		for (FResourceTypeData Resource : TierResources)
+		{
+			if (!ResourceDataByTier.Contains((int32)Resource.Tier))
+			{
+				ResourceDataByTier.Add((int32)Resource.Tier, FResourceTypeDataCollection());
+			}
+			ResourceDataByTier.Find((int32)Resource.Tier)->Data.Add(Resource);
+			FoundCount++;
+		}
+	}
+	return FoundCount;
+}
