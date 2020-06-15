@@ -8,9 +8,9 @@
 
 void UGridForgeBase::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& TemplateGrid, bool& Successful)
 {
-	SetupFromRoomGridTemplate(TemplateGrid);
+	SetRoomGridTemplate(TemplateGrid);
 	
-	// Don't call PickStartAndEndCells() because we are choosing them manually.
+	// Don't call PickStartAndEndCells() because we are choosing them manually in this base class.
 	TemplateGrid.StartCells.Empty();
 	TemplateGrid.StartCells.Add(FVector2D(0, 0));
 	TemplateGrid.EndCells.Empty();
@@ -51,10 +51,11 @@ void UGridForgeBase::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream,
 
 
 // Default implementation does nothing but return true.
-void UGridForgeBase::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandStream, const FRoomGridTemplate& RoomGridTemplate, bool& Successful)
+void UGridForgeBase::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandStream, bool& Successful)
 {
 	Successful = true;
 }
+
 
 bool UGridForgeBase::GetRoomRef( FRoomGridTemplate& RoomGridTemplate, const FVector2D& Coords, FRoomTemplate& Room)
 {
@@ -64,13 +65,115 @@ bool UGridForgeBase::GetRoomRef( FRoomGridTemplate& RoomGridTemplate, const FVec
 	return true;
 }
 
-void UGridForgeBase::SetupFromRoomGridTemplate(const FRoomGridTemplate& RoomGridTemplate)
+
+void UGridForgeBase::SetRoomGridTemplate(FRoomGridTemplate& GridTemplate)
 {
-	GridExtentMinX = RoomGridTemplate.GridExtentMinX;
-	GridExtentMaxX = RoomGridTemplate.GridExtentMaxX;
-	GridExtentMinY = RoomGridTemplate.GridExtentMinY;
-	GridExtentMaxY = RoomGridTemplate.GridExtentMaxY;
+	WorkingRoomGridTemplate = &GridTemplate;
 }
+
+
+void UGridForgeBase::GenerateBlackoutCells(FRandomStream& RandStream)
+{	
+	DebugLog(TEXT("GenerateBlackoutCells"));
+	UGridTemplateCell* NewCell = nullptr;
+	if (BlackoutCells.Num() > 0)
+	{
+		DebugLog(TEXT("Using pre-set blackout cells."));
+		// If they are already set (ex: came from grid manager's override blackout cells), just create the cells.
+		for (FVector2D Coords : BlackoutCells)
+		{
+			NewCell = GetOrCreateCell(Coords);
+			NewCell->CellState = ETRGridCellState::Blocked;
+		}
+	}
+	else
+	{
+		float WidthX = static_cast<float>(WorkingRoomGridTemplate->GridExtentMaxX - WorkingRoomGridTemplate->GridExtentMinX) + 1.0f;
+		float WidthY = static_cast<float>(WorkingRoomGridTemplate->GridExtentMaxY - WorkingRoomGridTemplate->GridExtentMinY) + 1.0f;
+		int32 BlackoutCount = 0;
+		bool bStopBlackoutSearch = false;
+		if (WidthX > 3 && WidthY > 3)
+		{
+			BlackoutCount = static_cast<int32>(FMath::RoundHalfToZero(FMath::Sqrt(WidthX * WidthY)) + RandStream.RandRange(-1, 0));
+			if (WidthX > 5 && WidthY > 5)
+			{
+				BlackoutCount += RandStream.RandRange(0, (int32)FMath::RoundHalfToZero((WidthX * WidthY) / 10.0f));
+			}
+		}
+		DebugLog(FString::Printf(TEXT("Generating blackout cells: %d"), BlackoutCount));
+		if (BlackoutCount > 0)
+		{
+			FVector2D BlackoutCoords;
+			int32 PickFails = 0;
+			while (BlackoutCount > 0 && !bStopBlackoutSearch && (PickFails <= BlackoutCount * 3))
+			{
+				DebugLog(FString::Printf(TEXT("      Trying pick. Remaining %d. Fails: %d"), BlackoutCount, PickFails));
+				if (PickBlackoutCoords(RandStream, BlackoutCoords))
+				{
+					DebugLog(FString::Printf(TEXT("      Looking at cell. X:%d Y:%d"), (int32)BlackoutCoords.X, (int32)BlackoutCoords.Y));
+					if (BlackoutCells.Contains(BlackoutCoords)) 
+					{ 
+						PickFails++;
+						continue; 
+					}
+					// Get neighbors and check rules to prevent blockages.
+					TMap<ETRDirection, UGridTemplateCell*> Neighbors;
+					TMap<ETRDirection, UGridTemplateCell*> NeighborsNeighbors;
+					UGridTemplateCell* CellOne = nullptr;
+					UGridTemplateCell* CellTwo = nullptr;
+					bool bOpposedNS, bOpposedEW;
+					bool bNOpposedNS, bNOpposedEW;
+					// Get our neighbors
+					GetCellNeighbors(BlackoutCoords, Neighbors);
+					if (HasOpposingBlockedNeighbors(Neighbors, bOpposedNS, bOpposedEW))
+					{
+						if (bOpposedNS)
+						{
+							GetCellNeighbors(BlackoutCoords + FVector2D(1.0, 0.0), NeighborsNeighbors);
+							if ((NeighborsNeighbors[ETRDirection::North] != nullptr && NeighborsNeighbors[ETRDirection::North]->CellState == ETRGridCellState::Blocked) ||
+								HasOpposingBlockedNeighbors(NeighborsNeighbors, bNOpposedNS, bNOpposedEW))
+							{
+								GetCellNeighbors(BlackoutCoords + FVector2D(-1.0, 0.0), NeighborsNeighbors);
+								if ((NeighborsNeighbors[ETRDirection::South] != nullptr && NeighborsNeighbors[ETRDirection::South]->CellState == ETRGridCellState::Blocked) ||
+									HasOpposingBlockedNeighbors(NeighborsNeighbors, bNOpposedNS, bNOpposedEW))
+								{
+									PickFails++;
+									continue; // pick again
+								}
+							}
+						}
+						if (bOpposedEW)
+						{
+							GetCellNeighbors(BlackoutCoords + FVector2D(0.0, 1.0), NeighborsNeighbors);
+							if ((NeighborsNeighbors[ETRDirection::East] != nullptr && NeighborsNeighbors[ETRDirection::East]->CellState == ETRGridCellState::Blocked) ||
+								HasOpposingBlockedNeighbors(NeighborsNeighbors, bNOpposedNS, bNOpposedEW))
+							{
+								GetCellNeighbors(BlackoutCoords + FVector2D(0.0, -1.0), NeighborsNeighbors);
+								if ((NeighborsNeighbors[ETRDirection::West] != nullptr && NeighborsNeighbors[ETRDirection::West]->CellState == ETRGridCellState::Blocked) ||
+									HasOpposingBlockedNeighbors(NeighborsNeighbors, bNOpposedNS, bNOpposedEW))
+								{
+									PickFails++;
+									continue; // pick again
+								}
+							}
+						}
+					}
+					BlackoutCells.Add(BlackoutCoords);
+					NewCell = GetOrCreateCell(BlackoutCoords);
+					NewCell->CellState = ETRGridCellState::Blocked;
+					--BlackoutCount;
+					PickFails = 0;
+					DebugLog(FString::Printf(TEXT("    Picked blackout cell X:%d Y:%d"), (int32)BlackoutCoords.X, (int32)BlackoutCoords.Y));
+				}
+				else
+				{
+					PickFails++;
+				}
+			}
+		}
+	}
+}
+
 
 FRoomTemplate* UGridForgeBase::GetOrCreateRoom(FRoomGridTemplate& RoomGridTemplate, const FVector2D Coords, bool& bFound)
 {
@@ -87,6 +190,7 @@ FRoomTemplate* UGridForgeBase::GetOrCreateRoom(FRoomGridTemplate& RoomGridTempla
 	return FoundRoom;
 }
 
+
 FRoomTemplate* UGridForgeBase::GetRoom(FRoomGridTemplate& RoomGridTemplate, const FVector2D& Coords, bool& bFound)
 {
 	bFound = false;
@@ -97,6 +201,7 @@ FRoomTemplate* UGridForgeBase::GetRoom(FRoomGridTemplate& RoomGridTemplate, cons
 	return Room;
 }
 
+
 FRoomGridRow* UGridForgeBase::GetRoomRow(FRoomGridTemplate& RoomGridTemplate, const int32 RowNum)
 {
 	if (!RoomGridTemplate.Grid.Contains(RowNum))
@@ -106,6 +211,7 @@ FRoomGridRow* UGridForgeBase::GetRoomRow(FRoomGridTemplate& RoomGridTemplate, co
 	}
 	return RoomGridTemplate.Grid.Find(RowNum);
 }
+
 
 FRoomTemplate* UGridForgeBase::GetRoomNeighbor(FRoomGridTemplate& RoomGridTemplate, const FVector2D& Coords, const ETRDirection Direction)
 {
@@ -129,6 +235,7 @@ FRoomTemplate* UGridForgeBase::GetRoomNeighbor(FRoomGridTemplate& RoomGridTempla
 	return Room;
 }
 
+
 ETRWallState UGridForgeBase::GetWallStateFromNeighbor(const ETRWallState NeighborState, const bool bConnectedToNeighbor)
 {
 	ETRWallState RoomWallState;
@@ -143,8 +250,10 @@ ETRWallState UGridForgeBase::GetWallStateFromNeighbor(const ETRWallState Neighbo
 	return RoomWallState;
 }
 
-void UGridForgeBase::TranslateCellGridToRoomGrid(UPARAM(ref)FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate)
+
+void UGridForgeBase::TranslateCellGridToRoomGrid(UPARAM(ref)FRandomStream& RandStream)
 {
+	FRoomGridTemplate& RoomGridTemplate = *WorkingRoomGridTemplate;
 	TArray<UGridTemplateCellRow*> Rows;
 	TArray<UGridTemplateCell*> CellsToTranslate;
 	FVector2D CurCoords;
@@ -182,6 +291,7 @@ void UGridForgeBase::TranslateCellGridToRoomGrid(UPARAM(ref)FRandomStream& RandS
 		}		
 	}
 }
+
 
 void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, UGridTemplateCell* Cell, FRoomGridTemplate& RoomGridTemplate)
 {
@@ -242,6 +352,7 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 	}
 }
 
+
 // Returns nullptr if no such cell exists already.
 UGridTemplateCell* UGridForgeBase::GetCell(const FVector2D& Coords, bool& bFound)
 {
@@ -256,32 +367,122 @@ UGridTemplateCell* UGridForgeBase::GetCell(const FVector2D& Coords, bool& bFound
 			return Row->RowCells[Y];
 		}
 	}
+	bFound = false;
 	return nullptr;
 }
 
-UGridTemplateCell* UGridForgeBase::GetOrCreateCellXY(const int32 X, const int32 Y)
+// Adds a placeholder blocked cell for neighbors outside grid extents.
+void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells)
 {
-	// If outside grid, return nullptr
-	if (X > GridExtentMaxX || X < GridExtentMinX || Y > GridExtentMaxY || Y < GridExtentMinY)
+	UGridTemplateCell* Cell = nullptr;
+	bool bFound;
+	NeighborCells.Empty(4);
+	Cell = GetCell(Coords + FVector2D(1, 0), bFound);
+	if (Cell != nullptr) { NeighborCells.Add(ETRDirection::North, Cell); }
+	else 
 	{
-		//UGridTemplateCell* NewCell = NewObject<UGridTemplateCell>(this, UGridTemplateCell::StaticClass());
-		//NewCell->X = X;
-		//NewCell->Y = Y;
-		//NewCell->CellState = ETRGridCellState::Blocked;
-		//return NewCell;
-		return nullptr;
+		if (!IsInGrid(Coords + FVector2D(1, 0))) 
+		{
+			Cell = NewObject<UGridTemplateCell>(this);
+			Cell->CellState = ETRGridCellState::Blocked;
+			Cell->X = (int32)Coords.X + 1;
+			Cell->Y = (int32)Coords.Y;
+		}
+		NeighborCells.Add(ETRDirection::North, Cell);
+	}
+	
+	Cell = GetCell(Coords + FVector2D(0, 1), bFound);
+	if (Cell != nullptr) { NeighborCells.Add(ETRDirection::East, Cell); }
+	else 
+	{
+		if (!IsInGrid(Coords + FVector2D(0, 1)))
+		{
+			Cell = NewObject<UGridTemplateCell>(this);
+			Cell->CellState = ETRGridCellState::Blocked;
+			Cell->X = (int32)Coords.X;
+			Cell->Y = (int32)Coords.Y + 1;
+		}
+		NeighborCells.Add(ETRDirection::East, Cell);
 	}
 
-	// Find or create it in the grid
+	Cell = GetCell(Coords + FVector2D(-1, 0), bFound);
+	if (Cell != nullptr) { NeighborCells.Add(ETRDirection::South, Cell); }
+	else 
+	{
+		if (!IsInGrid(Coords + FVector2D(-1, 0)))
+		{
+			Cell = NewObject<UGridTemplateCell>(this);
+			Cell->CellState = ETRGridCellState::Blocked;
+			Cell->X = (int32)Coords.X - 1;
+			Cell->Y = (int32)Coords.Y;
+		}
+		NeighborCells.Add(ETRDirection::South, Cell);
+	}
+	
+	Cell = GetCell(Coords + FVector2D(0, -1), bFound);
+	if (Cell != nullptr) { NeighborCells.Add(ETRDirection::West, Cell); }
+	else 
+	{
+		if (!IsInGrid(Coords + FVector2D(0, -1)))
+		{
+			Cell = NewObject<UGridTemplateCell>(this);
+			Cell->CellState = ETRGridCellState::Blocked;
+			Cell->X = (int32)Coords.X;
+			Cell->Y = (int32)Coords.Y - 1;
+		}
+		NeighborCells.Add(ETRDirection::West, Cell);
+	}
+}
+
+void UGridForgeBase::GetCellNeighbors(const UGridTemplateCell& Cell, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells)
+{
+	GetCellNeighbors(FVector2D(Cell.X, Cell.Y), NeighborCells);
+}
+
+bool UGridForgeBase::HasOpposingBlockedNeighbors(const TMap<ETRDirection, UGridTemplateCell*>& Neighbors, bool& bOpposedNS, bool& bOpposedEW)
+{
+	bOpposedNS = false;
+	bOpposedEW = false;
+	UGridTemplateCell* CellOne = nullptr;
+	UGridTemplateCell* CellTwo = nullptr;
+	CellOne = Neighbors[ETRDirection::North];
+	CellTwo = Neighbors[ETRDirection::South];
+	if ((CellOne != nullptr && CellOne->CellState == ETRGridCellState::Blocked) && (CellTwo != nullptr && CellTwo->CellState == ETRGridCellState::Blocked))
+	{
+		bOpposedNS = true;
+	}
+	CellOne = Neighbors[ETRDirection::East];
+	CellTwo = Neighbors[ETRDirection::West];
+	if ((CellOne != nullptr && CellOne->CellState == ETRGridCellState::Blocked) && (CellTwo != nullptr && CellTwo->CellState == ETRGridCellState::Blocked))
+	{
+		bOpposedEW = true;
+	}
+	DebugLog(FString::Printf(TEXT("    HasOpposingBlockedNeighbors NS:%s EW: %s"), (bOpposedNS ? TEXT("true") : TEXT("false")), (bOpposedEW ? TEXT("true") : TEXT("false"))));
+	return (bOpposedNS || bOpposedEW);
+}
+
+
+UGridTemplateCell* UGridForgeBase::GetOrCreateCellXY(const int32 X, const int32 Y)
+{
+	// We need our working grid 
+	if (WorkingRoomGridTemplate == nullptr)
+	{
+		UE_LOG(LogTRGame, Error, TEXT("%s - GetOrCreateCellXY - WorkingRoomGridTemplate is null."));
+		return nullptr;
+	}
+	// If outside grid, return nullptr
+	if (X > WorkingRoomGridTemplate->GridExtentMaxX || X < WorkingRoomGridTemplate->GridExtentMinX || Y > WorkingRoomGridTemplate->GridExtentMaxY || Y < WorkingRoomGridTemplate->GridExtentMinY)
+	{
+		return nullptr;
+	}
 	// If the grid doesn't have this row yet, create the row.
 	if (!GridTemplateCells.Contains(X))
 	{
 		UGridTemplateCellRow* NewRow = NewObject<UGridTemplateCellRow>(this);
 		GridTemplateCells.Add(X, NewRow);
 	}
-
-	UGridTemplateCellRow* CurRow = GridTemplateCells[X];
 	// If the cell isn't in the row yet, insert a new default cell.
+	UGridTemplateCellRow* CurRow = GridTemplateCells[X];
 	if (!CurRow->RowCells.Contains(Y))
 	{
 		UGridTemplateCell* NewCell = NewObject<UGridTemplateCell>(this);
@@ -302,12 +503,14 @@ UGridTemplateCell* UGridForgeBase::GetOrCreateCellXY(const int32 X, const int32 
 	return CurRow->RowCells[Y];
 }
 
+
 UGridTemplateCell* UGridForgeBase::GetOrCreateCell(const FVector2D& Coords)
 {
 	return GetOrCreateCellXY(Coords.X, Coords.Y);
 }
 
-UGridTemplateCell* UGridForgeBase::GetCellNeighbor(const int32 X, const int32 Y, const ETRDirection Direction)
+
+UGridTemplateCell* UGridForgeBase::GetOrCreateCellNeighbor(const int32 X, const int32 Y, const ETRDirection Direction)
 {
 	UGridTemplateCell* Cell = nullptr;
 	switch (Direction)
@@ -327,25 +530,27 @@ UGridTemplateCell* UGridForgeBase::GetCellNeighbor(const int32 X, const int32 Y,
 	return Cell;
 }
 
-void UGridForgeBase::GetCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells)
+
+void UGridForgeBase::GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells)
 {
 	NeighborCells.Empty(4);
 	UGridTemplateCell* Cell;
-	Cell = GetCellNeighbor(X, Y, ETRDirection::North);
+	Cell = GetOrCreateCellNeighbor(X, Y, ETRDirection::North);
 	if (Cell != nullptr) { NeighborCells.Add(Cell); }
-	Cell = GetCellNeighbor(X, Y, ETRDirection::East);
+	Cell = GetOrCreateCellNeighbor(X, Y, ETRDirection::East);
 	if (Cell != nullptr) { NeighborCells.Add(Cell); }
-	Cell = GetCellNeighbor(X, Y, ETRDirection::South);
+	Cell = GetOrCreateCellNeighbor(X, Y, ETRDirection::South);
 	if (Cell != nullptr) { NeighborCells.Add(Cell); }
-	Cell = GetCellNeighbor(X, Y, ETRDirection::West);
+	Cell = GetOrCreateCellNeighbor(X, Y, ETRDirection::West);
 	if (Cell != nullptr) { NeighborCells.Add(Cell); }
 }
+
 
 void UGridForgeBase::GetUnflaggedCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeBlocked)
 {
 	NeighborCells.Empty(4);
 	TArray<UGridTemplateCell*> TmpNeighbors;
-	GetCellNeighbors(X, Y, TmpNeighbors);
+	GetOrCreateCellNeighbors(X, Y, TmpNeighbors);
 	for (UGridTemplateCell* Cell : TmpNeighbors)
 	{
 		if (Cell != nullptr && !Cell->bFlagged) 
@@ -360,6 +565,7 @@ void UGridForgeBase::GetUnflaggedCellNeighbors(const int32 X, const int32 Y, TAr
 	TmpNeighbors.Empty();
 }
 
+
 void UGridForgeBase::EmptyGridTemplateCells()
 {
 	TArray<UGridTemplateCellRow*> Rows;
@@ -372,17 +578,19 @@ void UGridForgeBase::EmptyGridTemplateCells()
 	GridTemplateCells.Empty();
 }
 
-void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate)
+
+void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream)
 {
+	FRoomGridTemplate& RoomGridTemplate = *WorkingRoomGridTemplate;
 	int32 WidthX = (RoomGridTemplate.GridExtentMaxX - RoomGridTemplate.GridExtentMinX) + 1;
 	int32 WidthY = (RoomGridTemplate.GridExtentMaxY - RoomGridTemplate.GridExtentMinY) + 1;
 	int32 PadX = 0;
 	int32 PadY = 0;
 	int32 RemainingCellCount = 0;
 	int32 UnavailableCellCount = 0;
-	TArray<bool> PotentialCells;
+	TArray<bool> PotentialCells;	
 	
-	// We start with moving from North -> South. So start position will be along X = 0 row + padding.
+	// General level progress is south -> north. So start position will be along X = GridExtentMinX row + padding.
 	// End cell will be along X = GridExtentMaxX row - padding.
 	if (RoomGridTemplate.StartCells.Num() == 0)
 	{	
@@ -400,7 +608,7 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 			UnavailableCellCount = 0;
 			DebugLog(FString::Printf(TEXT("GridForgePrim - Trying with padding X:%d Y:%d"), PadX, PadY));
 			// Create an array of cell availability.  True if cell is available, false if not.
-			for (int32 Y = RoomGridTemplate.GridExtentMinY + PadY; Y <= GridExtentMaxY - PadY; Y++)
+			for (int32 Y = RoomGridTemplate.GridExtentMinY + PadY; Y <= RoomGridTemplate.GridExtentMaxY - PadY; Y++)
 			{
 				FVector2D CurCoord(RoomGridTemplate.GridExtentMinX + PadX, Y);
 				if (BlackoutCells.Contains(CurCoord) || RoomGridTemplate.StartCells.Contains(CurCoord))
@@ -419,7 +627,10 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 			if (RemainingCellCount <= 0)
 			{
 				// If no room left, reduce padding and try again.
-				if (PadX > 0) {	PadX--;	}
+				if (PadX > 0) 
+				{	
+					PadX--;	
+				}
 				else 
 				{
 					if (PadY == 0)
@@ -478,7 +689,7 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 			PotentialCells.Empty();
 			UnavailableCellCount = 0;
 			// Create an array of cell availability.  True if cell is available, false if not.
-			for (int32 Y = RoomGridTemplate.GridExtentMinY + PadY; Y <= GridExtentMaxY - PadY; Y++)
+			for (int32 Y = RoomGridTemplate.GridExtentMinY + PadY; Y <= RoomGridTemplate.GridExtentMaxY - PadY; Y++)
 			{
 				FVector2D CurCoord(RoomGridTemplate.GridExtentMaxX - PadX, Y);
 				if (BlackoutCells.Contains(CurCoord) || RoomGridTemplate.EndCells.Contains(CurCoord))
@@ -533,6 +744,115 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream,
 		DebugLog(FString::Printf(TEXT("GridForge using end cell X:%d Y:%d."), (int32)EndCoords.X, (int32)EndCoords.Y));
 	}
 }
+
+
+bool UGridForgeBase::PickBlackoutCoords(FRandomStream& RandStream, FVector2D& BlackoutCoords)
+{
+	DebugLog(TEXT("GridForge - PickBlackoutCoords"));
+	if (WorkingRoomGridTemplate == nullptr) { return false; }
+	FRoomGridTemplate& Template = *WorkingRoomGridTemplate;
+	float CellNumber = 0;
+	float DirectionWidth = 0;
+	float DirectionDepth = 0;
+	float DirectionFullDepth = 0;
+	float RotateDegrees = 0.0f;
+	float GridMinX = static_cast<float>(Template.GridExtentMinX);
+	float GridMaxX = static_cast<float>(Template.GridExtentMaxX);
+	float GridMinY = static_cast<float>(Template.GridExtentMinY);
+	float GridMaxY = static_cast<float>(Template.GridExtentMaxY);
+	// Pick along an X or Y edge
+	if (RandStream.FRandRange(0.0f, 1.0f) < 0.5f)
+	{
+		DirectionDepth = ((GridMaxX - GridMinX) + 1.0f) / 2.0f;
+		DirectionFullDepth = (GridMaxX - GridMinX) + 1.0f;
+		DirectionWidth = (GridMaxY - GridMinY) + 1.0f;
+		if (RandStream.FRandRange(0.0f, 1.0f) < 0.5f) { 
+			RotateDegrees = 180.0f;
+			DirectionDepth = FMath::TruncToFloat(DirectionDepth); // Trunc won't include center row, if any
+		}
+		else { 
+			RotateDegrees = 0.0f;
+			DirectionDepth = FMath::CeilToFloat(DirectionDepth); // Ceil will include center row, if any
+		}		
+	}
+	else
+	{
+		DirectionDepth = ((GridMaxY - GridMinY) + 1.0f) / 2.0f;
+		DirectionFullDepth = (GridMaxY - GridMinY) + 1.0f;
+		DirectionWidth = (GridMaxX - GridMinX) + 1.0f;
+		if (RandStream.FRandRange(0.0f, 1.0f) < 0.5f) {
+			RotateDegrees = 90.0f;
+			DirectionDepth = FMath::TruncToFloat(DirectionDepth);
+		}
+		else {
+			RotateDegrees = 270.0f;
+			DirectionDepth = FMath::CeilToFloat(DirectionDepth);
+		}
+	}
+	// On each row but the last one, chance to move out another row.
+	float DepthBias = 1.0f; // lower than 1.0 reduces chance of distance from edge
+	for (int32 CurDepth = 1; CurDepth < (int32)DirectionDepth; CurDepth++)
+	{
+		// Chance increases as we move out rows. More rows = higher chance to move out
+		if (RandStream.FRandRange(0.0f, 1.0f) < (static_cast<float>(CurDepth) / DirectionDepth) * DepthBias)
+		{
+			CellNumber += DirectionWidth;
+		}
+	}
+	// Move along the last row
+	if (DirectionWidth > 0) { CellNumber += RandStream.RandRange(0, DirectionWidth - 1); }
+
+	DebugLog(FString::Printf(TEXT("    CellNumber: %d, Rotation: %d"), (int32)CellNumber, (int32)RotateDegrees));
+
+	// Translate cell number to coords as +X, +Y offset
+	FVector2D Offset = FVector2D(FMath::TruncToFloat(CellNumber / DirectionWidth), (float)((int32)CellNumber % (int32)DirectionWidth));
+	DebugLog(FString::Printf(TEXT("                Offset: X:%d Y:%d"), (int32)Offset.X, (int32)Offset.Y));
+	// Move the Offset so center of virtual grid is at origin
+	Offset = Offset - FVector2D(DirectionFullDepth / 2.0f, DirectionWidth / 2.0f);
+	DebugLog(FString::Printf(TEXT("    AboutOrigin Offset: X:%d Y:%d"), (int32)Offset.X, (int32)Offset.Y));
+	if (RotateDegrees != 0.0f) { Offset = Offset.GetRotated(RotateDegrees); }
+	DebugLog(FString::Printf(TEXT("        Rotated Offset: X:%d Y:%d"), (int32)Offset.X, (int32)Offset.Y));
+	// Translate this coord to our actual grid coord as an offset from the center of the grid
+	FVector2D CellGridOriginOffset = FVector2D(
+		GridMinX + (((GridMaxX - GridMinX) + 1.0f) / 2.0f),
+		GridMinY + (((GridMaxY - GridMinY) + 1.0f) / 2.0f)
+	);
+	FVector2D FinalCoords = Offset + CellGridOriginOffset;
+	BlackoutCoords.Set(FinalCoords.X, FinalCoords.Y);
+	DebugLog(FString::Printf(TEXT("PickBlackoutCoords picked X:%d Y:%d"), (int32)BlackoutCoords.X, (int32)BlackoutCoords.Y));
+	return true;
+}
+
+
+bool UGridForgeBase::IsInGrid(const FVector2D Coords)
+{
+	int32 X = static_cast<int32>(Coords.X);
+	int32 Y = static_cast<int32>(Coords.Y);
+	if (WorkingRoomGridTemplate == nullptr) { return false; }
+	if (X < WorkingRoomGridTemplate->GridExtentMinX || X > WorkingRoomGridTemplate->GridExtentMaxX) { return false; }
+	if (Y < WorkingRoomGridTemplate->GridExtentMinY || Y > WorkingRoomGridTemplate->GridExtentMaxY) { return false; }
+	return true;
+}
+
+
+int32 UGridForgeBase::GridCoordsToCellNumber(const FVector2D Coords)
+{
+	if (!IsInGrid(Coords)) return -1;
+	int32 GridWidthY = (WorkingRoomGridTemplate->GridExtentMaxY - WorkingRoomGridTemplate->GridExtentMinY) + 1;
+	//      Cells in prior rows                                                                         Cells in this row before us
+	return ((static_cast<int32>(Coords.X) - WorkingRoomGridTemplate->GridExtentMinX) * (GridWidthY)) + (static_cast<int32>(Coords.Y) - WorkingRoomGridTemplate->GridExtentMinY);
+}
+
+
+//FVector2D UGridForgeBase::CellNumberToGridCoords(const int32 CellNumber)
+//{
+//	if (WorkingRoomGridTemplate == nullptr) { return FVector2D(); }
+//	return FVector2D(
+//		(float)CellNumber / (float)(WorkingRoomGridTemplate->GridExtentMaxY - WorkingRoomGridTemplate->GridExtentMinY),
+//		(float)CellNumber % (float)
+//	);
+//}
+
 
 FString UGridForgeBase::RoomToString(const FRoomTemplate& Room)
 {

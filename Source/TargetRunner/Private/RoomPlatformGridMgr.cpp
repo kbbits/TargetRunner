@@ -15,12 +15,10 @@ ARoomPlatformGridMgr::ARoomPlatformGridMgr()
 
 }
 
-void ARoomPlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ARoomPlatformGridMgr, BlackoutCells);
-}
+//void ARoomPlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+//{
+//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);	
+//}
 
 // Called when the game starts or when spawned
 void ARoomPlatformGridMgr::BeginPlay()
@@ -38,32 +36,26 @@ void ARoomPlatformGridMgr::Tick(float DeltaTime)
 
 void ARoomPlatformGridMgr::GenerateGridImpl()
 {
+	bool bSuccessful = false;
 	// Destroy old grid, if any
 	DestroyGrid();
-
 	DebugLog(FString::Printf(TEXT("%s GenerateGrid - Generating grid. Extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), *this->GetName(), GridExtentMinX, GridExtentMinY, GridExtentMaxX, GridExtentMaxY));
-
-	bool bSuccessful;
+	// Grab the game mode.
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
 	if (GameMode == nullptr)
 	{
 		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode."), *this->GetName());
 		return;
 	}
-
+	// Get our random stream and create the grid forge
 	FRandomStream& GridRandStream = GameMode->GetGridStream();
 	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
-	if (GridForge)
-	{
-		// TODO: Generate blackout cells.
-		GridForge->BlackoutCells = BlackoutCells;
-	}
-	else
+	if (GridForge == nullptr)
 	{
 		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not construct GridForge."), *this->GetName());
 		return;
 	}
-	
+	// Populate basic properties of the template
 	RoomGridTemplate.GridCellWorldSize = GridCellWorldSize;
 	RoomGridTemplate.RoomCellSubdivision = RoomCellSubdivision;
 	if (RoomGridTemplate.RoomCellSubdivision == 0) { RoomGridTemplate.RoomCellSubdivision = 1; }
@@ -81,6 +73,14 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 		RoomGridTemplate.StartCells.Add(StartGridCoords);
 		RoomGridTemplate.EndCells.Add(ExitGridCoords);
 	}
+	// Use override blackout cells or generate them here
+	if (OverrideBlackoutCells.Num() > 0)
+	{
+		// Use the manually specifid blackout cells.
+		GridForge->BlackoutCells = OverrideBlackoutCells;
+	}
+	
+	// Fill the RoomGridTemplate's grid
 	GridForge->GenerateGridTemplate(GridRandStream, RoomGridTemplate, bSuccessful);
 
 	if (bSuccessful)

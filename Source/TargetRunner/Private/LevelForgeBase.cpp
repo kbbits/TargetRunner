@@ -83,7 +83,7 @@ bool ULevelForgeBase::GenerateThumbnail(TAssetPtr<UTexture2D> Thumbnail)
 
 bool ULevelForgeBase::GenerateGridExtents(const float DifficultyTier, FLevelTemplate& LevelTemplate)
 {
-	DebugLog(FString::Printf(TEXT("GenerateGridExtents")));
+	DebugLog(TEXT("GenerateGridExtents"));
 	float NormalizedDifficulty = MAX_TIER > 0 ? (DifficultyTier / static_cast<float>(MAX_TIER)) : 1.0f;
 	int32 TmpExtent;
 	TmpExtent = (int32)FMath::RoundHalfToZero(FMath::GetMappedRangeValueClamped(FVector2D(0, MAX_TIER), FVector2D(1, MAX_EXTENT_X), DifficultyTier));
@@ -109,7 +109,7 @@ bool ULevelForgeBase::GenerateGridExtents(const float DifficultyTier, FLevelTemp
 
 bool ULevelForgeBase::GenerateResourcesAvailable(const float DifficultyTier, TArray<FResourceQuantity>& ResourcesAvailable)
 {
-	DebugLog(FString::Printf(TEXT("GenerateResourcesAvailable")));
+	DebugLog(TEXT("GenerateResourcesAvailable"));
 	TMap<int32, FResourceTypeDataCollection> TierResources;
 	if (UResourceFunctionLibrary::ResourceDataByTier(ResourceDataTable, 0.0f, DifficultyTier+1, TierResources) == 0) 
 	{ 

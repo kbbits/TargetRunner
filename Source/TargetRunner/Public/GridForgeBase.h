@@ -24,25 +24,23 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TArray<FVector2D> BlackoutCells;
 
-    int32 GridExtentMinX;
-    int32 GridExtentMaxX;
-    int32 GridExtentMinY;
-    int32 GridExtentMaxY;
-
 protected:
 
+    FRoomGridTemplate* WorkingRoomGridTemplate;
+
 #if WITH_EDITOR
-    const bool bEnableClassDebugLog = false;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+        bool bEnableClassDebugLog = true;
 #endif
 
 public:
 
     UFUNCTION(BlueprintCallable)
-        virtual void GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate, bool& Successful);
+        virtual void GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& NewRoomGridTemplate, bool& Successful);
 
     // Generates the underlying cell maze using info from the RoomGridTemplate. 
     UFUNCTION(BlueprintCallable)
-        virtual void GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandStream, const FRoomGridTemplate& RoomGridTemplate, bool& Successful);
+        virtual void GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandStream, bool& Successful);
 
     UFUNCTION(BlueprintCallable)
         bool GetRoomRef(FRoomGridTemplate& RoomGridTemplate, const FVector2D& Coords, FRoomTemplate& RoomTemplate);
@@ -52,7 +50,10 @@ public:
 
 protected:
 
-    void SetupFromRoomGridTemplate(const FRoomGridTemplate& RoomGridTemplate);
+    void SetRoomGridTemplate(FRoomGridTemplate& RoomGridTemplate);
+
+    // Base class implementation of picking blackout cells.
+    virtual void GenerateBlackoutCells(FRandomStream& RandStream);
 
     FRoomTemplate* GetOrCreateRoom(FRoomGridTemplate& RoomGridTemplate, const FVector2D Coords, bool& bFound);
 
@@ -68,15 +69,24 @@ protected:
     ETRWallState GetWallStateFromNeighbor(const ETRWallState NeighborState, const bool bConnectedToNeighbor);
 
     // Take our grid of cells and translate it to fill out the room grid in the RoomGridTemplate.
-    void TranslateCellGridToRoomGrid(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate);
+    void TranslateCellGridToRoomGrid(UPARAM(ref) FRandomStream& RandStream);
 
     // Take a given grid cell and translte it to a RoomTemplate, then put that into the room grid in the RoomGridTemplate.
     void TranslateCellToRoom(UPARAM(ref) FRandomStream& RandStream, UGridTemplateCell* Cell, FRoomGridTemplate& RoomGridTemplate);
 
-    // Grid cells related - for generating the base cell maze data.
+    // ======== Grid cells related - for generating the base cell maze data. ============
 
     UFUNCTION(BlueprintCallable)
         UGridTemplateCell* GetCell(const FVector2D& Coords, bool& bFound);
+
+    // Adds a placeholder blocked cell for neighbors outside grid extents.
+    UFUNCTION(BlueprintCallable)
+        void GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
+
+    // Adds a placeholder blocked cell for neighbors outside grid extents.
+    void GetCellNeighbors(const UGridTemplateCell& Cell, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
+
+    bool HasOpposingBlockedNeighbors(const TMap<ETRDirection, UGridTemplateCell*>& Neighbors, bool& bOpposedNS, bool& bOpposedEW);
 
     UFUNCTION(BlueprintCallable)
         UGridTemplateCell* GetOrCreateCellXY(const int32 X, const int32 Y);
@@ -85,16 +95,29 @@ protected:
         UGridTemplateCell* GetOrCreateCell(const FVector2D& Coords);
 
     UFUNCTION(BlueprintCallable)
-        UGridTemplateCell* GetCellNeighbor(const int32 X, const int32 Y, const ETRDirection Direction);
+        UGridTemplateCell* GetOrCreateCellNeighbor(const int32 X, const int32 Y, const ETRDirection Direction);
     
     UFUNCTION(BlueprintCallable)
-        void GetCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells);
+        void GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells);
 
     UFUNCTION(BlueprintCallable)
         void GetUnflaggedCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeBlocked = false);
 
     // If there are no start or end cells selected, select one of each and set it in the RoomTemplateGrid.
-    void PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate);    
+    void PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream);
+
+    // Picks a coordinate for a blackout cell.
+    // Returns true if a coordinate could be selected, false otherwise.
+    bool PickBlackoutCoords(FRandomStream& RandStream, FVector2D& BlackoutCoords);
+
+    bool IsInGrid(const FVector2D Coords);
+
+    // Each grid cell can also be identified by a number. The number of a given cell depends on the extents of the grid. 
+    // Cells are numbered starting at GridExtentMinX, GridExtentMinY, proceeding along the +Y axis, then up the +X axis.
+    // Resulting in cell 0 being at [GridExtentMinX, GridExtentMinY] and the highest cell number at [GridExtentMaxX, GridExtentMaxY].
+    int32 GridCoordsToCellNumber(const FVector2D Coords);
+
+    //FVector2D CellNumberToGridCoords(const int32 CellNumber);
     
     // Debug
     FString RoomToString(const FRoomTemplate& Room);

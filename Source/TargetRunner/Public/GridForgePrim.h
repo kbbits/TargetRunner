@@ -19,7 +19,7 @@ public:
     virtual void GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& TemplateGrid, bool& bSuccessful) override;
 
     // Generates the underlying cell maze, which the room template is based on.
-    virtual void GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandStream, const FRoomGridTemplate& RoomGridTemplate, bool& bSuccessful) override;
+    virtual void GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandStream, bool& bSuccessful) override;
 
 protected:
 

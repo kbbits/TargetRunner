@@ -9,22 +9,23 @@ void UGridForgePrim::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream,
 {
 	DebugLog(FString::Printf(TEXT("%s - GenerateGridTemplate"), *this->GetName()));
 
-	SetupFromRoomGridTemplate(RoomGridTemplate);
+	SetRoomGridTemplate(RoomGridTemplate);
 	
-	PickStartAndEndCells(RandStream, RoomGridTemplate);
-
-	GenerateGridTemplateCells(RandStream, RoomGridTemplate, bSuccessful);
+	GenerateBlackoutCells(RandStream);
+	PickStartAndEndCells(RandStream);
+	GenerateGridTemplateCells(RandStream, bSuccessful);
 	if (bSuccessful)
 	{
-		TranslateCellGridToRoomGrid(RandStream, RoomGridTemplate);
+		TranslateCellGridToRoomGrid(RandStream);
 	}
 }
 
 // Fill the GridTemplate using our version of the Prim algorithm.
-void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandStream, const FRoomGridTemplate& RoomGridTemplate, bool& bSuccessful)
+void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandStream, bool& bSuccessful)
 {
 	bSuccessful = false;
-	
+	FRoomGridTemplate& RoomGridTemplate = *WorkingRoomGridTemplate;
+
 	if (RoomGridTemplate.StartCells.Num() == 0)
 	{
 		UE_LOG(LogTRGame, Error, TEXT("GridForge StartCell not set."));

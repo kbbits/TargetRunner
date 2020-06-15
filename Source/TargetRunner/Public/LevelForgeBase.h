@@ -11,7 +11,7 @@
 /**
  *
  */
-UCLASS(BlueprintType, Config=Game)
+UCLASS(BlueprintType, Blueprintable, Config=Game)
 class TARGETRUNNER_API ULevelForgeBase : public UObject
 {
     GENERATED_BODY()
@@ -121,7 +121,9 @@ protected:
         
     // Debug
     #if WITH_EDITOR
-    FORCEINLINE void DebugLog(const FString& LogString) { UE_LOG(LogTRGame, Log, TEXT("%s"), *LogString); };
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+        bool bEnableClassDebugLog = true;
+    FORCEINLINE void DebugLog(const FString& LogString) { if (bEnableClassDebugLog) { UE_LOG(LogTRGame, Log, TEXT("%s"), *LogString); } };
     #else
     FORCEINLINE void DebugLog(const FString& LogString) { };
     #endif

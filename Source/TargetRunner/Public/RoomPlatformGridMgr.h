@@ -40,9 +40,9 @@ public:
 		FRoomGridTemplate RoomGridTemplate;
 
 	// These cells are not available to be part of the maze grid.
-	// These are determined during grid generation.
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
-		TArray<FVector2D> BlackoutCells;
+	// These are usually determined during grid generation if this array is empty, but can be manually specified here.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<FVector2D> OverrideBlackoutCells;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -68,4 +68,8 @@ public:
 	virtual void DestroyGridImpl() override;
 	
 	TArray<FRoomTemplate*> GetAllRoomTemplates();
+
+protected:
+
+	
 };

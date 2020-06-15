@@ -7,7 +7,7 @@
 
 void UGridForgeManual::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate, bool& Successful)
 {
-	SetupFromRoomGridTemplate(RoomGridTemplate);
+	SetRoomGridTemplate(RoomGridTemplate);
 
 	// Don't call PickStartAndEndCells() because we are choosing them manually.
 	RoomGridTemplate.StartCells.Empty();
