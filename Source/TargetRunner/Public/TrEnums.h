@@ -3,10 +3,14 @@
 UENUM(BlueprintType)
 enum class ETRDirection : uint8
 {
-	North	UMETA(DisplayName = "North"),
-	East	UMETA(DisplayName = "East"),
-	South	UMETA(DisplayName = "South"),
-	West	UMETA(DisplayName = "West")
+	North		UMETA(DisplayName = "North"),
+	East		UMETA(DisplayName = "East"),
+	South		UMETA(DisplayName = "South"),
+	West		UMETA(DisplayName = "West"),
+	NorthWest	UMETA(DispalyName = "NorthWest"),
+	NorthEast	UMETA(DispalyName = "NorthEast"),
+	SouthEast	UMETA(DispalyName = "SouthEast"),
+	SouthWest	UMETA(DispalyName = "SouthWest")
 };
 
 UENUM(BlueprintType)

@@ -11,12 +11,14 @@
 /**
  *
  */
-UCLASS()
+UCLASS(Blueprintable)
 class TARGETRUNNER_API UGridForgeBase : public UObject
 {
     GENERATED_BODY()
 
 public:
+    UGridForgeBase();
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TMap<int32, UGridTemplateCellRow*> GridTemplateCells;
 
@@ -24,13 +26,31 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TArray<FVector2D> BlackoutCells;
 
+    // Applied as a multiplier to the number of blackout cells generated.
+    // Default is 1.0.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        float BlackoutDensityFactor;
+
+    // 0 - 1. Higher bias increases chance blackout cells will be towards center.
+    // Default = 0.75
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        float BlackoutCellCenterBias;
+
+    // Higher bias increases chance of blackout cells on X edges, lower along Y edges.
+    // 0-1  Default = 0.5
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        float BlackoutCellXYBias;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        int32 BlackoutSearchDistance;
+
 protected:
 
     FRoomGridTemplate* WorkingRoomGridTemplate;
 
 #if WITH_EDITOR
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-        bool bEnableClassDebugLog = true;
+        bool bEnableClassDebugLog = false;
 #endif
 
 public:
@@ -86,7 +106,7 @@ protected:
     // Adds a placeholder blocked cell for neighbors outside grid extents.
     void GetCellNeighbors(const UGridTemplateCell& Cell, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
 
-    bool HasOpposingBlockedNeighbors(const TMap<ETRDirection, UGridTemplateCell*>& Neighbors, bool& bOpposedNS, bool& bOpposedEW);
+    bool HasOpposingBlockedNeighbors(const FVector2D& Coords, const int32 Distance, const TArray<FVector2D>& IgnoredCells, TMap<ETRDirection, UGridTemplateCell*>& Neighbors, bool& bOpposedNS, bool& bOpposedEW);
 
     UFUNCTION(BlueprintCallable)
         UGridTemplateCell* GetOrCreateCellXY(const int32 X, const int32 Y);
@@ -111,6 +131,8 @@ protected:
     bool PickBlackoutCoords(FRandomStream& RandStream, FVector2D& BlackoutCoords);
 
     bool IsInGrid(const FVector2D Coords);
+
+    FVector2D CellToCoords(const UGridTemplateCell* Cell);
 
     // Each grid cell can also be identified by a number. The number of a given cell depends on the extents of the grid. 
     // Cells are numbered starting at GridExtentMinX, GridExtentMinY, proceeding along the +Y axis, then up the +X axis.

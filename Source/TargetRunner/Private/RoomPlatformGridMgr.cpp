@@ -40,21 +40,28 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	// Destroy old grid, if any
 	DestroyGrid();
 	DebugLog(FString::Printf(TEXT("%s GenerateGrid - Generating grid. Extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), *this->GetName(), GridExtentMinX, GridExtentMinY, GridExtentMaxX, GridExtentMaxY));
+	FRandomStream* GridStreamFound = nullptr;
 	// Grab the game mode.
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
 	if (GameMode == nullptr)
 	{
-		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode."), *this->GetName());
-		return;
+		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode. Using default rand stream."), *this->GetName());
+		//return;
+		GridStreamFound = &DefaultGridRandStream;
 	}
-	// Get our random stream and create the grid forge
-	FRandomStream& GridRandStream = GameMode->GetGridStream();
+	else 
+	{
+		// Get our random stream and create the grid forge
+		GridStreamFound = &GameMode->GetGridStream();
+	}
+	FRandomStream& GridRandStream = *GridStreamFound;
 	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
 	if (GridForge == nullptr)
 	{
 		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not construct GridForge."), *this->GetName());
 		return;
 	}
+	GridForge->EmptyGridTemplateCells();
 	// Populate basic properties of the template
 	RoomGridTemplate.GridCellWorldSize = GridCellWorldSize;
 	RoomGridTemplate.RoomCellSubdivision = RoomCellSubdivision;
@@ -78,6 +85,10 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	{
 		// Use the manually specifid blackout cells.
 		GridForge->BlackoutCells = OverrideBlackoutCells;
+	}
+	else
+	{
+		GridForge->BlackoutCells.Empty();
 	}
 	
 	// Fill the RoomGridTemplate's grid
@@ -191,23 +202,27 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	if (RoomTemplate == nullptr) { UE_LOG(LogTRGame, Error, TEXT("%s - Could not find room template at X:%d Y:%d"), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y); }
 
 	NewRoom = GetWorld()->SpawnActor<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(GridCoords), SpawnParams);
-	NewRoom->MyGridManager = this;
-	NewRoom->GridX = GridCoords.X;
-	NewRoom->GridY = GridCoords.Y;
-	// Create wall template, sized so each of the four walls gets [RoomCellSubdivision] entries.
-	NewRoom->WallTemplate.Empty(4 * RoomGridTemplate.RoomCellSubdivision);
-	TArray<ETRWallState> Walls;
-	Walls.Add(RoomTemplate->NorthWall);
-	Walls.Add(RoomTemplate->EastWall);
-	Walls.Add(RoomTemplate->SouthWall);
-	Walls.Add(RoomTemplate->WestWall);
-	// Append wall segments for each wall. 
-	for (ETRWallState WallState : Walls)
+	if (NewRoom != nullptr)
 	{
-		NewRoom->WallTemplate.Append(WallState == ETRWallState::Blocked ? SolidWall : (WallState == ETRWallState::Door ? DoorWall : EmptyWall));
+		NewRoom->MyGridManager = this;
+		NewRoom->RoomTemplate = *RoomTemplate;
+		NewRoom->GridX = GridCoords.X;
+		NewRoom->GridY = GridCoords.Y;
+		// Create wall template, sized so each of the four walls gets [RoomCellSubdivision] entries.
+		NewRoom->WallTemplate.Empty(4 * RoomGridTemplate.RoomCellSubdivision);
+		TArray<ETRWallState> Walls;
+		Walls.Add(RoomTemplate->NorthWall);
+		Walls.Add(RoomTemplate->EastWall);
+		Walls.Add(RoomTemplate->SouthWall);
+		Walls.Add(RoomTemplate->WestWall);
+		// Append wall segments for each wall. 
+		for (ETRWallState WallState : Walls)
+		{
+			NewRoom->WallTemplate.Append(WallState == ETRWallState::Blocked ? SolidWall : (WallState == ETRWallState::Door ? DoorWall : EmptyWall));
+		}
+		AddPlatformToGridMap(NewRoom);
+		NewRoom->GenerateRoom();
 	}
-	AddPlatformToGridMap(NewRoom);
-	NewRoom->GenerateRoom();
 }
 
 void ARoomPlatformGridMgr::SpawnRooms_Implementation()

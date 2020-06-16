@@ -3,6 +3,7 @@
 #include "TrEnums.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "RoomTemplate.h"
 #include "PlatformBase.h"
 #include "Math/TransformNonVectorized.h"
 #include "RoomPlatformBase.generated.h"
@@ -30,6 +31,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FTransform> WallSectionTransforms;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		FRoomTemplate RoomTemplate;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

@@ -129,8 +129,9 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 	}
 	else
 	{
+		DefaultGridRandStream.Reset();
 		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode."), *this->GetName());
-		return;
+		//return;
 	}
 
 	GenerateGridImpl();

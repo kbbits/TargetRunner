@@ -16,6 +16,10 @@ class TARGETRUNNER_API UGridForgePrim : public UGridForgeBase
 
 public:
 
+    // Stop generating additional grid after a path to the exit has been found.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+        bool bStopWhenExitFound = true;
+
     virtual void GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& TemplateGrid, bool& bSuccessful) override;
 
     // Generates the underlying cell maze, which the room template is based on.

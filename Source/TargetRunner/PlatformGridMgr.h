@@ -69,10 +69,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 RoomCellSubdivision;
 	
-	// TODO: Replace this with usage of the randstream in TR_GameMode.
+	// Use this stream if no GameMode (ex: in Editor)
 	// Should only be used on server.
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//	FRandomStream GridRandStream;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FRandomStream DefaultGridRandStream;
 
 	// A map of actor references initialized and used at runtime for efficiency.
 	// Only valid on server.

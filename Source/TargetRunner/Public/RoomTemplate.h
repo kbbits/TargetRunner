@@ -1,13 +1,13 @@
 #pragma once
 
 
-#include "Engine/DataTable.h"
+//#include "Engine/DataTable.h"
 #include "TrEnums.h"
 #include "ResourceQuantity.h"
 #include "RoomTemplate.generated.h"
 
 USTRUCT(BlueprintType)
-struct FRoomTemplate : public FTableRowBase
+struct FRoomTemplate //: public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -25,6 +25,10 @@ public:
 		ETRWallState SouthWall;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		ETRWallState WestWall;
+
+	// If this is a "blackout" room. 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bIsBlackout;
 
 	// Is this room an "inside" room (bIsInterior=true) or an "outside" room (bIsInterior=false). Default = false = exterior rooms.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
