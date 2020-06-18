@@ -23,6 +23,9 @@ public:
 		int32 Y;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 Group;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		ETRGridCellState CellState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -12,4 +12,5 @@ UGridTemplateCell::UGridTemplateCell()
 	CellState = ETRGridCellState::Open;
 	bOnPath = false;
 	bFlagged = false;
+	Group = 0;
 }

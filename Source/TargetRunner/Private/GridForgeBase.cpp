@@ -130,28 +130,27 @@ void UGridForgeBase::GenerateBlackoutCells(FRandomStream& RandStream)
 					TArray<FVector2D> IgnoredCells;
 					UGridTemplateCell* CellOne = nullptr;
 					UGridTemplateCell* CellTwo = nullptr;
-					bool bOpposedNS, bOpposedEW;
+					//bool bBlockedNS, bBlockedEW;
+					int32 GroupNumber;
 					// Check our neighbors
-					if (HasOpposingBlockedNeighbors(BlackoutCoords, BlackoutSearchDistance, IgnoredCells, Neighbors, bOpposedNS, bOpposedEW))
-					{
-						PickFails++;
-						continue; // pick again
-						//if (bOpposedNS)
-						//{
-						//}
-						//if (bOpposedEW)
-						//{
-						//}
-					}
-					else
+					//if (HasOpposingBlockedNeighbors(BlackoutCoords, BlackoutSearchDistance, IgnoredCells, Neighbors, bBlockedNS, bBlockedEW))
+					GetBlockedCellNeighbors(BlackoutCoords, Neighbors);
+					if (AllGroupCellsAdjacent(BlackoutCoords, Neighbors) && GetBlockingCellGroupNumber(BlackoutCoords, Neighbors, GroupNumber))
 					{
 						BlackoutCoords = FVector2D((int32)BlackoutCoords.X, (int32)BlackoutCoords.Y);
 						BlackoutCells.Add(BlackoutCoords);
-						DebugLog(FString::Printf(TEXT("Added blackout cell X:%f Y:%f"), BlackoutCoords.X, BlackoutCoords.Y));
+						DebugLog(FString::Printf(TEXT("Added blackout cell X:%f Y:%f in group: %d"), BlackoutCoords.X, BlackoutCoords.Y, GroupNumber));
 						NewCell = GetOrCreateCell(BlackoutCoords);
 						NewCell->CellState = ETRGridCellState::Blocked;
+						NewCell->Group = GroupNumber;
+						BlockingGroups[GroupNumber]->RowCells.Add(GridCoordsToCellNumber(BlackoutCoords), NewCell);
 						--BlackoutCount;
 						PickFails = 0;
+					}
+					else
+					{
+						PickFails++;
+						continue; // pick again
 					}
 				}
 				else
@@ -319,10 +318,12 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 			Room->EastWall = ETRWallState::Empty;
 			Room->SouthWall = ETRWallState::Empty;
 			Room->WestWall = ETRWallState::Empty;
+			Room->Group = Cell->Group;
 			Room->bIsBlackout = true;
 		}
 		else
 		{
+			Room->Group = Cell->Group;
 			Room->bIsBlackout = false;
 			// Determine wall state
 			// North	
@@ -398,6 +399,7 @@ void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection
 			Cell->CellState = ETRGridCellState::Blocked;
 			Cell->X = (int32)Coords.X + 1;
 			Cell->Y = (int32)Coords.Y;
+			Cell->Group = -1;
 		}
 		NeighborCells.Add(ETRDirection::North, Cell);
 	}
@@ -412,6 +414,7 @@ void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection
 			Cell->CellState = ETRGridCellState::Blocked;
 			Cell->X = (int32)Coords.X;
 			Cell->Y = (int32)Coords.Y + 1;
+			Cell->Group = -1;
 		}
 		NeighborCells.Add(ETRDirection::East, Cell);
 	}
@@ -426,6 +429,7 @@ void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection
 			Cell->CellState = ETRGridCellState::Blocked;
 			Cell->X = (int32)Coords.X - 1;
 			Cell->Y = (int32)Coords.Y;
+			Cell->Group = -1;
 		}
 		NeighborCells.Add(ETRDirection::South, Cell);
 	}
@@ -440,6 +444,7 @@ void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection
 			Cell->CellState = ETRGridCellState::Blocked;
 			Cell->X = (int32)Coords.X;
 			Cell->Y = (int32)Coords.Y - 1;
+			Cell->Group = -1;
 		}
 		NeighborCells.Add(ETRDirection::West, Cell);
 	}
@@ -455,6 +460,7 @@ void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection
 			Cell->CellState = ETRGridCellState::Blocked;
 			Cell->X = (int32)Coords.X + 1;
 			Cell->Y = (int32)Coords.Y - 1;
+			Cell->Group = -1;
 		}
 		NeighborCells.Add(ETRDirection::NorthWest, Cell);
 	}
@@ -469,6 +475,7 @@ void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection
 			Cell->CellState = ETRGridCellState::Blocked;
 			Cell->X = (int32)Coords.X + 1;
 			Cell->Y = (int32)Coords.Y + 1;
+			Cell->Group = -1;
 		}
 		NeighborCells.Add(ETRDirection::NorthEast, Cell);
 	}
@@ -483,6 +490,7 @@ void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection
 			Cell->CellState = ETRGridCellState::Blocked;
 			Cell->X = (int32)Coords.X - 1;
 			Cell->Y = (int32)Coords.Y + 1;
+			Cell->Group = -1;
 		}
 		NeighborCells.Add(ETRDirection::SouthEast, Cell);
 	}
@@ -497,6 +505,7 @@ void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection
 			Cell->CellState = ETRGridCellState::Blocked;
 			Cell->X = (int32)Coords.X - 1;
 			Cell->Y = (int32)Coords.Y - 1;
+			Cell->Group = -1;
 		}
 		NeighborCells.Add(ETRDirection::SouthWest, Cell);
 	}
@@ -507,7 +516,18 @@ void UGridForgeBase::GetCellNeighbors(const UGridTemplateCell& Cell, TMap<ETRDir
 	GetCellNeighbors(FVector2D(Cell.X, Cell.Y), NeighborCells);
 }
 
-bool UGridForgeBase::HasOpposingBlockedNeighbors(const FVector2D& Coords, const int32 Distance, const TArray<FVector2D>& IgnoredCells, TMap<ETRDirection, UGridTemplateCell*>& Neighbors, bool& bOpposedNS, bool& bOpposedEW)
+void UGridForgeBase::GetBlockedCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells)
+{
+	TMap<ETRDirection, UGridTemplateCell*> AllNeighbors;
+	GetCellNeighbors(Coords, AllNeighbors);
+	NeighborCells.Empty();
+	for (TPair<ETRDirection, UGridTemplateCell*> NeighborEntry : AllNeighbors)
+	{
+		if (NeighborEntry.Value != nullptr) { if (NeighborEntry.Value->CellState == ETRGridCellState::Blocked) { NeighborCells.Add(NeighborEntry.Key, NeighborEntry.Value); } }
+	}
+}
+
+bool UGridForgeBase::HasOpposingBlockedNeighbors(const FVector2D& Coords, const int32 Distance, const TArray<FVector2D>& IgnoredCells, TMap<ETRDirection, UGridTemplateCell*>& Neighbors, bool& bBlockedNS, bool& bBlockedEW)
 {
 	
 	FString LogIndent;
@@ -516,54 +536,49 @@ bool UGridForgeBase::HasOpposingBlockedNeighbors(const FVector2D& Coords, const 
 	// If outside the grid, we're blocking at least one direction NS or EW
 	if (!IsInGrid(Coords))
 	{
-		bOpposedNS = int32(Coords.Y) < WorkingRoomGridTemplate->GridExtentMinY || int32(Coords.Y) > WorkingRoomGridTemplate->GridExtentMaxY ||
+		bBlockedEW = int32(Coords.Y) <= WorkingRoomGridTemplate->GridExtentMinY || int32(Coords.Y) >= WorkingRoomGridTemplate->GridExtentMaxY ||
 			WorkingRoomGridTemplate->GridExtentMinX - (int32)Coords.X > 1 || (int32)Coords.X - WorkingRoomGridTemplate->GridExtentMaxX > 1;
-		bOpposedEW = int32(Coords.X) < WorkingRoomGridTemplate->GridExtentMinX || int32(Coords.X) > WorkingRoomGridTemplate->GridExtentMaxX ||
+		bBlockedNS = int32(Coords.X) <= WorkingRoomGridTemplate->GridExtentMinX || int32(Coords.X) >= WorkingRoomGridTemplate->GridExtentMaxX ||
 			WorkingRoomGridTemplate->GridExtentMinY - (int32)Coords.Y > 1 || (int32)Coords.Y - WorkingRoomGridTemplate->GridExtentMaxY > 1;
-		//DebugLog(FString::Printf(TEXT("%sOut of grid is blocked for X:%d Y:%d - NS:%s EW: %s"), *LogIndent, (int32)Coords.X, (int32)Coords.Y, (bOpposedNS ? TEXT("true") : TEXT("false")), (bOpposedEW ? TEXT("true") : TEXT("false"))));
+		//DebugLog(FString::Printf(TEXT("%sOut of grid is blocked for X:%d Y:%d - NS:%s EW: %s"), *LogIndent, (int32)Coords.X, (int32)Coords.Y, (bBlockedNS ? TEXT("true") : TEXT("false")), (bBlockedEW ? TEXT("true") : TEXT("false"))));
 		return true;
 	}
 
-	bOpposedNS = false;
-	bOpposedEW = false;
-	TArray<UGridTemplateCell*> GroupOne;
-	TArray<UGridTemplateCell*> GroupTwo;
+	bBlockedNS = false;
+	bBlockedEW = false;
+	TMap<ETRDirection, UGridTemplateCell*> GroupOne;
+	TMap<ETRDirection, UGridTemplateCell*> GroupTwo;
 	
-	GetCellNeighbors(Coords, Neighbors);
-	if (Neighbors[ETRDirection::NorthWest] != nullptr && Neighbors[ETRDirection::NorthWest]->CellState == ETRGridCellState::Blocked) {
-		GroupOne.Add(Neighbors[ETRDirection::NorthWest]); }
-	if (Neighbors[ETRDirection::North] != nullptr && Neighbors[ETRDirection::North]->CellState == ETRGridCellState::Blocked) { 
-		GroupOne.Add(Neighbors[ETRDirection::North]); }
-	if (Neighbors[ETRDirection::NorthEast] != nullptr && Neighbors[ETRDirection::NorthEast]->CellState == ETRGridCellState::Blocked) {
-		GroupOne.Add(Neighbors[ETRDirection::NorthEast]); }
-	if (Neighbors[ETRDirection::SouthWest] != nullptr && Neighbors[ETRDirection::SouthWest]->CellState == ETRGridCellState::Blocked) {
-		GroupTwo.Add(Neighbors[ETRDirection::SouthWest]); }
-	if (Neighbors[ETRDirection::South] != nullptr && Neighbors[ETRDirection::South]->CellState == ETRGridCellState::Blocked) {
-		GroupTwo.Add(Neighbors[ETRDirection::South]); }
-	if (Neighbors[ETRDirection::SouthEast] != nullptr && Neighbors[ETRDirection::SouthEast]->CellState == ETRGridCellState::Blocked) {
-		GroupTwo.Add(Neighbors[ETRDirection::SouthEast]); }
+	// If anything on north _and_ south rows blocks, the EW travel is blocked.
+	GetBlockedCellNeighbors(Coords, Neighbors);
+	if (Neighbors[ETRDirection::NorthWest] != nullptr ) { GroupOne.Add(ETRDirection::NorthWest, Neighbors[ETRDirection::NorthWest]); }
+	if (Neighbors[ETRDirection::North] != nullptr )     { GroupOne.Add(ETRDirection::North, Neighbors[ETRDirection::North]); }
+	if (Neighbors[ETRDirection::NorthEast] != nullptr ) { GroupOne.Add(ETRDirection::NorthEast, Neighbors[ETRDirection::NorthEast]); }
+	if (Neighbors[ETRDirection::SouthWest] != nullptr ) { GroupTwo.Add(ETRDirection::SouthWest, Neighbors[ETRDirection::SouthWest]); }
+	if (Neighbors[ETRDirection::South] != nullptr )     { GroupTwo.Add(ETRDirection::South, Neighbors[ETRDirection::South]); }
+	if (Neighbors[ETRDirection::SouthEast] != nullptr ) { GroupTwo.Add(ETRDirection::SouthEast, Neighbors[ETRDirection::SouthEast]); }
 	if (GroupOne.Num() > 0 && GroupTwo.Num() > 0)
 	{
 		if (Distance < 1)
 		{
-			bOpposedNS = true;
+			bBlockedEW = true;
 		}
 		else
 		{
 			TMap<ETRDirection, UGridTemplateCell*> NeighborsNeighbors;
 			TArray<FVector2D> NeighborIgnoredCells;
-			bool bNOpposedNS;
-			bool bNOpposedEW;
+			bool bNBlockedNS;
+			bool bNBlockedEW;
 			bool bFoundUnblockedOne = false;
 			bool bFoundUnblockedTwo = false;
 			NeighborIgnoredCells.Append(IgnoredCells);
 			NeighborIgnoredCells.Add(Coords);
-			for (UGridTemplateCell* NeighborCell : GroupOne)
+			for (TPair<ETRDirection, UGridTemplateCell*> NeighborCell : GroupOne)
 			{
-				if (!IgnoredCells.Contains(CellToCoords(NeighborCell)))
+				if (!IgnoredCells.Contains(CellToCoords(NeighborCell.Value)))
 				{
-					NeighborIgnoredCells.Add(CellToCoords(NeighborCell));
-					if (!HasOpposingBlockedNeighbors(CellToCoords(NeighborCell), Distance - 1, NeighborIgnoredCells, NeighborsNeighbors, bNOpposedNS, bNOpposedEW))
+					NeighborIgnoredCells.Add(CellToCoords(NeighborCell.Value));
+					if (!HasOpposingBlockedNeighbors(CellToCoords(NeighborCell.Value), Distance - 1, NeighborIgnoredCells, NeighborsNeighbors, bNBlockedNS, bNBlockedEW))
 					{
 						bFoundUnblockedOne = true;
 						break;
@@ -572,12 +587,12 @@ bool UGridForgeBase::HasOpposingBlockedNeighbors(const FVector2D& Coords, const 
 			}
 			if (bFoundUnblockedOne)
 			{
-				for (UGridTemplateCell* NeighborCell : GroupTwo)
+				for (TPair<ETRDirection, UGridTemplateCell*> NeighborCell : GroupTwo)
 				{
-					if (!IgnoredCells.Contains(CellToCoords(NeighborCell)))
+					if (!IgnoredCells.Contains(CellToCoords(NeighborCell.Value)))
 					{
-						NeighborIgnoredCells.Add(CellToCoords(NeighborCell));
-						if (!HasOpposingBlockedNeighbors(CellToCoords(NeighborCell), Distance - 1, NeighborIgnoredCells, NeighborsNeighbors, bNOpposedNS, bNOpposedEW))
+						NeighborIgnoredCells.Add(CellToCoords(NeighborCell.Value));
+						if (!HasOpposingBlockedNeighbors(CellToCoords(NeighborCell.Value), Distance - 1, NeighborIgnoredCells, NeighborsNeighbors, bNBlockedNS, bNBlockedEW))
 						{
 							bFoundUnblockedTwo = true;
 							break;
@@ -585,71 +600,358 @@ bool UGridForgeBase::HasOpposingBlockedNeighbors(const FVector2D& Coords, const 
 					}
 				}
 			}
-			bOpposedNS = !(bFoundUnblockedOne && bFoundUnblockedTwo);
+			bBlockedNS = !(bFoundUnblockedOne && bFoundUnblockedTwo);
 		}
 	}
 
-	if (Neighbors[ETRDirection::SouthWest] != nullptr && Neighbors[ETRDirection::SouthWest]->CellState == ETRGridCellState::Blocked) { 
-		GroupOne.Add(Neighbors[ETRDirection::SouthWest]); }
-	if (Neighbors[ETRDirection::West] != nullptr && Neighbors[ETRDirection::West]->CellState == ETRGridCellState::Blocked) {
-		GroupOne.Add(Neighbors[ETRDirection::West]); }
-	if (Neighbors[ETRDirection::NorthWest] != nullptr && Neighbors[ETRDirection::NorthWest]->CellState == ETRGridCellState::Blocked) {
-		GroupOne.Add(Neighbors[ETRDirection::NorthWest]); }
-	if (Neighbors[ETRDirection::NorthEast] != nullptr && Neighbors[ETRDirection::NorthEast]->CellState == ETRGridCellState::Blocked) {
-		GroupTwo.Add(Neighbors[ETRDirection::NorthEast]); }
-	if (Neighbors[ETRDirection::East] != nullptr && Neighbors[ETRDirection::East]->CellState == ETRGridCellState::Blocked) {
-		GroupTwo.Add(Neighbors[ETRDirection::East]); }
-	if (Neighbors[ETRDirection::SouthEast] != nullptr && Neighbors[ETRDirection::SouthEast]->CellState == ETRGridCellState::Blocked) {
-		GroupTwo.Add(Neighbors[ETRDirection::SouthEast]); }
-	if (GroupOne.Num() > 0 && GroupTwo.Num() > 0)
+	//if (Neighbors[ETRDirection::SouthWest] != nullptr && Neighbors[ETRDirection::SouthWest]->CellState == ETRGridCellState::Blocked) { 
+	//	GroupOne.Add(Neighbors[ETRDirection::SouthWest]); }
+	//if (Neighbors[ETRDirection::West] != nullptr && Neighbors[ETRDirection::West]->CellState == ETRGridCellState::Blocked) {
+	//	GroupOne.Add(Neighbors[ETRDirection::West]); }
+	//if (Neighbors[ETRDirection::NorthWest] != nullptr && Neighbors[ETRDirection::NorthWest]->CellState == ETRGridCellState::Blocked) {
+	//	GroupOne.Add(Neighbors[ETRDirection::NorthWest]); }
+	//if (Neighbors[ETRDirection::NorthEast] != nullptr && Neighbors[ETRDirection::NorthEast]->CellState == ETRGridCellState::Blocked) {
+	//	GroupTwo.Add(Neighbors[ETRDirection::NorthEast]); }
+	//if (Neighbors[ETRDirection::East] != nullptr && Neighbors[ETRDirection::East]->CellState == ETRGridCellState::Blocked) {
+	//	GroupTwo.Add(Neighbors[ETRDirection::East]); }
+	//if (Neighbors[ETRDirection::SouthEast] != nullptr && Neighbors[ETRDirection::SouthEast]->CellState == ETRGridCellState::Blocked) {
+	//	GroupTwo.Add(Neighbors[ETRDirection::SouthEast]); }
+	//if (GroupOne.Num() > 0 && GroupTwo.Num() > 0)
+	//{
+	//	if (Distance < 1)
+	//	{
+	//		bBlockedEW = true;
+	//	}
+	//	else
+	//	{
+	//		TMap<ETRDirection, UGridTemplateCell*> NeighborsNeighbors;
+	//		TArray<FVector2D> NeighborIgnoredCells;
+	//		bool bNBlockedNS;
+	//		bool bNBlockedEW;
+	//		bool bFoundUnblockedOne = false;
+	//		bool bFoundUnblockedTwo = false;
+	//		NeighborIgnoredCells.Append(IgnoredCells);
+	//		NeighborIgnoredCells.Add(Coords);
+	//		for (UGridTemplateCell* NeighborCell : GroupOne)
+	//		{
+	//			if (!IgnoredCells.Contains(CellToCoords(NeighborCell)))
+	//			{
+	//				NeighborIgnoredCells.Add(CellToCoords(NeighborCell));
+	//				if (!HasOpposingBlockedNeighbors(CellToCoords(NeighborCell), Distance - 1, NeighborIgnoredCells, NeighborsNeighbors, bNBlockedNS, bNBlockedEW))
+	//				{
+	//					bFoundUnblockedOne = true;
+	//					break;
+	//				}
+	//			}
+	//		}
+	//		if (bFoundUnblockedOne)
+	//		{
+	//			for (UGridTemplateCell* NeighborCell : GroupTwo)
+	//			{
+	//				if (!IgnoredCells.Contains(CellToCoords(NeighborCell)))
+	//				{
+	//					NeighborIgnoredCells.Add(CellToCoords(NeighborCell));
+	//					if (!HasOpposingBlockedNeighbors(CellToCoords(NeighborCell), Distance - 1, NeighborIgnoredCells, NeighborsNeighbors, bNBlockedNS, bNBlockedEW))
+	//					{
+	//						bFoundUnblockedTwo = true;
+	//						break;
+	//					}
+	//				}
+	//			}
+	//		}
+	//		bBlockedEW = !(bFoundUnblockedOne && bFoundUnblockedTwo);
+	//	}
+	//}
+
+	//DebugLog(FString::Printf(TEXT("%sHasOpposingBlockedNeighbors for X:%d Y:%d - NS:%s EW: %s"), *LogIndent, (int32)Coords.X, (int32)Coords.Y, (bBlockedNS ? TEXT("true") : TEXT("false")), (bBlockedEW ? TEXT("true") : TEXT("false"))));
+	return (bBlockedNS || bBlockedEW);
+}
+
+bool UGridForgeBase::CanPlaceBlockingCell(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& FoundBlockingNeighbors)
+{
+	TMap<ETRDirection, UGridTemplateCell*>& BlockingNeighbors = FoundBlockingNeighbors;
+	// Get blocking neighbors in all eight directions.
+	GetBlockedCellNeighbors(Coords, BlockingNeighbors);
+	int32 NumBlockers = BlockingNeighbors.Num();
+	// init the group number;
+	//if (!GetBlockingCellGroupNumber(Coords, BlockingNeighbors, GroupNumber)) { return false; }
+
+	// If 0 or 1 blockers, ok to place a blocker
+	if (NumBlockers <= 1) { return true; }
+	// If 7 or more blockers, we're in an "ally" or "pocket", so it is ok to place blocker.
+	if (NumBlockers >= 7) { return true; }
+	// Take a look at our immediately adjacent neighbors.
+	int32 AdjacentBlockersNum = 0;
+	FVector2D Offset;
+	FVector2D AdjacentSumVector = FVector2D(0.0f, 0.f);
+	FVector2D AbsSumVector = FVector2D(0.0f, 0.f);
+	if (BlockingNeighbors.Contains(ETRDirection::North)) {
+		AdjacentBlockersNum++;
+		AdjacentSumVector += (CellToCoords(BlockingNeighbors[ETRDirection::North]) - Coords);
+	}
+	if (BlockingNeighbors.Contains(ETRDirection::East)) {
+		AdjacentBlockersNum++;
+		AdjacentSumVector += (CellToCoords(BlockingNeighbors[ETRDirection::East]) - Coords);
+	}
+	if (BlockingNeighbors.Contains(ETRDirection::South)) {
+		AdjacentBlockersNum++;
+		AdjacentSumVector += (CellToCoords(BlockingNeighbors[ETRDirection::South]) - Coords);
+	}
+	if (BlockingNeighbors.Contains(ETRDirection::West)) {
+		AdjacentBlockersNum++;
+		AdjacentSumVector += (CellToCoords(BlockingNeighbors[ETRDirection::West]) - Coords);
+	}
+	AbsSumVector = AdjacentSumVector.GetAbs();
+	// If at least three of N, S, Eand W are blocked, we're an ally or island and ok to place blocker.
+	if (AdjacentBlockersNum >= 3) { return true; }
+
+	// If all blockers are grid bounaries, ok to place blocker.
+	int32 NumExtentNeighbors = 0;
+	for (TPair<ETRDirection, UGridTemplateCell*> BlockerElem : BlockingNeighbors)
 	{
-		if (Distance < 1)
+		if (!IsInGrid(CellToCoords(BlockerElem.Value)))
 		{
-			bOpposedEW = true;
+			NumExtentNeighbors++;
+		}
+	}
+	if (NumExtentNeighbors == NumBlockers) { return true; }
+	
+	// Num Blockers is at least 2 here, (or it would have hit success above). And...
+	// If zero adjacent and total neighbors >= 2, it's a blocking join. 
+	// Or, if we have only two blockers on opposite sides of each other.
+	// Place only according to blocking join rules.
+	if ((AdjacentBlockersNum == 0 /*&& NumBlockers >= 2*/) ||
+		(NumBlockers == 2 && AdjacentSumVector.IsZero()))
+	{
+		return false;//GetBlockingCellGroupNumber(Coords, BlockingNeighbors, GroupNumber);
+	}
+
+	/* --- From here down AdjacentBlockersNum is 1 or 2 --- */
+	
+	bool bFound;
+	FVector2D ProdVector = FVector2D(1.0f, 1.0f);
+	FVector2D SumVector = FVector2D(0.0f, 0.f);
+	for (TPair<ETRDirection, UGridTemplateCell*> BlockerElem : BlockingNeighbors)
+	{
+		Offset = (CellToCoords(BlockerElem.Value) - Coords).RoundToVector();
+		// Sum the relative offsets of the blocking neighbors
+		SumVector += Offset;
+		ProdVector *= Offset;
+	}
+	AbsSumVector = SumVector.GetAbs();
+	// In a small "corner", ok to block
+	if (NumBlockers == 2 && AdjacentBlockersNum == 2 && !AdjacentSumVector.IsZero()) { return true; }
+	// Just two tucked next to each other, ok to add blocker
+	if (NumBlockers == 2 && AdjacentBlockersNum == 1 && AbsSumVector.GetMax() == 2) { return true; }
+	// If there are 3-5 total blockers: 
+	if (NumBlockers >= 3 && NumBlockers <= 5)
+	{
+		// if the absolute value of the sum is 3 in either component, they are in a line and all bunched up. It is ok to place blocker.
+		if (AbsSumVector.GetMax() == 3.0f) { return true; }
+		// If there are exactly 3 blockers
+		if (NumBlockers == 3)
+		{
+			// If the absolute value of the sum is 2 in both components, they are in a "corner", it is ok to place blocker.
+			// If one is 2 and the other is 0, its a "zag" corner and ok to place.
+			if ((AbsSumVector.X == 2.0f && (AbsSumVector.Y == 2.0f || AbsSumVector.Y == 0.0f)) ||
+				AbsSumVector.Y == 2.0f && AbsSumVector.X == 0.0f) {
+				return true;
+			}
+			if (AbsSumVector.GetMin() == 0.0f) {
+				if (AbsSumVector.GetMax() >= 2) { return true; }
+				if (AbsSumVector.GetMax() == 1.0f && ProdVector.IsZero()) { return true; }
+			}
+		}
+		if (NumBlockers == 4 || NumBlockers == 5)
+		{
+			// Only two adjacent, look at the opposite diagonal - if it not blocked, then it is ok to block us.
+			if (AdjacentBlockersNum == 2 && !AdjacentSumVector.IsZero())
+			{
+				UGridTemplateCell* DiagCell = GetCell(Coords - AdjacentSumVector, bFound);
+				if (DiagCell == nullptr || (bFound && DiagCell->CellState != ETRGridCellState::Blocked)) { return true; }
+			}
+		}
+	}
+	// All valid arrangements of 0-5 blocking neighbors that do not result in a "join" should be handled above.
+	// Valid arrangements of 6+ blocking neighbors are inherently handled by above.
+	// Everything that falls through to here is considered a "join".
+	// TODO: joining logic
+	// return CanPlaceJoiningCell(Coords);
+	return false;
+}
+
+
+bool UGridForgeBase::GetBlockingCellGroupNumber(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& BlockingNeighbors, int32& GroupNumber)
+{
+	GroupNumber = 0;
+	if (BlockingNeighbors.Num() == 0)
+	{
+		GetBlockedCellNeighbors(Coords, BlockingNeighbors);
+	}
+
+	TArray<int32> NeighborGroups;
+	int32 AnchoredCount = 0;
+	int32 UseGroupNumber = 0;
+	bool bHasOutOfGridNeighbor = false;
+	for (TPair<ETRDirection, UGridTemplateCell*> NeighborElem : BlockingNeighbors)
+	{
+		if (NeighborElem.Value->Group > 0) // out-of-grid cells have group -1, blocking cells must have group > 0
+		{
+			// Start with first group 
+			if (UseGroupNumber == 0) { UseGroupNumber = NeighborElem.Value->Group; }
+			// For each different group:
+			if (!NeighborGroups.Contains(NeighborElem.Value->Group))
+			{
+				NeighborGroups.Add(NeighborElem.Value->Group);
+				if (AnchoredCellGroups.Contains(NeighborElem.Value->Group)) {
+					AnchoredCount++; 
+					if (AnchoredCount == 1) { UseGroupNumber = NeighborElem.Value->Group; }
+				}
+			}
 		}
 		else
 		{
-			TMap<ETRDirection, UGridTemplateCell*> NeighborsNeighbors;
-			TArray<FVector2D> NeighborIgnoredCells;
-			bool bNOpposedNS;
-			bool bNOpposedEW;
-			bool bFoundUnblockedOne = false;
-			bool bFoundUnblockedTwo = false;
-			NeighborIgnoredCells.Append(IgnoredCells);
-			NeighborIgnoredCells.Add(Coords);
-			for (UGridTemplateCell* NeighborCell : GroupOne)
-			{
-				if (!IgnoredCells.Contains(CellToCoords(NeighborCell)))
-				{
-					NeighborIgnoredCells.Add(CellToCoords(NeighborCell));
-					if (!HasOpposingBlockedNeighbors(CellToCoords(NeighborCell), Distance - 1, NeighborIgnoredCells, NeighborsNeighbors, bNOpposedNS, bNOpposedEW))
-					{
-						bFoundUnblockedOne = true;
-						break;
-					}
-				}
-			}
-			if (bFoundUnblockedOne)
-			{
-				for (UGridTemplateCell* NeighborCell : GroupTwo)
-				{
-					if (!IgnoredCells.Contains(CellToCoords(NeighborCell)))
-					{
-						NeighborIgnoredCells.Add(CellToCoords(NeighborCell));
-						if (!HasOpposingBlockedNeighbors(CellToCoords(NeighborCell), Distance - 1, NeighborIgnoredCells, NeighborsNeighbors, bNOpposedNS, bNOpposedEW))
-						{
-							bFoundUnblockedTwo = true;
-							break;
-						}
-					}
-				}
-			}
-			bOpposedEW = !(bFoundUnblockedOne && bFoundUnblockedTwo);
+			if (!bHasOutOfGridNeighbor) { bHasOutOfGridNeighbor = !IsInGrid(CellToCoords(NeighborElem.Value)); }
 		}
 	}
+	// Can't join different groups that are already anchored.
+	if (AnchoredCount > 1)
+	{
+	return false;
+	}
+	// All cells in a group must be contiguous.
+	// AllGroupCellsAdjacent(Coords, BlockingNeighbors);
 
-	//DebugLog(FString::Printf(TEXT("%sHasOpposingBlockedNeighbors for X:%d Y:%d - NS:%s EW: %s"), *LogIndent, (int32)Coords.X, (int32)Coords.Y, (bOpposedNS ? TEXT("true") : TEXT("false")), (bOpposedEW ? TEXT("true") : TEXT("false"))));
-	return (bOpposedNS || bOpposedEW);
+	if (UseGroupNumber > 0)
+	{
+		// We will use an existing group
+		GroupNumber = UseGroupNumber;
+		// TODO: Move this actual joining logic elsewhere?
+		// Join the other (non-anchored) groups.
+		UGridTemplateCellRow* CurGroup = nullptr;
+		UGridTemplateCell* TmpCell = nullptr;
+		for (int32 CurGroupNumber : NeighborGroups)
+		{
+			if (CurGroupNumber != GroupNumber)
+			{
+				DebugLog(FString::Printf(TEXT("GetBlockingCellGroupNumber - Joining group %d to %d."), CurGroupNumber, GroupNumber));
+				CurGroup = BlockingGroups[CurGroupNumber];
+				DebugLog(FString::Printf(TEXT("                              moving group size: %d."), CurGroup->RowCells.Num()));
+				// Change each cell's group
+				for (TPair<int32, UGridTemplateCell*> CurCellElem : CurGroup->RowCells)
+				{
+					//CurGroup->RowCells[CurCellElem.Key]->Group = GroupNumber;
+					CurCellElem.Value->Group = GroupNumber;
+					// Update in main grid too. - Shouldn't have to do this.
+					//TmpCell = GetCell(CellToCoords(CurGroup->RowCells[CurCellElem.Key]), bFound);
+					//if (TmpCell != nullptr && bFound)
+					//{
+					//	TmpCell->Group = GroupNumber;
+					//}
+				}
+				// Move them in the BlockingGroups map.
+				BlockingGroups[GroupNumber]->RowCells.Append(CurGroup->RowCells);
+				CurGroup->RowCells.Empty();
+				//BlockingGroups.Remove(CurGroupNumber);
+				if (AnchoredCount > 0) { AnchoredCellGroups.Add(CurGroupNumber); }
+			}
+		}
+	}
+	else
+	{
+		GroupNumber = NextGroupNumber++;
+		if (!BlockingGroups.Contains(GroupNumber))
+		{
+			UGridTemplateCellRow* NewRow = NewObject<UGridTemplateCellRow>(this);
+			BlockingGroups.Add(GroupNumber, NewRow);
+			DebugLog(FString::Printf(TEXT("GetBlockingCellGroupNumber - New group %d."), GroupNumber));
+		}
+	}
+	if (bHasOutOfGridNeighbor && !AnchoredCellGroups.Contains(GroupNumber))
+	{
+		AnchoredCellGroups.Add(GroupNumber);
+		DebugLog(FString::Printf(TEXT("GetBlockingCellGroupNumber - Anchored group %d."), GroupNumber));
+	}
+
+	return GroupNumber > 0;
+}
+
+bool UGridForgeBase::AllGroupCellsAdjacent(const FVector2D& Coords, const TMap<ETRDirection, UGridTemplateCell*>& BlockingNeighbors)
+{
+	if (BlockingNeighbors.Num() <= 1) { return true; }
+	TArray<ETRDirection> ClockwiseArray = { ETRDirection::North, ETRDirection::NorthEast, ETRDirection::East, ETRDirection::SouthEast,
+											ETRDirection::South, ETRDirection::SouthWest, ETRDirection::West, ETRDirection::NorthWest };
+	TArray<ETRDirection> OrdinalDirections = { ETRDirection::North, ETRDirection::East, ETRDirection::South, ETRDirection::West };
+	UGridTemplateCell* CurCell = nullptr;
+	TArray<int32> CheckedGroups;
+	int32 StartGroup = BlockingNeighbors.Contains(ETRDirection::NorthWest) ? BlockingNeighbors[ETRDirection::NorthWest]->Group : 0;
+	int32 CurrentGroup = StartGroup;
+	int32 LastOrdinalGroup = BlockingNeighbors.Contains(ETRDirection::West) ? BlockingNeighbors[ETRDirection::West]->Group : 0;
+	bool bFailIfChanges = false;
+	bool bFailed = false;
+	bool bIsOrdinal = true;
+	//CheckedGroups.Add(StartGroup);
+	// Make sure each group is contiguous
+	for (ETRDirection Direction : ClockwiseArray)
+	{
+		bIsOrdinal = OrdinalDirections.Contains(Direction);
+		CurCell = nullptr;
+		if (BlockingNeighbors.Contains(Direction))
+		{
+			CurCell = BlockingNeighbors[Direction];
+		}
+		if (CurCell == nullptr)
+		{
+			// Only reset on ordinal neighbors (directly adjacent)
+			if (bIsOrdinal) 
+			{ 
+				LastOrdinalGroup = 0;
+				CurrentGroup = 0; 
+			}
+			continue;
+		}
+		
+		// Ignore wall group
+		//if (CurCell->Group == -1) continue;
+		// Found a new group
+		if (bIsOrdinal && LastOrdinalGroup != 0)
+		{
+			CurrentGroup = LastOrdinalGroup;
+		}
+
+		if (CurCell->Group != CurrentGroup)
+		{				
+			// If we've already seen this group or we're hitting a new anchored group and we've already seen a wall (or anchored group)
+			if (CheckedGroups.Contains(CurCell->Group) || (CurrentGroup != -1 && AnchoredCellGroups.Contains(CurCell->Group) && CheckedGroups.Contains(-1)))
+			{
+				// Don't count as repeat hit if moving from anchored group directly to wall
+				if (AnchoredCellGroups.Contains(CurrentGroup) && CurCell->Group == -1)
+				{
+					// Just change group group
+					CurrentGroup = CurCell->Group;
+					if (bIsOrdinal) { LastOrdinalGroup = CurCell->Group; }
+					continue;
+				}
+				else
+				{
+					DebugLog(FString::Printf(TEXT("GetBlockingCellGroupNumber - Group hit twice: %d"), CurCell->Group));
+					// Already encountered.
+					bFailed = true;
+					break;
+				}
+			}
+			else
+			{
+				// New group
+				CheckedGroups.Add(CurCell->Group);
+				CurrentGroup = CurCell->Group;
+				if (bIsOrdinal) { LastOrdinalGroup = CurCell->Group; }
+				// Achored groups also count as visiting a wall
+				if (AnchoredCellGroups.Contains(CurCell->Group)) { CheckedGroups.Add(-1); }
+			}
+		}
+	}
+	return !bFailed;
 }
 
 

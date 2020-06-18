@@ -42,11 +42,21 @@ public:
         float BlackoutCellXYBias;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-        int32 BlackoutSearchDistance;
+        int32 BlackoutSearchDistance; 
 
 protected:
 
     FRoomGridTemplate* WorkingRoomGridTemplate;
+
+    // This contains the next group number to use. You must increment after using.
+    int32 NextGroupNumber = 1;
+
+    // Tracks which cell groups have members that are adjacent to a wall.
+    // If it is in this list, the group is touching a wall somewhere.
+    TArray<int32> AnchoredCellGroups;
+
+    // Key is group number, the Row array contains blocking cells in that group.
+    TMap<int32, UGridTemplateCellRow*> BlockingGroups;
 
 #if WITH_EDITOR
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -106,7 +116,21 @@ protected:
     // Adds a placeholder blocked cell for neighbors outside grid extents.
     void GetCellNeighbors(const UGridTemplateCell& Cell, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
 
-    bool HasOpposingBlockedNeighbors(const FVector2D& Coords, const int32 Distance, const TArray<FVector2D>& IgnoredCells, TMap<ETRDirection, UGridTemplateCell*>& Neighbors, bool& bOpposedNS, bool& bOpposedEW);
+    // Only include entries in map for neighbors that exist and are blocked.
+    void GetBlockedCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
+
+    bool HasOpposingBlockedNeighbors(const FVector2D& Coords, const int32 Distance, const TArray<FVector2D>& IgnoredCells, TMap<ETRDirection, UGridTemplateCell*>& Neighbors, bool& bBlockedNS, bool& bBlockedEW);
+
+    // if it retuns true (can place) then the new blocking cell group number is populated.
+    bool CanPlaceBlockingCell(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& FoundBlockingNeighbors);
+
+    // Determines if a joining blocker can be placed. i.e. a "joining blocker" is a blocking cell between two or more other blocking cells.
+    // If BlockingNeighbors is empty, this will call GetBlockingNeighbors().
+    // If this returns true then the appropriate cell group number will be popuated > 0.
+    // If this returns false and this is an invalid place for a new blocked cell and GroupNumber will = 0.
+    bool GetBlockingCellGroupNumber(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& BlockingNeighbors, int32& GroupNumber);
+
+    bool AllGroupCellsAdjacent(const FVector2D& Coords, const TMap<ETRDirection, UGridTemplateCell*>& BlockingNeighbors);
 
     UFUNCTION(BlueprintCallable)
         UGridTemplateCell* GetOrCreateCellXY(const int32 X, const int32 Y);

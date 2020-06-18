@@ -26,6 +26,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		ETRWallState WestWall;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 Group;
+
 	// If this is a "blackout" room. 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bIsBlackout;
