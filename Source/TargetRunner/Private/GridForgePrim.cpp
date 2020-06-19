@@ -68,7 +68,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 			DebugLog(FString::Printf(TEXT("GridForgePrim - New active cell X:%d Y:%d Flagged:%s"), CurCell->X, CurCell->Y, CurCell->bFlagged ? TEXT("True") : TEXT("False")));
 		}
 				
-		GetUnflaggedCellNeighbors(CurCoords.X, CurCoords.Y, NeighborCells, false);
+		GetUnflaggedCellNeighbors(CurCoords.X, CurCoords.Y, NeighborCells, false, false);
 		
 		if (NeighborCells.Num() == 0)
 		{

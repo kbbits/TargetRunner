@@ -36,4 +36,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FVector2D> ConnectedCells;
+
+public:
+
+	// Get our X, Y coords as an FVector2D
+	UFUNCTION(BlueprintCallable)
+		const FVector2D GetCoords();
 };

@@ -14,3 +14,8 @@ UGridTemplateCell::UGridTemplateCell()
 	bFlagged = false;
 	Group = 0;
 }
+
+const FVector2D UGridTemplateCell::GetCoords()
+{
+	return FVector2D(X, Y);
+}

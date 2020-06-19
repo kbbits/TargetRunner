@@ -53,15 +53,24 @@ protected:
 
     // Tracks which cell groups have members that are adjacent to a wall.
     // If it is in this list, the group is touching a wall somewhere.
-    TArray<int32> AnchoredCellGroups;
+    UPROPERTY(BlueprintReadOnly)
+        TArray<int32> AnchoredCellGroups;
 
     // Key is group number, the Row array contains blocking cells in that group.
-    TMap<int32, UGridTemplateCellRow*> BlockingGroups;
+    UPROPERTY(BlueprintReadOnly)
+        TMap<int32, UGridTemplateCellRow*> BlockingGroups;
 
 #if WITH_EDITOR
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
         bool bEnableClassDebugLog = false;
 #endif
+
+    const int32 WALL_GROUP_ID = -1;
+
+    // Some helper arrays for iterating
+    const TArray<ETRDirection> ClockwiseArray = { ETRDirection::North, ETRDirection::NorthEast, ETRDirection::East, ETRDirection::SouthEast,
+                                                  ETRDirection::South, ETRDirection::SouthWest, ETRDirection::West, ETRDirection::NorthWest };
+    const TArray<ETRDirection> OrthogonalDirections = { ETRDirection::North, ETRDirection::East, ETRDirection::South, ETRDirection::West };
 
 public:
 
@@ -85,7 +94,7 @@ protected:
     // Base class implementation of picking blackout cells.
     virtual void GenerateBlackoutCells(FRandomStream& RandStream);
 
-    FRoomTemplate* GetOrCreateRoom(FRoomGridTemplate& RoomGridTemplate, const FVector2D Coords, bool& bFound);
+    FRoomTemplate* GetOrCreateRoom(FRoomGridTemplate& RoomGridTemplate, const FVector2D& Coords, bool& bFound);
 
     FRoomTemplate* GetRoom(FRoomGridTemplate& RoomGridTemplate, const FVector2D& Coords, bool& bFound);
 
@@ -117,9 +126,8 @@ protected:
     void GetCellNeighbors(const UGridTemplateCell& Cell, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
 
     // Only include entries in map for neighbors that exist and are blocked.
-    void GetBlockedCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
-
-    bool HasOpposingBlockedNeighbors(const FVector2D& Coords, const int32 Distance, const TArray<FVector2D>& IgnoredCells, TMap<ETRDirection, UGridTemplateCell*>& Neighbors, bool& bBlockedNS, bool& bBlockedEW);
+    UFUNCTION(BlueprintCallable)
+        void GetBlockedCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
 
     // if it retuns true (can place) then the new blocking cell group number is populated.
     bool CanPlaceBlockingCell(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& FoundBlockingNeighbors);
@@ -142,10 +150,10 @@ protected:
         UGridTemplateCell* GetOrCreateCellNeighbor(const int32 X, const int32 Y, const ETRDirection Direction);
     
     UFUNCTION(BlueprintCallable)
-        void GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells);
+        void GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeDiagonal = true);
 
     UFUNCTION(BlueprintCallable)
-        void GetUnflaggedCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeBlocked = false);
+        void GetUnflaggedCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeBlocked = false, const bool bIncludeDiagonal = true);
 
     // If there are no start or end cells selected, select one of each and set it in the RoomTemplateGrid.
     void PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream);
@@ -154,16 +162,17 @@ protected:
     // Returns true if a coordinate could be selected, false otherwise.
     bool PickBlackoutCoords(FRandomStream& RandStream, FVector2D& BlackoutCoords);
 
-    bool IsInGrid(const FVector2D Coords);
+    UFUNCTION(BlueprintCallable)
+        const bool IsInGrid(const FVector2D& Coords);
 
-    FVector2D CellToCoords(const UGridTemplateCell* Cell);
+    UFUNCTION(BlueprintCallable)
+        const FVector2D DirectionToOffset(const ETRDirection Direction);
 
     // Each grid cell can also be identified by a number. The number of a given cell depends on the extents of the grid. 
     // Cells are numbered starting at GridExtentMinX, GridExtentMinY, proceeding along the +Y axis, then up the +X axis.
     // Resulting in cell 0 being at [GridExtentMinX, GridExtentMinY] and the highest cell number at [GridExtentMaxX, GridExtentMaxY].
-    int32 GridCoordsToCellNumber(const FVector2D Coords);
+    const int32 GridCoordsToCellNumber(const FVector2D& Coords);
 
-    //FVector2D CellNumberToGridCoords(const int32 CellNumber);
     
     // Debug
     FString RoomToString(const FRoomTemplate& Room);
