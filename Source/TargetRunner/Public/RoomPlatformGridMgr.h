@@ -6,6 +6,7 @@
 #include "GridForgeBase.h"
 #include "RoomPlatformBase.h"
 #include "RoomGridTemplate.h"
+#include "ResourceDropperBase.h"
 #include "RoomPlatformGridMgr.generated.h"
 
 UCLASS()
@@ -21,9 +22,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		bool bGenerateStartEnd;
 
-	// For dev-time use. To auto-spawn the whole grid during GenerateGrid
+#if WITH_EDITOR
+	// Only exists in editor builds. To auto-spawn the whole grid during GenerateGrid
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
-		bool bSpawnGridAfterGenerate;
+		bool bSpawnRoomsAfterGenerate;
+#endif
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+		TArray<FResourceQuantity> ResourcesToDistribute;
 	
 	// This is set by the GameMode during InitGridManager
 	// Can be setup manually for use in-editor.
@@ -34,6 +40,11 @@ public:
 	// Can be set manually for use in-editor.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		TSubclassOf<ARoomPlatformBase> RoomClass;
+
+	// This is set by the GameMode during InitGridManager
+	// Can be set manually for use in-editor.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+		TSubclassOf<UResourceDropperBase> ResourceDropperClass;
 	
 	// A grid containing the temlates for the rooms. This is populated during grid generation.
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
@@ -43,6 +54,11 @@ public:
 	// These are usually determined during grid generation if this array is empty, but can be manually specified here.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FVector2D> OverrideBlackoutCells;
+
+	// Use this stream if no GameMode (ex: in Editor)
+	// Should only be used on server.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FRandomStream DefaultResourceDropperStream;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -52,13 +68,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Spanwn the room from the room template grid with the given coordinates.
-	UFUNCTION(Server, Reliable, BlueprintCallable)
-		void SpawnRoom(FVector2D GridCoords);
-
-	// Spawns all rooms in the room templat grid
+	// Spawns all rooms in the room template grid
 	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 		void SpawnRooms();
+
+	// Spanwn the room from the room template grid with the given coordinates.
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+		void SpawnRoom(FVector2D GridCoords);	
 
 	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
 		void ClientUpdateRoomGridTemplate(const FRoomGridTemplate& UpdatedTemplate);
@@ -66,8 +82,6 @@ public:
 	virtual void GenerateGridImpl() override;
 
 	virtual void DestroyGridImpl() override;
-	
-	TArray<FRoomTemplate*> GetAllRoomTemplates();
 
 protected:
 

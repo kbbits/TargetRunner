@@ -40,6 +40,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static TArray<FResourceQuantity> AddResourceQuantities(const TArray<FResourceQuantity>& QuantitiesOne, const TArray<FResourceQuantity>& QuantitiesTwo);
 
+	// Multiplies the Quantity of each FResourceQuantity in the array by the given multiplier.
+	// If bTruncate is true, the multplied quantities will be truncated to an integer value.
+	UFUNCTION(BlueprintPure, Category = "Resource Functions")
+		static void MultiplyResourceQuantity(const TArray<FResourceQuantity>& Quantities, const float Multiplier, const bool bTruncate, TArray<FResourceQuantity>& MultipliedQuantities);
+
 	// Helper to get the Goods.Name for the specified ResourceType
 	// If we change to support ResourceTypeData mapping to Goods.Name by something other than Type, we'll need to change this.
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")

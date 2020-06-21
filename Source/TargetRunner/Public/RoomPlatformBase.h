@@ -57,5 +57,10 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void SpawnWalls();
 
+	// Spawns the resources.
+	// Call this on server!
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		bool SpawnResources();
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

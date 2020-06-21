@@ -35,7 +35,11 @@ void ARoomPlatformBase::Tick(float DeltaTime)
 
 void ARoomPlatformBase::GenerateRoom_Implementation()
 {
-	if (CalculateWalls()) { SpawnWalls(); }
+	if (CalculateWalls())
+	{
+		SpawnWalls();
+		SpawnResources();
+	}
 }
 
 bool ARoomPlatformBase::CalculateWalls()
@@ -100,8 +104,12 @@ bool ARoomPlatformBase::CalculateWalls()
 void ARoomPlatformBase::SpawnWalls_Implementation()
 {
 	// Override and implement in BP.
+}
 
-
+bool ARoomPlatformBase::SpawnResources_Implementation()
+{
+	// Override and implement in BP.
+	return true;
 }
 
 void ARoomPlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const

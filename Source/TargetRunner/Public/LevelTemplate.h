@@ -15,6 +15,7 @@ struct FLevelTemplate : public FTableRowBase
 public:
 	FLevelTemplate()
 	{
+		LevelSeed = 0;
 		GridForgeType = FName(TEXT("Default"));
 	}
 

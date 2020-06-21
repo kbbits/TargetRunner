@@ -119,6 +119,18 @@ TArray<FResourceQuantity> UResourceFunctionLibrary::AddResourceQuantities(const 
 	return TotalResources;
 }
 
+void UResourceFunctionLibrary::MultiplyResourceQuantity(const TArray<FResourceQuantity>& Quantities, const float Multiplier, const bool bTruncate, TArray<FResourceQuantity>& MultipliedQuantities)
+{
+	float NewQuantity = 0;
+	MultipliedQuantities.Empty(Quantities.Num());
+	for (FResourceQuantity TmpQuantity : Quantities)
+	{
+		NewQuantity = TmpQuantity.Quantity * Multiplier;
+		if (bTruncate) { NewQuantity = FMath::TruncToFloat(NewQuantity); }
+		MultipliedQuantities.Add(FResourceQuantity(TmpQuantity.ResourceType, NewQuantity));
+	}
+}
+
 FName UResourceFunctionLibrary::GoodsNameForResource(const FResourceType& ResourceType)
 {
 	return ResourceType.Type;

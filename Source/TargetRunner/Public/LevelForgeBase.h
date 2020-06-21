@@ -36,7 +36,7 @@ public:
 
     // The quantity of resources for a level. Will be scaled by resource tier relative to level tier. 
     // If resource tier == level tier, this will be the quantity range used.
-    // Default is (900.0f, 1100.0f)
+    // Default is (5000.0f, 6000.0f)
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
         FFloatRange BaseResourceQuantityRange;
 

@@ -1,10 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RoomPlatformGridMgr.h"
+#include "..\Public\RoomPlatformGridMgr.h"
 
 #include "TargetRunner.h"
+#include "RoomFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "..\Public\RoomPlatformGridMgr.h"
 #include "TR_GameMode.h"
 
 // Sets default values
@@ -12,13 +13,15 @@ ARoomPlatformGridMgr::ARoomPlatformGridMgr()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	ResourceDropperClass = UResourceDropperBase::StaticClass();
 }
+
 
 //void ARoomPlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 //{
 //	Super::GetLifetimeReplicatedProps(OutLifetimeProps);	
 //}
+
 
 // Called when the game starts or when spawned
 void ARoomPlatformGridMgr::BeginPlay()
@@ -27,12 +30,14 @@ void ARoomPlatformGridMgr::BeginPlay()
 	
 }
 
+
 // Called every frame
 void ARoomPlatformGridMgr::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
 }
+
 
 void ARoomPlatformGridMgr::GenerateGridImpl()
 {
@@ -41,20 +46,27 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	DestroyGrid();
 	DebugLog(FString::Printf(TEXT("%s GenerateGrid - Generating grid. Extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), *this->GetName(), GridExtentMinX, GridExtentMinY, GridExtentMaxX, GridExtentMaxY));
 	FRandomStream* GridStreamFound = nullptr;
+	FRandomStream* ResourceStreamFound = nullptr;
 	// Grab the game mode.
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
 	if (GameMode == nullptr)
 	{
 		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode. Using default rand stream."), *this->GetName());
-		//return;
+		// Use our default streams
 		GridStreamFound = &DefaultGridRandStream;
+		GridStreamFound->Reset();
+		ResourceStreamFound = &DefaultResourceDropperStream;
+		ResourceStreamFound->Reset();
 	}
 	else 
 	{
-		// Get our random stream and create the grid forge
+		// Get our random streams from game mode
 		GridStreamFound = &GameMode->GetGridStream();
+		ResourceStreamFound = &GameMode->GetResourceDropperStream();
 	}
 	FRandomStream& GridRandStream = *GridStreamFound;
+	FRandomStream& ResourceDropperStream = *ResourceStreamFound;
+	// Create the grid forge
 	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
 	if (GridForge == nullptr)
 	{
@@ -80,7 +92,7 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 		RoomGridTemplate.StartCells.Add(StartGridCoords);
 		RoomGridTemplate.EndCells.Add(ExitGridCoords);
 	}
-	// Use override blackout cells or generate them here
+	// Use override blackout cells if present
 	if (OverrideBlackoutCells.Num() > 0)
 	{
 		// Use the manually specifid blackout cells.
@@ -96,14 +108,21 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 
 	if (bSuccessful)
 	{
-		DebugLog(FString::Printf(TEXT("%s GenerateGrid - Generating grid successful."), *this->GetName()));
+		DebugLog(FString::Printf(TEXT("%s GenerateGrid - Generating grid successful."), *GetNameSafe(this)));
 		StartGridCoords = RoomGridTemplate.StartCells[0];
-		ExitGridCoords = RoomGridTemplate.EndCells[0];		
-		MovePlayerStarts();
-		if (bSpawnGridAfterGenerate)
-		{	
-			SpawnRooms();
+		ExitGridCoords = RoomGridTemplate.EndCells[0];
+		// Allocate resources to room templates
+		UResourceDropperBase* ResourceDropper = NewObject<UResourceDropperBase>(this, ResourceDropperClass);
+		if (ResourceDropper == nullptr) {
+			UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not construct ResourceDropper."), *GetNameSafe(this));
+			return;
 		}
+		ResourceDropper->DistributeResources(ResourceDropperStream, ResourcesToDistribute, RoomGridTemplate);
+		// Move/Create player start locations
+		MovePlayerStarts();
+		#if WITH_EDITOR
+			if (bSpawnRoomsAfterGenerate) {	SpawnRooms();}
+		#endif
 	} 
 	else
 	{
@@ -118,6 +137,7 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 		ClientUpdateRoomGridTemplate(RoomGridTemplate);
 	}
 }
+
 
 void ARoomPlatformGridMgr::DestroyGridImpl()
 {
@@ -158,6 +178,33 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 		ClientUpdateRoomGridTemplate(RoomGridTemplate);
 	}
 }
+
+
+void ARoomPlatformGridMgr::SpawnRooms_Implementation()
+{
+	TArray<int32> RowNums;
+	TArray<int32> ColNums;
+	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
+	for (int32 Row : RowNums)
+	{
+		ColNums.Empty(RoomGridTemplate.Grid.Find(Row)->RowRooms.Num());
+		RoomGridTemplate.Grid.Find(Row)->RowRooms.GenerateKeyArray(ColNums);
+		for (int32 Col : ColNums)
+		{
+			FRoomTemplate* Room = RoomGridTemplate.Grid.Find(Row)->RowRooms.Find(Col);
+			if (Room != nullptr)
+			{
+				SpawnRoom(FVector2D(Row, Col));
+			}
+		}
+	}
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// Have the clients update their grid maps
+		ClientFillGridFromExistingPlatforms();
+	}
+}
+
 
 void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 {
@@ -225,31 +272,6 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	}
 }
 
-void ARoomPlatformGridMgr::SpawnRooms_Implementation()
-{
-	TArray<int32> RowNums;
-	TArray<int32> ColNums;
-	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
-	for (int32 Row : RowNums)
-	{
-		ColNums.Empty(RoomGridTemplate.Grid.Find(Row)->RowRooms.Num());
-		RoomGridTemplate.Grid.Find(Row)->RowRooms.GenerateKeyArray(ColNums);
-		for (int32 Col : ColNums)
-		{
-			FRoomTemplate* Room = RoomGridTemplate.Grid.Find(Row)->RowRooms.Find(Col);
-			if (Room != nullptr)
-			{
-				SpawnRoom(FVector2D(Row, Col));
-			}
-		}
-	}
-
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		// Have the clients update their grid maps
-		ClientFillGridFromExistingPlatforms();
-	}
-}
 
 void ARoomPlatformGridMgr::ClientUpdateRoomGridTemplate_Implementation(const FRoomGridTemplate& UpdatedTemplate)
 {
@@ -258,28 +280,4 @@ void ARoomPlatformGridMgr::ClientUpdateRoomGridTemplate_Implementation(const FRo
 	{
 		RoomGridTemplate = UpdatedTemplate;
 	}
-}
-
-TArray<FRoomTemplate*> ARoomPlatformGridMgr::GetAllRoomTemplates()
-{
-	TArray<FRoomTemplate*> AllRooms;
-	TArray<int32> RowNums;
-	TArray<int32> ColNums;
-	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
-
-	for (int32 Row : RowNums)
-	{
-		ColNums.Empty(RoomGridTemplate.Grid.Find(Row)->RowRooms.Num());
-		RoomGridTemplate.Grid.Find(Row)->RowRooms.GenerateKeyArray(ColNums);
-		for (int32 Col : ColNums)
-		{
-			FRoomTemplate* Room = RoomGridTemplate.Grid.Find(Row)->RowRooms.Find(Col);
-			if (Room != nullptr)
-			{
-				AllRooms.Add(Room);
-			}
-		}
-	}
-
-	return AllRooms;
 }

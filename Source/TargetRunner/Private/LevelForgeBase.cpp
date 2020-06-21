@@ -10,7 +10,7 @@ ULevelForgeBase::ULevelForgeBase(const FObjectInitializer& OI)
 	MAX_TIER = 10;
 	MAX_EXTENT_X = 5;
 	MAX_EXTENT_Y = 5;
-	BaseResourceQuantityRange = FFloatRange(900.0f, 1100.0f);
+	BaseResourceQuantityRange = FFloatRange(5000.0f, 6000.0f);
 	ResourceQuantityTierScalingExp = 0.5f;
 	HigherTierResourceQuantityMultiplier = 0.2f;
 	BaseUnlockCost = 1000.0f;

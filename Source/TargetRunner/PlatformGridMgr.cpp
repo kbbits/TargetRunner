@@ -116,7 +116,7 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 	// Destroy old grid, if any
 	DestroyGrid();
 
-	UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid."), *this->GetName());
+	UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid."), *GetNameSafe(this));
 
 	// TODO Seed this correctly - currently uses values added in editor.
 	//GridRandStream.GenerateNewSeed();
@@ -130,12 +130,11 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 	else
 	{
 		DefaultGridRandStream.Reset();
-		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode."), *this->GetName());
+		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode."), *GetNameSafe(this));
 		//return;
 	}
 
-	GenerateGridImpl();
-	
+	GenerateGridImpl();	
 }
 
 void APlatformGridMgr::GenerateGridImpl()
@@ -183,6 +182,7 @@ void APlatformGridMgr::DestroyGridImpl()
 	}
 	PlatformGridMap.Empty();
 }
+
 
 void APlatformGridMgr::AddPlatformToGridMap(APlatformBase* Platform)
 {
@@ -254,6 +254,19 @@ APlatformBase * APlatformGridMgr::RemovePlatformFromGridMap(const int32 X, const
 APlatformBase* APlatformGridMgr::RemovePlatformFromGrid(const FVector2D Coords, bool& Success)
 {
 	return RemovePlatformFromGridMap(static_cast<int32>(Coords.X), static_cast<int32>(Coords.Y), Success);
+}
+
+int32 APlatformGridMgr::GetPlatformCount()
+{
+	int32 TotalCount = 0;
+	TArray<int32> RowNums;
+	TArray<int32> PlatformNums;
+	PlatformGridMap.GenerateKeyArray(RowNums);
+	for (int32 RowNum : RowNums)
+	{
+		TotalCount += PlatformGridMap.Find(RowNum)->RowPlatforms.Num();
+	}
+	return TotalCount;
 }
 
 int32 APlatformGridMgr::GetGridWidthX()

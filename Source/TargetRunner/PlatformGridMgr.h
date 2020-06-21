@@ -33,7 +33,7 @@ public:
 	APlatformGridMgr();
 	
 	// Rows are along grid x axis, columns (elements in each row) are grid Y axis
-	// NOTE: On clients, oly PlatformBase actors that exist when FillGridFromExistingPlatforms() is called will be in the grid.
+	// NOTE: On clients, only PlatformBase actors that exist when FillGridFromExistingPlatforms() is called will be in the grid.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<int32, FPlatformGridRow> PlatformGridMap;
 
@@ -134,6 +134,11 @@ public:
 		APlatformBase* RemovePlatformFromGridMap(const int32 X, const int32 Y, bool& Success);
 	UFUNCTION(BlueprintCallable)
 		APlatformBase* RemovePlatformFromGrid(const FVector2D Coords, bool& Success);
+
+	// Returns the number of spawned platforms (rooms) in the current grid.
+	// Note: This iterates the grid to do the count. Cache this value when appropriate.
+	UFUNCTION(BlueprintCallable)
+		int32 GetPlatformCount();
 
 	// The total number of cells across the X axis of the grid.
 	UFUNCTION(BlueprintPure)

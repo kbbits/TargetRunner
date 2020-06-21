@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "LevelTemplate.h"
+#include "LevelForgeBase.h"
+#include "ResourceDropperBase.h"
 #include "GoodsDropper.h"
 #include "PlatformGridMgr.h"
 #include "TRToolBase.h"
@@ -17,6 +19,7 @@
  *      If grid manager does not already exist in the world, spwan or load sublevel that contains the grid manager.
  *		Call InitGridManager() to find and initialize the grid manager.
  *      Call GenerateGrid() on the grid manager.
+ *		Call SpawnLevel() to spawn the generated level in the world.
  */
 UCLASS()
 class TARGETRUNNER_API ATR_GameMode : public AGameMode
@@ -40,6 +43,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<UGridForgeBase> DefaultGridForgeClass;
 
+	// The LevelForge class to use.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<ULevelForgeBase> DefaultLevelForgeClass;
+
+	// The ResourceDropper class to use.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TSubclassOf<UResourceDropperBase> DefaultResourceDropperClass;
+
 	// Until we implement LevelTemplate->Theme stuff, this is the room class that will be used.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ARoomPlatformBase> DefaultRoomClass;
@@ -56,9 +67,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* GoodsDropperTable;
-
-protected:
-		
 	
 private:
 
@@ -73,6 +81,10 @@ private:
 	// Used to generate the map grid. Note helper functions: FRandRangeGrid and RandRangeGrid
 	UPROPERTY(BlueprintGetter=GetGridStream)
 		FRandomStream GridRandStream;
+
+	// Used to generate the resource distribution. 
+	UPROPERTY(BlueprintGetter = GetResourceDropperStream)
+		FRandomStream ResourceDropperRandStream;
 
 	// Our Grid Manager. Set by InitGridManager.
 	APlatformGridMgr* GridManager;
@@ -96,17 +108,20 @@ public:
 	UFUNCTION(BlueprintPure)
 		FLevelTemplate GetLevelTemplate();
 
+	// Sets the current grid manager and initializes it from the level template. i.e. sets up grid extents, cell size, etc.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		bool InitGridManager();
+
 	// Gets the current grid manager in the level.
 	// Returns false if no grid manager could be found.
 	UFUNCTION(BlueprintCallable)
 		APlatformGridMgr* GetGridManager();
 
-	// Sets the current grid manager and initializes it from the level template. i.e. sets up grid extents, cell size, etc.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		bool InitGridManager();
-
 	UFUNCTION(BlueprintPure)
 		void GetGridExtents(FVector2D& MinExtents, FVector2D& MaxExtents);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		bool SpawnLevel();
 
 	/*------------ Random Streams -------------------------*/
 
@@ -119,6 +134,9 @@ public:
 
 	UFUNCTION(BlueprintPure)
 		FRandomStream& GetGridStream();
+
+	UFUNCTION(BlueprintPure)
+		FRandomStream& GetResourceDropperStream();
 
 	// Get a float in range from the Grid Stream.
 	UFUNCTION(BlueprintCallable)
@@ -136,6 +154,9 @@ public:
 				
 	UFUNCTION(BlueprintCallable)
 		TSubclassOf<UGridForgeBase> GetGridForgeClass();
+
+	UFUNCTION(BlueprintCallable)
+		TSubclassOf<UResourceDropperBase> GetResourceDropperClass();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		TSubclassOf<ARoomPlatformBase> GetRoomClass();
