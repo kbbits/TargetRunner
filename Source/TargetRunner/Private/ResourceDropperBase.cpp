@@ -73,7 +73,7 @@ void UResourceDropperBase::DistributeResources(UPARAM(ref) FRandomStream& RandSt
 		DropRoomCoords.Add(RoomCoords);
 		RoomsRemaining--;
 	}
-	// Now go and set all the picked room template's resources.
+	// Now go and set all the picked room templates' resources.
 	for (FVector2D DropRoomCoord : DropRoomCoords)
 	{
 		if (TemplateGrid.Grid.Contains(DropRoomCoord.X)) {

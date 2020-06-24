@@ -52,6 +52,10 @@ void AResourceNodeBase::ServerSetCurrentHealth_Implementation(const float NewCur
 		CurrentHealth = NewCurrentHealth;
 		// Replication will call this on clients. This is a direct call for server.
 		OnRep_CurrentHealth();
+		if (CurrentHealth <= 0.0f)
+		{
+			OnNodeDestroyed.Broadcast();
+		}
 	}	
 }
 

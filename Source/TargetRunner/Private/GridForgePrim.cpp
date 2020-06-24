@@ -47,14 +47,16 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 	UGridTemplateCell* CurCell = StartCell;
 	FVector2D NextCoords;
 	UGridTemplateCell* NextCell;
-	
+	bool bFound = false;
+
 	if (StartCell == nullptr || StartCell->CellState == ETRGridCellState::Blocked)
 	{
 		UE_LOG(LogTRGame, Error, TEXT("GridForgePrim - Could not create an unblocked start cell for grid."));
 		return;
 	}
-	ActiveCoords.Add(StartCoords);
 	StartCell->bFlagged = true;
+	StartCell->DistanceToStart = 0;
+	ActiveCoords.Add(StartCoords);	
 
 	while (ActiveCoords.Num() > 0)
 	{
@@ -62,8 +64,10 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 		{
 			CurCoords = PickCoord(RandStream, ActiveCoords);
 			DebugLog(FString::Printf(TEXT("GridForgePrim - %d active, picked X:%d Y:%d"), ActiveCoords.Num(), (int32)CurCoords.X, (int32)CurCoords.Y));
-			CurCell = GetOrCreateCell(CurCoords);
-			if (CurCell == nullptr) { continue; }
+			CurCell = GetCell(CurCoords, bFound);
+			if (CurCell == nullptr) {
+				UE_LOG(LogTRGame, Error, TEXT("GridForgePrim - Picked cell coords X:%d Y:%d but cell is null."), (int32)CurCoords.X, (int32)CurCoords.Y);
+			}
 			ConnectedCellCount++;
 			DebugLog(FString::Printf(TEXT("GridForgePrim - New active cell X:%d Y:%d Flagged:%s"), CurCell->X, CurCell->Y, CurCell->bFlagged ? TEXT("True") : TEXT("False")));
 		}
@@ -74,13 +78,15 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 		{
 			ActiveCoords.Remove(CurCoords);
 			NextCoords = CurCoords;
+			NextCell = CurCell;
 			DebugLog(FString::Printf(TEXT("GridForgePrim - Removing X:%d Y:%d from active."), (int32)CurCoords.X, (int32)CurCoords.Y));
 		}
 		else
 		{
 			NextCell = NeighborCells[RandStream.RandRange(0, NeighborCells.Num() - 1)];
 			NextCell->bFlagged = true;
-			NextCoords = FVector2D(NextCell->X, NextCell->Y);
+			NextCell->DistanceToStart = CurCell->DistanceToStart + 1;
+			NextCoords = NextCell->GetCoords();
 			CurCell->ConnectedCells.Add(NextCoords);
 			DebugLog(FString::Printf(TEXT("GridForgePrim - Connected current cell X:%d Y:%d to neighbor X:%d Y:%d. Total connections: %d"), CurCell->X, CurCell->Y, NextCell->X, NextCell->Y, CurCell->ConnectedCells.Num()));
 			ConnectedCellCount++;
@@ -91,6 +97,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 		// Putting this down here handles case when start == end and grid size is only one cell.
 		if (EndCoords == NextCoords)
 		{
+			NextCell->DistanceToEnd = 0;
 			if (bStopWhenExitFound)
 			{
 				// Stop creating more cells.

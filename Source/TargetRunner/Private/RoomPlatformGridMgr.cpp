@@ -253,6 +253,7 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	{
 		NewRoom->MyGridManager = this;
 		NewRoom->RoomTemplate = *RoomTemplate;
+		// TODO: Seed platform rand stream
 		NewRoom->GridX = GridCoords.X;
 		NewRoom->GridY = GridCoords.Y;
 		// Create wall template, sized so each of the four walls gets [RoomCellSubdivision] entries.

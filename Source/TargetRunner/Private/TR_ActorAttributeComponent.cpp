@@ -45,38 +45,15 @@ void UTR_ActorAttributeComponent::TickComponent(float DeltaTime, ELevelTick Tick
 	// With this check here we don't need to use flags for our events.
 	if (CurrentValue == oldCurrentValue) { return; }
 
-	// Check max and fire events if we just hit max
+	// Check max and fire events if we just hit max or min
 	if (CurrentValue == MaxValue)
 	{
-		// Reset OnHitMin flag since we're not at min
-		// if (bFiredOnMin) { bFiredOnMin = false; }
-		// Call event if we haven't already
-		//if (!bFiredOnMax)
-		//{
-		//	OnHitMaximum.Broadcast();
-		//	bFiredOnMax = true;
-		//}
 		OnHitMaximum.Broadcast();
 	}
-	else if (CurrentValue == MinValue) // We are at minimum
+	else if (CurrentValue == MinValue) 
 	{
-		// Reset OnHitMax flag since we're not at max
-		//if (bFiredOnMax) { bFiredOnMax = false; }
-		// Call event if we haven't already
-		//if (!bFiredOnMin)
-		//{
-		//	OnHitMinimum.Broadcast();
-		//	bFiredOnMin = true;
-		//}
 		OnHitMinimum.Broadcast();
 	}
-	//else // Not at min or max
-	//{
-	//	// Reset OnHitMin flag since we're not at min
-	//	if (bFiredOnMin) { bFiredOnMin = false; }
-	//	// Reset OnHitMax flag since we're not at max
-	//	if (bFiredOnMax) { bFiredOnMax = false; }
-	//}
 }
 
 // Get remainin capacity of this attribute. (max value - current value)

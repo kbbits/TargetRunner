@@ -4,6 +4,7 @@
 #include "TrEnums.h"
 #include "Math/Vector2D.h"
 #include "UnrealNetwork.h"
+#include "..\Public\RoomPlatformBase.h"
 
 // Sets default values
 ARoomPlatformBase::ARoomPlatformBase()
@@ -38,7 +39,7 @@ void ARoomPlatformBase::GenerateRoom_Implementation()
 	if (CalculateWalls())
 	{
 		SpawnWalls();
-		SpawnResources();
+		SpawnContents(); // Calls SpawnResources
 	}
 }
 
@@ -97,6 +98,7 @@ bool ARoomPlatformBase::CalculateWalls()
 		return true;
 	}
 	else {
+		UE_LOG(LogTRGame, Error, TEXT("%s - CalculateWalls found null grid manager"), *GetNameSafe(this));
 		return false;
 	}
 }
@@ -106,11 +108,19 @@ void ARoomPlatformBase::SpawnWalls_Implementation()
 	// Override and implement in BP.
 }
 
+
+bool ARoomPlatformBase::SpawnContents_Implementation()
+{
+	return SpawnResources();
+}
+
+
 bool ARoomPlatformBase::SpawnResources_Implementation()
 {
 	// Override and implement in BP.
 	return true;
 }
+
 
 void ARoomPlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {

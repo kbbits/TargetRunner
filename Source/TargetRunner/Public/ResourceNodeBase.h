@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Delegates/Delegate.h"
 #include "UnrealNetwork.h"
 #include "ResourceType.h"
 #include "ResourceQuantity.h"
@@ -11,6 +12,11 @@
 #include "ExtractableResource.h"
 #include "TargetRunner.h"
 #include "ResourceNodeBase.generated.h"
+
+// Event dispatcher for when we are destroyed
+// Only called on server.
+UDELEGATE(BlueprintAuthorityOnly)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNodeDestroyed);
 
 // A harvestable resource. 
 UCLASS()
@@ -92,6 +98,12 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable)
 		void ServerSetCurrentHealth(const float NewCurrentHealth);
 	virtual void ServerSetCurrentHealth_Implementation(const float NewCurrentHealth);
+
+	// Delegates
+
+	// Hit minimum value event
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnNodeDestroyed OnNodeDestroyed;
 
 	// IExtractableResource interface functions
 

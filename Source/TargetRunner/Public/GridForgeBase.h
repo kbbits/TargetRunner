@@ -48,7 +48,7 @@ protected:
 
     FRoomGridTemplate* WorkingRoomGridTemplate;
 
-    // This contains the next group number to use. You must increment after using.
+    // This contains the next group number to use. You must increment after using. (no wrapper functions now)
     int32 NextGroupNumber = 1;
 
     // Tracks which cell groups have members that are adjacent to a wall.

@@ -92,6 +92,10 @@ void UGridForgeBase::GenerateBlackoutCells(FRandomStream& RandStream)
 		{
 			NewCell = GetOrCreateCell(Coords);
 			NewCell->CellState = ETRGridCellState::Blocked;
+			NewCell->Group = 1;
+			UGridTemplateCellRow* NewRow = NewObject<UGridTemplateCellRow>(this);
+			NewRow->RowCells.Add(GridCoordsToCellNumber(Coords), NewCell);
+			BlockingGroups.Add(1, NewRow);
 		}
 	}
 	else
@@ -331,7 +335,7 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 			// Determine wall state
 			// North	
 			TmpRoom = GetRoomNeighbor(RoomGridTemplate, RoomCoords, ETRDirection::North);
-			bConnected = Cell->ConnectedCells.Contains(RoomCoords + FVector2D(1, 0));
+			bConnected = Cell->ConnectedCells.Contains(RoomCoords + DirectionToOffset(ETRDirection::North));
 			NeighborWallState = ETRWallState::Empty;
 			if (TmpRoom != nullptr) { NeighborWallState = TmpRoom->SouthWall; }
 			else { DebugLog(TEXT("No north neighbor found.")); }
@@ -390,6 +394,7 @@ UGridTemplateCell* UGridForgeBase::GetCell(const FVector2D& Coords, bool& bFound
 // Adds a placeholder blocked cell for neighbors outside grid extents.
 void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells)
 {
+	// TODO: Rework this by iterating directions.
 	UGridTemplateCell* Cell = nullptr;
 	bool bFound;
 	NeighborCells.Empty(8);
@@ -860,33 +865,6 @@ UGridTemplateCell* UGridForgeBase::GetOrCreateCellNeighbor(const int32 X, const 
 {
 	UGridTemplateCell* Cell = nullptr;
 	Cell = GetOrCreateCell(FVector2D(X, Y) + DirectionToOffset(Direction));
-	//switch (Direction)
-	//{
-	//case ETRDirection::North :
-	//	Cell = GetOrCreateCellXY(X + 1, Y);
-	//	break;
-	//case ETRDirection::NorthEast :
-	//	Cell = GetOrCreateCellXY(X + 1, Y + 1);
-	//	break;
-	//case ETRDirection::East :
-	//	Cell = GetOrCreateCellXY(X, Y + 1);
-	//	break;
-	//case ETRDirection::SouthEast :
-	//	Cell = GetOrCreateCellXY(X - 1, Y + 1);
-	//	break;
-	//case ETRDirection::South :
-	//	Cell = GetOrCreateCellXY(X - 1, Y);
-	//	break;
-	//case ETRDirection::SouthWest :
-	//	Cell = GetOrCreateCellXY(X - 1, Y - 1);
-	//	break;
-	//case ETRDirection::West :
-	//	Cell = GetOrCreateCellXY(X, Y - 1);
-	//	break;
-	//case ETRDirection::NorthWest :
-	//	Cell = GetOrCreateCellXY(X + 1, Y - 1);
-	//	break;
-	//}
 	return Cell;
 }
 
@@ -907,14 +885,6 @@ void UGridForgeBase::GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArr
 		Cell = GetOrCreateCellNeighbor(X, Y, Direction);
 		if (Cell != nullptr) { NeighborCells.Add(Cell); }
 	}
-	//Cell = GetOrCreateCellNeighbor(X, Y, ETRDirection::North);
-	//if (Cell != nullptr) { NeighborCells.Add(Cell); }
-	//Cell = GetOrCreateCellNeighbor(X, Y, ETRDirection::East);
-	//if (Cell != nullptr) { NeighborCells.Add(Cell); }
-	//Cell = GetOrCreateCellNeighbor(X, Y, ETRDirection::South);
-	//if (Cell != nullptr) { NeighborCells.Add(Cell); }
-	//Cell = GetOrCreateCellNeighbor(X, Y, ETRDirection::West);
-	//if (Cell != nullptr) { NeighborCells.Add(Cell); }
 }
 
 

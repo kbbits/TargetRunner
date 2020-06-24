@@ -26,6 +26,12 @@ public:
 		int32 Group;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 DistanceToStart = -1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 DistanceToEnd = -1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		ETRGridCellState CellState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

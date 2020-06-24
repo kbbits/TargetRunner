@@ -57,6 +57,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void SpawnWalls();
 
+	// Spawns room contents. By default this just calls SpawnResources.
+	// If you override this, remember to call Parent.
+	// Call this on server!
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		bool SpawnContents();
+
 	// Spawns the resources.
 	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
