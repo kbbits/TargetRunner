@@ -2,7 +2,7 @@
 
 
 #include "TR_ActorAttributeComponent.h"
-//#include "..\Public\TR_ActorAttributeComponent.h"
+//#include "..\..\Public\TR_ActorAttributeComponent.h"
 
 // Sets default values for this component's properties
 UTR_ActorAttributeComponent::UTR_ActorAttributeComponent()

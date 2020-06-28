@@ -6,16 +6,16 @@
 #include "GameFramework/Actor.h"
 #include "UsableTool.h"
 #include "ResourceRateFilter.h"
-#include "TRToolBase.generated.h"
+#include "ToolActorBase.generated.h"
 
 UCLASS()
-class TARGETRUNNER_API ATRToolBase : public AActor, public IUsableTool
+class TARGETRUNNER_API AToolActorBase : public AActor, public IUsableTool
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ATRToolBase();
+	AToolActorBase();
 
 protected:
 
@@ -47,7 +47,7 @@ protected:
 
 	// The effective extraction rates of this tool against given resource types. Expressed as a percent (0.0 - 1.0).
 	// Values > 1.0 are allowed. Calculated extracted amounts against a resource type not matching any filters will = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
 		TArray<FResourceRateFilter> BaseResourceExtractionRates;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")

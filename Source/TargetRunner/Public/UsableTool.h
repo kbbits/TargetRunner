@@ -47,6 +47,7 @@ public:
 	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
 	//	ETRWeaponState SetCurrentState(const ETRWeaponState NewState);
 
+	// Begin Fire Action
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
 		void BeginFire();
 

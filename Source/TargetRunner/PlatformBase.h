@@ -38,6 +38,11 @@ protected:
 
 	void InitPlatformScale();
 
+	// Gets the current grid manager in the level.
+	// Returns nullptr if no grid manager could be found.
+	UFUNCTION(BlueprintCallable)
+		APlatformGridMgr* GetGridManager();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

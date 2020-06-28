@@ -23,7 +23,21 @@ void APlatformBase::BeginPlay()
 void APlatformBase::InitPlatformScale()
 {
 	//ATR_GameMode* = UGameplayStatics::GetGameMode<ATR_GameMode>(GetWorld());
+}
 
+
+APlatformGridMgr* APlatformBase::GetGridManager()
+{
+	if (MyGridManager == nullptr)
+	{
+		TArray<AActor*> FoundManagers;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlatformGridMgr::StaticClass(), FoundManagers);
+		if (FoundManagers.Num() > 0)
+		{
+			MyGridManager = Cast<APlatformGridMgr>(FoundManagers[0]);
+		}
+	}
+	return MyGridManager;
 }
 
 // Called every frame

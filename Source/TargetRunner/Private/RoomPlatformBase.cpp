@@ -21,11 +21,21 @@ ARoomPlatformBase::ARoomPlatformBase()
 	FloorMeshComponent->AttachToComponent(RoomSceneComponent, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
+void ARoomPlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ARoomPlatformBase, RoomTemplate);
+	DOREPLIFETIME(ARoomPlatformBase, WallTemplate);
+}
+
+
 // Called when the game starts or when spawned
 void ARoomPlatformBase::BeginPlay()
 {
 	Super::BeginPlay();
 }
+
 
 // Called every frame
 void ARoomPlatformBase::Tick(float DeltaTime)
@@ -34,14 +44,20 @@ void ARoomPlatformBase::Tick(float DeltaTime)
 
 }
 
+
 void ARoomPlatformBase::GenerateRoom_Implementation()
 {
+	if (MyGridManager == nullptr)
+	{
+		GetGridManager();
+	}
 	if (CalculateWalls())
 	{
 		SpawnWalls();
 		SpawnContents(); // Calls SpawnResources
 	}
 }
+
 
 bool ARoomPlatformBase::CalculateWalls()
 {
@@ -103,6 +119,7 @@ bool ARoomPlatformBase::CalculateWalls()
 	}
 }
 
+
 void ARoomPlatformBase::SpawnWalls_Implementation()
 {
 	// Override and implement in BP.
@@ -111,7 +128,14 @@ void ARoomPlatformBase::SpawnWalls_Implementation()
 
 bool ARoomPlatformBase::SpawnContents_Implementation()
 {
-	return SpawnResources();
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		return SpawnResources();
+	}
+	else
+	{
+		return true;
+	}
 }
 
 
@@ -122,10 +146,4 @@ bool ARoomPlatformBase::SpawnResources_Implementation()
 }
 
 
-void ARoomPlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	//DOREPLIFETIME(ARoomPlatformBase, RoomCellSubdivision);
-}
 

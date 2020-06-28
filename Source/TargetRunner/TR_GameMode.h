@@ -9,7 +9,7 @@
 #include "ResourceDropperBase.h"
 #include "GoodsDropper.h"
 #include "PlatformGridMgr.h"
-#include "TRToolBase.h"
+#include "ToolActorBase.h"
 #include "TR_GameMode.generated.h"
 
 /**
@@ -60,7 +60,7 @@ public:
 		float LevelDifficulty;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TMap<FName, TSubclassOf<ATRToolBase>> ToolClassMap;
+		TMap<FName, TSubclassOf<AToolActorBase>> ToolClassMap;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UGoodsDropper* GoodsDropper;
@@ -113,7 +113,7 @@ public:
 		bool InitGridManager();
 
 	// Gets the current grid manager in the level.
-	// Returns false if no grid manager could be found.
+	// Returns nullptr if no grid manager could be found.
 	UFUNCTION(BlueprintCallable)
 		APlatformGridMgr* GetGridManager();
 
@@ -150,7 +150,7 @@ public:
 		
 	// Get the tool class by the given name. Currently this map of names -> classes is maintained in the ToolClassMap property.
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure)
-		void ToolClassByName(const FName ToolName, TSubclassOf<ATRToolBase>& ToolClass, bool& bValid);
+		void ToolClassByName(const FName ToolName, TSubclassOf<AToolActorBase>& ToolClass, bool& bValid);
 				
 	UFUNCTION(BlueprintCallable)
 		TSubclassOf<UGridForgeBase> GetGridForgeClass();

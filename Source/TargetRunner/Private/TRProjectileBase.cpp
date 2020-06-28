@@ -36,7 +36,6 @@ bool ATRProjectileBase::CalculateDamageByType_Implementation(const float Damage,
 {
 	FResourceRateFilter FoundRate;
 	ETRResourceMatch FoundSimilarity;
-
 	if (UResourceFunctionLibrary::FindResourceRateFilter(GetDamageRates(), ResourceType, FoundRate, FoundSimilarity))
 	{
 		CalculatedDamage = Damage * FoundRate.Rate;

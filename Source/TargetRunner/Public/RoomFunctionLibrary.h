@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "TargetRunner.h"
 #include "RoomTemplate.h"
+#include "RoomGridTemplate.h"
 #include "RoomFunctionLibrary.generated.h"
 
 /**

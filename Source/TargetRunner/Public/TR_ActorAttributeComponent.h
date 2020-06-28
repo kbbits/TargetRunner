@@ -10,11 +10,11 @@
 
 // Event dispatcher for when we hit minimum value
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttrMinimum);
-//DECLARE_EVENT(UTR_ActorAttributeComponent, FOnHitAttrMinimum);
 // Event dispatcher for when we hit maximum value
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttrMaximum);
-//DECLARE_EVENT(UTR_ActorAttributeComponent, FOnHitAttrMaximum);
 
+
+// Deprecated - Use ActorAttributes/TRActorAttributeComponent
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TARGETRUNNER_API UTR_ActorAttributeComponent : public UActorComponent
 {
@@ -23,7 +23,6 @@ class TARGETRUNNER_API UTR_ActorAttributeComponent : public UActorComponent
 public:
 	// Sets default values for this component's properties
 	UTR_ActorAttributeComponent();
-		
 
 	// The name of the attribute. ex: Energy
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
@@ -45,7 +44,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
 		float RechargeRate = 0;
 
-	// Rate of attribute change (per second).
+	// If true, attribute recharge will be suspended.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
 		bool bRechargePaused = false;
 
@@ -56,11 +55,6 @@ public:
 	// Hit maximum value event
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnHitAttrMaximum OnHitMaximum;
-
-private:
-	// flags so we only call event once when we hit a min or max.
-	//bool bFiredOnMax = false;
-	//bool bFiredOnMin = false;
 
 protected:
 	// Called when the game starts

@@ -54,7 +54,7 @@ void ATRToolBase::BeginFire_Implementation()
 
 void ATRToolBase::EndFire_Implementation()
 {
-	// Base class does nothing
+	// Base class does nothing but set state.
 	WeaponState = ETRWeaponState::Idle;
 }
 
@@ -70,7 +70,7 @@ FGoodsQuantity ATRToolBase::GetAmmoPerShot_Implementation()
 
 float ATRToolBase::GetDamagePerShot_Implementation()
 {
-	return Damage;
+	return BaseDamage;
 }
 
 TAssetPtr<USoundBase> ATRToolBase::GetFireSound_Implementation()

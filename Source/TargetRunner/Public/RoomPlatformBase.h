@@ -26,13 +26,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UStaticMeshComponent* FloorMeshComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 		TArray<ETRWallState> WallTemplate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FTransform> WallSectionTransforms;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 		FRoomTemplate RoomTemplate;
 
 protected:
@@ -45,7 +45,7 @@ public:
 
 	// Generates the entire room, including walls, etc.
 	// Must set the WallTemplate member var before calling.
-	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
+	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, CallInEditor)
 		void GenerateRoom();
 
 	// Generates the outer walls for the room. Called by GenerateRoom.
