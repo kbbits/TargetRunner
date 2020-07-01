@@ -134,34 +134,36 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		// Update the clients' room grid template
-		ClientUpdateRoomGridTemplate(RoomGridTemplate);
+		//ClientUpdateRoomGridTemplate(RoomGridTemplate);
 	}
 }
 
 
 void ARoomPlatformGridMgr::DestroyGridImpl()
 {
+	//TArray<int32> RowNums;
+	//TArray<int32> PlatformNums;
+	//PlatformGridMap.GenerateKeyArray(RowNums);
+
+	//DebugLog(FString::Printf(TEXT("Destroying %d rows."), RowNums.Num()));
+	//for (int32 Row : RowNums)
+	//{
+	//	PlatformGridMap.Find(Row)->RowPlatforms.GenerateKeyArray(PlatformNums);
+	//	for (int32 Col : PlatformNums)
+	//	{
+	//		APlatformBase* Platform = PlatformGridMap.Find(Row)->RowPlatforms[Col];
+	//		if (IsValid(Platform))
+	//		{
+	//			DebugLog(FString::Printf(TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY));
+	//			Platform->Destroy();
+	//		}
+	//	}
+	//	PlatformGridMap.Find(Row)->RowPlatforms.Empty();
+	//}
+	//PlatformGridMap.Empty();
+
+	APlatformGridMgr::DestroyGridImpl();
 	TArray<int32> RowNums;
-	TArray<int32> PlatformNums;
-	PlatformGridMap.GenerateKeyArray(RowNums);
-
-	DebugLog(FString::Printf(TEXT("Destroying %d rows."), RowNums.Num()));
-	for (int32 Row : RowNums)
-	{
-		PlatformGridMap.Find(Row)->RowPlatforms.GenerateKeyArray(PlatformNums);
-		for (int32 Col : PlatformNums)
-		{
-			APlatformBase* Platform = PlatformGridMap.Find(Row)->RowPlatforms[Col];
-			if (IsValid(Platform))
-			{
-				DebugLog(FString::Printf(TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY));
-				Platform->Destroy();
-			}
-		}
-		PlatformGridMap.Find(Row)->RowPlatforms.Empty();
-	}
-	PlatformGridMap.Empty();
-
 	RowNums.Empty(RoomGridTemplate.Grid.Num());
 	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
 	for (int32 Row : RowNums)
@@ -175,7 +177,7 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		// Update the clients' room grid template
-		ClientUpdateRoomGridTemplate(RoomGridTemplate);
+		//ClientUpdateRoomGridTemplate(RoomGridTemplate);
 	}
 }
 
@@ -201,7 +203,7 @@ void ARoomPlatformGridMgr::SpawnRooms_Implementation()
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		// Have the clients update their grid maps
-		ClientFillGridFromExistingPlatforms();
+		//ClientFillGridFromExistingPlatforms();
 	}
 }
 
@@ -274,11 +276,25 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 }
 
 
-void ARoomPlatformGridMgr::ClientUpdateRoomGridTemplate_Implementation(const FRoomGridTemplate& UpdatedTemplate)
+void ARoomPlatformGridMgr::SetRoomGridTemplateData_Implementation(const FRoomGridTemplate& UpdatedTemplate, const TArray<FVector2D>& RoomCoords, const TArray<FRoomTemplate>& RoomTemplates)
 {
-	// Multicast replication but only needed on clients.
-	if (GetLocalRole() < ROLE_Authority)
+	RoomGridTemplate = UpdatedTemplate;
+	int32 CoordX;
+	int32 CoordY;
+	for (int i = 0; i < RoomCoords.Num(); i++)
 	{
-		RoomGridTemplate = UpdatedTemplate;
+		CoordX = (int32)RoomCoords[i].X;
+		CoordY = (int32)RoomCoords[i].Y;
+		if (!RoomGridTemplate.Grid.Contains(CoordX))
+		{
+			FRoomGridRow NewRow;
+			RoomGridTemplate.Grid.Add(CoordX, NewRow);
+		}
+		RoomGridTemplate.Grid.Find(CoordX)->RowRooms.Add(CoordY, RoomTemplates[i]);
 	}
+	// Multicast replication but only needed on clients.
+	//if (GetLocalRole() < ROLE_Authority)
+	//{
+	//	RoomGridTemplate = UpdatedTemplate;
+	//}
 }

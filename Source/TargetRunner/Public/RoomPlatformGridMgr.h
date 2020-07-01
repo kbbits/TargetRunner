@@ -69,15 +69,18 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// Spawns all rooms in the room template grid
-	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
+	//UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
+	UFUNCTION(BlueprintNativeEvent, CallInEditor)
 		void SpawnRooms();
 
 	// Spanwn the room from the room template grid with the given coordinates.
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	//UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void SpawnRoom(FVector2D GridCoords);	
 
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
-		void ClientUpdateRoomGridTemplate(const FRoomGridTemplate& UpdatedTemplate);
+	//UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
+	UFUNCTION(BlueprintNativeEvent)
+		void SetRoomGridTemplateData(const FRoomGridTemplate& UpdatedTemplate, const TArray<FVector2D>& RoomCoords, const TArray<FRoomTemplate>& RoomTemplates);
 
 	virtual void GenerateGridImpl() override;
 

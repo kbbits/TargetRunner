@@ -115,7 +115,9 @@ public:
 	// Called by GenerateGrid. Native subclasses should override this one.
 	virtual void GenerateGridImpl();
 
-	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
+	// Calls DestroyGriImpl and on server destroys the player starts
+	//UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
+	UFUNCTION(BlueprintNativeEvent, CallInEditor)
 		void DestroyGrid();
 
 	// Called by DestroyGrid. Subclasses should override this one.

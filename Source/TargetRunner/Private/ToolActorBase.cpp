@@ -3,6 +3,7 @@
 
 #include "ToolActorBase.h"
 #include "..\Public\ToolActorBase.h"
+#include "ResourceFunctionLibrary.h"
 
 // Sets default values
 AToolActorBase::AToolActorBase()
@@ -33,12 +34,14 @@ FName AToolActorBase::GetName_Implementation()
 
 FText AToolActorBase::GetDisplayName_Implementation()
 {
-	return DisplayName;
+	if (Tool != nullptr) { return Tool->DisplayName;  }
+	return FText();
 }
 
 TSubclassOf<ATRProjectileBase> AToolActorBase::GetProjectileClass_Implementation()
 {
-	return ProjectileClass;
+	if (Tool != nullptr) { return Tool->ProjectileClass; }
+	return ATRProjectileBase::StaticClass();
 }
 
 ETRWeaponState AToolActorBase::GetCurrentState_Implementation()
@@ -60,17 +63,20 @@ void AToolActorBase::EndFire_Implementation()
 
 float AToolActorBase::GetEnergyPerShot_Implementation()
 {
-	return EnergyPerShot;
+	if (Tool != nullptr) { return Tool->EnergyPerShot.CurrentValue; }
+	return 0.0f;
 }
 
 FGoodsQuantity AToolActorBase::GetAmmoPerShot_Implementation()
 {
-	return AmmoPerShot;
+	if (Tool != nullptr) { return Tool->AmmoPerShot; }
+	return FGoodsQuantity();
 }
 
 float AToolActorBase::GetDamagePerShot_Implementation()
 {
-	return BaseDamage;
+	if (Tool != nullptr) { return Tool->BaseDamage.CurrentValue; }
+	return 0.0f;
 }
 
 TAssetPtr<USoundBase> AToolActorBase::GetFireSound_Implementation()
@@ -86,6 +92,18 @@ TAssetPtr<USoundBase> AToolActorBase::GetFireBusySound_Implementation()
 TAssetPtr<USoundBase> AToolActorBase::GetReloadSound_Implementation()
 {
 	return ReloadSound;
+}
+
+TArray<FResourceRateFilter> AToolActorBase::GetDamageRates()
+{
+	if (Tool != nullptr) { return Tool->BaseDamageRates; }
+	return TArray<FResourceRateFilter>();
+}
+
+TArray<FResourceRateFilter> AToolActorBase::GetResourceExtractionRates()
+{
+	if (Tool != nullptr) { return Tool->BaseResourceExtractionRates; }
+	return TArray<FResourceRateFilter>();
 }
 
 

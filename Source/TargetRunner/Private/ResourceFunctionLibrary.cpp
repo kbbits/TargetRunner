@@ -136,14 +136,14 @@ FName UResourceFunctionLibrary::GoodsNameForResource(const FResourceType& Resour
 	return ResourceType.Type;
 }
 
-void UResourceFunctionLibrary::ResourceTypeForData(const FResourceTypeData& ResourceData, FResourceType& ResourceType)
+void UResourceFunctionLibrary::ResourceTypeForCode(const FName& ResourceCode, FResourceType& ResourceType)
 {
-	if (!ResourceData.Code.IsNone())
+	if (!ResourceCode.IsNone())
 	{
 		TArray<FString> CodeStrings;
-		ResourceData.Code.ToString().ParseIntoArray(CodeStrings, TEXT("."), true);
+		ResourceCode.ToString().ParseIntoArray(CodeStrings, TEXT("."), true);
 		ResourceType = FResourceType(
-			ResourceData.Code,												/* Code */
+			ResourceCode,													/* Code */
 			CodeStrings.IsValidIndex(0) ? FName(*CodeStrings[0]) : FName(), /* Category */
 			CodeStrings.IsValidIndex(1) ? FName(*CodeStrings[1]) : FName(), /* Type */
 			CodeStrings.IsValidIndex(2) ? FName(*CodeStrings[2]) : FName()  /* SubType */
@@ -153,6 +153,26 @@ void UResourceFunctionLibrary::ResourceTypeForData(const FResourceTypeData& Reso
 	{
 		ResourceType = FResourceType();
 	}
+}
+
+void UResourceFunctionLibrary::ResourceTypeForData(const FResourceTypeData& ResourceData, FResourceType& ResourceType)
+{
+	ResourceTypeForCode(ResourceData.Code, ResourceType);
+	//if (!ResourceData.Code.IsNone())
+	//{
+	//	TArray<FString> CodeStrings;
+	//	ResourceData.Code.ToString().ParseIntoArray(CodeStrings, TEXT("."), true);
+	//	ResourceType = FResourceType(
+	//		ResourceData.Code,												/* Code */
+	//		CodeStrings.IsValidIndex(0) ? FName(*CodeStrings[0]) : FName(), /* Category */
+	//		CodeStrings.IsValidIndex(1) ? FName(*CodeStrings[1]) : FName(), /* Type */
+	//		CodeStrings.IsValidIndex(2) ? FName(*CodeStrings[2]) : FName()  /* SubType */
+	//	);
+	//}
+	//else
+	//{
+	//	ResourceType = FResourceType();
+	//}
 }
 
 int32 UResourceFunctionLibrary::ResourceDataInTier(const UDataTable* ResourceDataTable, const float MinTier, const float MaxTier, TArray<FResourceTypeData>& ResourceData)

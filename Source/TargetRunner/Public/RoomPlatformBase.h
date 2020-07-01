@@ -32,7 +32,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FTransform> WallSectionTransforms;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_RoomTemplate)
 		FRoomTemplate RoomTemplate;
 
 protected:
@@ -43,9 +43,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void OnRep_RoomTemplate();
+	void OnRep_RoomTemplate_Implementation();
+
 	// Generates the entire room, including walls, etc.
 	// Must set the WallTemplate member var before calling.
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, CallInEditor)
+	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 		void GenerateRoom();
 
 	// Generates the outer walls for the room. Called by GenerateRoom.

@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "UsableTool.h"
 #include "ResourceRateFilter.h"
+#include "AttributeDataSet.h"
+#include "ToolBase.h"
 #include "ToolActorBase.generated.h"
 
 UCLASS()
@@ -22,33 +24,36 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		FName Name;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-		FText DisplayName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
+		UToolBase* Tool;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-		TSubclassOf<ATRProjectileBase> ProjectileClass;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+	//	FText DisplayName;
+
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+	//	TSubclassOf<ATRProjectileBase> ProjectileClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons")
 		ETRWeaponState WeaponState;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-		float EnergyPerShot;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+	//	float EnergyPerShot;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-		FGoodsQuantity AmmoPerShot;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+	//	FGoodsQuantity AmmoPerShot;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-		float BaseDamage;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+	//	float BaseDamage;
 
 	// The effective damage rates of this tool against given resource types. Expressed as a percent of base damage (0.0 - 1.0).
 	// Values > 1.0 are allowed. Calculated damage against a resource type not matching any filters will = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
-		TArray<FResourceRateFilter> BaseDamageRates;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
+	//	TArray<FResourceRateFilter> BaseDamageRates;
 
 	// The effective extraction rates of this tool against given resource types. Expressed as a percent (0.0 - 1.0).
 	// Values > 1.0 are allowed. Calculated extracted amounts against a resource type not matching any filters will = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
-		TArray<FResourceRateFilter> BaseResourceExtractionRates;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
+	//	TArray<FResourceRateFilter> BaseResourceExtractionRates;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		TAssetPtr<USoundBase> FireSound;
@@ -125,5 +130,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
 		TAssetPtr<USoundBase> GetReloadSound();
 	virtual TAssetPtr<USoundBase> GetReloadSound_Implementation();
+
+	UFUNCTION(BlueprintPure, Category = "Player Weapons")
+		TArray<FResourceRateFilter> GetDamageRates();
+
+	UFUNCTION(BlueprintPure, Category = "Player Weapons")
+		TArray<FResourceRateFilter> GetResourceExtractionRates();
 
 };

@@ -25,7 +25,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bCanRemoveDynamic;
 
-	// Only valid on server!
+	// Call GetGridManager to initialize this.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		APlatformGridMgr* MyGridManager;
 

@@ -25,31 +25,31 @@ public:
 	UActorAttributeComponent();
 
 	// The attribute data
-	UPROPERTY(EditAnywhere, Replicated, SaveGame, Category = "ActorAttributes")
+	UPROPERTY(EditAnywhere, Replicated, SaveGame, Category = "ItemAttributes")
 		FAttributeData AttributeData;
 
 	// The name of the attribute. ex: Energy
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
 	//	FName Name;
 
 	//// The minimum value allowed for this attribute
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
 	//	float MinValue = 0;
 
 	//// The maximum value allowed for this attribute
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
 	//	float MaxValue = 0;
 
 	//// The current value of this attribute
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
 	//	float CurrentValue = 0;
 
 	// Rate of attribute change (per second).
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
 		float RechargeRate = 0;
 
 	// If true, attribute recharge will be suspended.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ActorAttributes")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
 		bool bRechargePaused = false;
 	
 	// Hit minimum value event
@@ -66,43 +66,43 @@ protected:
 
 public:	
 	// Call this to set attribute data for components created dynamically.
-	UFUNCTION(BlueprintCallable, Category = "ActorAttributess")
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributess")
 		void SetAttributeData(const FAttributeData& NewData);
 
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintPure, Category = "ActorAttributes")
+	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		FName GetAttributeName();
 
-	UFUNCTION(BlueprintPure, Category = "ActorAttributes")
+	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetMin();
-	UFUNCTION(BlueprintCallable, Category = "ActorAttributes")
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void SetMin(const float NewMin);
 
-	UFUNCTION(BlueprintPure, Category = "ActorAttributes")
+	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetMax();
-	UFUNCTION(BlueprintCallable, Category = "ActorAttributes")
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void SetMax(const float NewMax);
 
-	UFUNCTION(BlueprintPure, Category = "ActorAttributes")
+	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetCurrent();
 	// Sets current value clamped to min/max 
-	UFUNCTION(BlueprintCallable, Category = "ActorAttributes")
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void SetCurrent(const float NewValue);
 
 	// Get remainin capacity of this attribute. (max value - current value)
-	UFUNCTION(BlueprintPure, Category="ActorAttributes")
+	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetRemainingCapacity();
 
 	// Get the current percent of maximum value 0.0 - 1.0
-	UFUNCTION(BlueprintPure, Category = "ActorAttributes")
+	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetCurrentPercent();
 
 	// Add the given amount from the current value of this attribute. Value can be negative.
-	UFUNCTION(BlueprintCallable, Category = "ActorAttributes")
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		bool DeltaValue(const float ToAdd, const bool bAllowOverspill);
 
-	UFUNCTION(BlueprintCallable, Category = "ActorAttributes")
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		float ResetToMax();
 };

@@ -28,7 +28,7 @@ public:
 
 	// Finds the most specific resource rate filter in the array of FResourceRateFilters matching the given resource type.
 	// Returns true if a match was found, false otherwise.
-	// NOTE: Any fields in the ResourceRates ResourceType that are "None" (NAME_NONE) are wildcards.
+	// NOTE: Any fields in the ResourceFilters ResourceType that are "None" (NAME_NONE) are wildcards.
 	// Ex: If ResourceFilters contains these: [{Category: "Metal", Type: "Copper", SubType: "None", Rate: 2.0}, {Category: "Metal", Type: "None", SubType: "None", Rate: 1.0}, {Category: "Metal", Type: "Iron", SubType: "None", Rate: 4.0}]
 	//    Then calling this with a ResourceType {Category: "Metal", Type: "Copper", SubType: "None"} will return the first rate with Rate=2.0, FoundMatchDegree = ETRResourceMatch::Type
 	//    Calling this with a ResourceType {Category: "Metal", Type: "Aluminum", SubType: "None"} will return the second rate with Rate=1.0, FoundMatchDegree = ETRResourceMatch::Category
@@ -50,6 +50,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static FName GoodsNameForResource(const FResourceType& ResourceType);
 
+	// Helper to convert a ResourceType code into a ResourceType struct
+	UFUNCTION(BlueprintPure, Category = "Resource Funtions")
+		static void ResourceTypeForCode(const FName& ResourceCode, FResourceType& ResourceType);
+	
 	// Helper to convert a ResourceTypeData into a ResourceType
 	UFUNCTION(BlueprintPure, Category = "Resource Funtions")
 		static void ResourceTypeForData(const FResourceTypeData& ResourceData, FResourceType& ResourceType);

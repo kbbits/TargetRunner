@@ -45,6 +45,11 @@ void ARoomPlatformBase::Tick(float DeltaTime)
 }
 
 
+void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
+{
+}
+
+
 void ARoomPlatformBase::GenerateRoom_Implementation()
 {
 	if (MyGridManager == nullptr)

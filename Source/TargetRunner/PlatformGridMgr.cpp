@@ -26,7 +26,6 @@ void APlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& O
 	DOREPLIFETIME_CONDITION(APlatformGridMgr, StartGridCoords, COND_InitialOnly);
 	DOREPLIFETIME_CONDITION(APlatformGridMgr, ExitGridCoords, COND_InitialOnly);
 	DOREPLIFETIME_CONDITION(APlatformGridMgr, RoomCellSubdivision, COND_InitialOnly);
-
 }
 
 // Called when the game starts or when spawned
@@ -147,6 +146,7 @@ void APlatformGridMgr::DestroyGrid_Implementation()
 	DestroyGridImpl();
 	if (GetLocalRole() == ROLE_Authority)
 	{
+		DebugLog(FString::Printf(TEXT("DestroyGrid destroying player starts:%d."), PlayerStarts.Num()));
 		// Destroy any player starts we spawned.
 		for (APlayerStart* tmpPlayerStart : PlayerStarts)
 		{
@@ -155,7 +155,7 @@ void APlatformGridMgr::DestroyGrid_Implementation()
 		PlayerStarts.Empty();
 
 		// Have the clients update their grid maps
-		ClientFillGridFromExistingPlatforms();
+		//ClientFillGridFromExistingPlatforms();
 	}
 }
 

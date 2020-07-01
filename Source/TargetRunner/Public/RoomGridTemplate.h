@@ -14,7 +14,7 @@ struct FRoomGridTemplate : public FTableRowBase
 public:
 
 	// The grid of room templates. X grid coordinate as key in Grid map, Y grid coordinate as key in row map.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, NotReplicated)
 		TMap<int32, FRoomGridRow> Grid;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
