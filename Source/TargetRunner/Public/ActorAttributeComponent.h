@@ -8,7 +8,8 @@
 #include "AttributeData.h"
 #include "ActorAttributeComponent.generated.h"
 
-
+// Event dispatcher for when CurrentValue changes
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeltaCurrent, float, NewCurrent);
 // Event dispatcher for when we hit minimum value
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttributeMinimum);
 // Event dispatcher for when we hit maximum value
@@ -24,7 +25,8 @@ public:
 	// Sets default values for this component's properties
 	UActorAttributeComponent();
 
-	// The attribute data
+	// The attribute data.
+	// Modifying this directly skips notifications and clamping logic.
 	UPROPERTY(EditAnywhere, Replicated, SaveGame, Category = "ItemAttributes")
 		FAttributeData AttributeData;
 
@@ -51,6 +53,10 @@ public:
 	// If true, attribute recharge will be suspended.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
 		bool bRechargePaused = false;
+
+	// Hit minimum value event
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnDeltaCurrent OnDeltaCurrent;
 	
 	// Hit minimum value event
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")

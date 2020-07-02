@@ -13,11 +13,11 @@ struct FPlayerLevelRecord : public FTableRowBase
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		FGuid PlayerID;
+		FGuid PlayerGuid;
 	
-	// The seed (ID) related to this level.
+	// The ID related to this level.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		int32 LevelSeed;
+		FName LevelId;
 
 	// Has the player unlocked access to this level?
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)

@@ -27,7 +27,7 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	NewLevelTemplate.LevelSeed = NewSeed;
 	LevelStream.Initialize(NewSeed);
 	LevelStream.Reset();
-
+	
 	NewLevelTemplate.Tier = DifficultyTier;
 	NewLevelTemplate.GridForgeType = FName(TEXT("Default"));
 	if (!GenerateDisplayName(NewLevelTemplate.DisplayName)) { return; }
@@ -46,6 +46,9 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 		NewLevelTemplate.StartHourOfDay = 9.0f + LevelStream.FRandRange(-2.0f, 2.0f);
 	}
 	// TODO: Theme, ThemeTags, OtherResourcesAvailable
+
+	// Set the ID as compound key
+	NewLevelTemplate.LevelId = FName(FString::Printf(TEXT("%d:%d:%s:%s"), (int32)NewLevelTemplate.Tier, NewLevelTemplate.LevelSeed, *NewLevelTemplate.GridForgeType.ToString(), *NewLevelTemplate.Theme.ToString()));
 
 	DebugLog(FString::Printf(TEXT("GenerateNewLevelTemplate Successful.")));
 	Successful = true;

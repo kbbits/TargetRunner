@@ -45,26 +45,17 @@ void UActorAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// Don't do anything if recharge is paused
 	if (bRechargePaused) { return; }
 
-	float oldCurrentValue = AttributeData.CurrentValue;
+	float NewValue = AttributeData.CurrentValue;
 	// If we recharge and we're not at one of the min/max
 	if ((RechargeRate > 0.0f && AttributeData.CurrentValue < AttributeData.MaxValue) || (RechargeRate < 0.0f && AttributeData.CurrentValue > AttributeData.MinValue))
 	{
 		// Update the new value based on recharge
-		AttributeData.CurrentValue = FMath::Clamp((RechargeRate * DeltaTime) + AttributeData.CurrentValue, AttributeData.MinValue, AttributeData.MaxValue);
+		NewValue = FMath::Clamp((RechargeRate * DeltaTime) + AttributeData.CurrentValue, AttributeData.MinValue, AttributeData.MaxValue);
 	}
-
-	// If the value hasn't changed just return, we have nothing else to do.
-	// With this check here we don't need to use flags for our events.
-	if (AttributeData.CurrentValue == oldCurrentValue) { return; }
-
-	// Check max and fire events if we just hit max or min
-	if (AttributeData.CurrentValue == AttributeData.MaxValue)
-	{
-		OnHitMaximum.Broadcast();
-	}
-	else if (AttributeData.CurrentValue == AttributeData.MinValue)
-	{
-		OnHitMinimum.Broadcast();
+	// If it's a new value, set it.
+	if (AttributeData.CurrentValue != NewValue) 
+	{ 
+		SetCurrent(NewValue);
 	}
 }
 
@@ -100,7 +91,20 @@ float UActorAttributeComponent::GetCurrent()
 
 void UActorAttributeComponent::SetCurrent(const float NewValue)
 {
-	AttributeData.CurrentValue = FMath::Clamp(NewValue, AttributeData.MinValue, AttributeData.MaxValue);
+	float NewValueClamped = FMath::Clamp(NewValue, AttributeData.MinValue, AttributeData.MaxValue);
+	if (AttributeData.CurrentValue != NewValueClamped)
+	{
+		AttributeData.CurrentValue = NewValueClamped;
+		OnDeltaCurrent.Broadcast(AttributeData.CurrentValue);
+		if (AttributeData.CurrentValue == AttributeData.MaxValue)
+		{
+			OnHitMaximum.Broadcast();
+		}
+		else if (AttributeData.CurrentValue == AttributeData.MinValue)
+		{
+			OnHitMinimum.Broadcast();
+		}
+	}	
 }
 
 // Get remainin capacity of this attribute. (max value - current value)
@@ -130,13 +134,11 @@ float UActorAttributeComponent::GetCurrentPercent()
 bool UActorAttributeComponent::DeltaValue(const float ToAdd = 1, const bool bAllowOverspill = false)
 {
 	float NewValue = AttributeData.CurrentValue + ToAdd;
-
 	// If we are outside allowed range and we don't allow overspill, just return false
 	if ((NewValue > AttributeData.MaxValue || NewValue < AttributeData.MinValue) && !bAllowOverspill)
 	{
 		return false;
 	}
-
 	// Set the current value to the new clamped value
 	SetCurrent(NewValue);
 	return true;
@@ -145,7 +147,7 @@ bool UActorAttributeComponent::DeltaValue(const float ToAdd = 1, const bool bAll
 // Sets the current value to max value and returns this value.
 float UActorAttributeComponent::ResetToMax()
 {
-	AttributeData.CurrentValue = AttributeData.MaxValue;
+	SetCurrent(AttributeData.MaxValue);
 	return AttributeData.CurrentValue;
 }
 

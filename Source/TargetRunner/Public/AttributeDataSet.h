@@ -11,6 +11,10 @@ struct FAttributeDataSet
 
 public:
 
+	// Unique instance ID
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
+		FGuid ItemGuid;
+
 	// Attribute Data
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
 		TMap<FName, FAttributeData> Attributes;

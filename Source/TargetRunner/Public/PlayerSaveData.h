@@ -2,6 +2,8 @@
 
 #include "Engine/DataTable.h"
 #include "TrEnums.h"
+#include "AttributeDataSet.h"
+#include "ToolData.h"
 #include "PlayerSaveData.generated.h"
 
 USTRUCT(BlueprintType)
@@ -10,6 +12,9 @@ struct FPlayerSaveData : public FTableRowBase
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FGuid PlayerGuid;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Name;
 
@@ -26,46 +31,31 @@ public:
 		float TotalPlaytimeInRuns;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float ResourceOneTotal;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float ResourceTwoTotal;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float TargetsHit;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float CurrentScore;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float TotalTargetsHit;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float HighScore;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float MaxHealth;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	//	float MaxHealth;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	//	float MaxEnergy;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	//	float EnergyRegenRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float MaxEnergy;
+		FAttributeDataSet AttributeData;
+		
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	//	TArray<FName> ToolsUnlocked;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float TargetsDestroyed;
+		TArray<FToolData> ToolInventory;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float TotalTargetsDestroyed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float EnergyRegenRate;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float ResourceOneSpent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float ResourceTwoSpent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TArray<FName> ToolsUnlocked;
+		TArray<FGuid> LastEquippedItems;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TMap<FName, float> HitCounts;
@@ -78,4 +68,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TMap<FName, float> TotalGoodsCollected;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TMap<FName, float> TotalGoodsSpent;
+	
 };

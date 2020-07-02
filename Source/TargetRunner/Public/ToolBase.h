@@ -20,6 +20,15 @@ public:
 	UToolBase();
 
 public:
+
+	// Unique instance ID
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FGuid ItemGuid;
+
+	// Value of the item in the shop
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+		float BuyValue;
+
 	// Thumbnail for GUI use
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TAssetPtr<UTexture2D> Thumbnail;

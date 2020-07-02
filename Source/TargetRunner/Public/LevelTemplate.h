@@ -17,12 +17,21 @@ public:
 	{
 		LevelSeed = 0;
 		GridForgeType = FName(TEXT("Default"));
+		Theme = FName(TEXT("Default"));
 	}
 
+	// Unique instance ID - a compound of tier:seed:gridforgetype:theme
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FName LevelId;
+
 	// Seed used to generate the level.
-	// This is the level's unique ID -- each LevelTemplate must have a unique seed.
+	// Level seed should be unique in each tier.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 LevelSeed;
+
+	// Relates to difficulty
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		float Tier;
 
 	// The human-readable name for this level
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
@@ -48,10 +57,6 @@ public:
 	// The grid generation method to use.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName GridForgeType;
-
-	// Relates to difficulty
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float Tier;
 
 	// Required to unlock the level.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)

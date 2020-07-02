@@ -17,6 +17,8 @@ UToolBase::UToolBase()
 void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 {
 	ToolData.ToolClass = StaticClass();
+	ToolData.AttributeData.ItemGuid = ItemGuid;
+	ToolData.AttributeData.FloatAttributes.Add(FName(TEXT("BuyValue")), BuyValue);
 	ToolData.AttributeData.Attributes.Add(EnergyPerShot.Name, EnergyPerShot);
 	ToolData.AttributeData.Attributes.Add(BaseDamage.Name, BaseDamage);
 	ToolData.AttributeData.ResourceRateAttributes.Add(DAMAGE_RATES_NAME, FResourceRateFilterSet(BaseDamageRates));
@@ -25,8 +27,17 @@ void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 
 void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 {
-	if (GetClass()->IsChildOf(ToolData.ToolClass))
+	if (ToolData.ToolClass.Get()->IsChildOf(GetClass()))
 	{
+		if (ToolData.AttributeData.ItemGuid.IsValid()) {
+			if (ItemGuid.IsValid() && ItemGuid != ToolData.AttributeData.ItemGuid) {
+				UE_LOG(LogTRGame, Warning, TEXT("UpdateFromTooldData - %s item guids do not match"), *GetNameSafe(this));
+			}
+			ItemGuid = ToolData.AttributeData.ItemGuid;
+		}
+		if (ToolData.AttributeData.FloatAttributes.Contains(FName(TEXT("BuyValue")))) {
+			BuyValue = ToolData.AttributeData.FloatAttributes[FName(TEXT("BuyValue"))];
+		}
 		if (ToolData.AttributeData.Attributes.Contains(EnergyPerShot.Name)) { 
 			EnergyPerShot = ToolData.AttributeData.Attributes[EnergyPerShot.Name]; 
 		}
