@@ -332,6 +332,9 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 		{
 			Room->Group = Cell->Group;
 			Room->bIsBlackout = false;
+			Room->DistanceToStart = Cell->DistanceToStart;
+			Room->DistanceToEnd = Cell->DistanceToEnd;
+			Room->DistanceToShortestPath = Cell->DistanceToShortestPath;
 			// Determine wall state
 			// North	
 			TmpRoom = GetRoomNeighbor(RoomGridTemplate, RoomCoords, ETRDirection::North);
@@ -375,8 +378,9 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 // Returns nullptr if no such cell exists already.
 UGridTemplateCell* UGridForgeBase::GetCell(const FVector2D& Coords, bool& bFound)
 {
-	int32 X = static_cast<int32>(Coords.X);
-	int32 Y = static_cast<int32>(Coords.Y);
+	FVector2D Rounded = Coords.RoundToVector();
+	int32 X = static_cast<int32>(Rounded.X);
+	int32 Y = static_cast<int32>(Rounded.Y);
 	if (GridTemplateCells.Contains(X))
 	{
 		if (GridTemplateCells[X]->RowCells.Contains(Y))
@@ -857,7 +861,8 @@ UGridTemplateCell* UGridForgeBase::GetOrCreateCellXY(const int32 X, const int32 
 
 UGridTemplateCell* UGridForgeBase::GetOrCreateCell(const FVector2D& Coords)
 {
-	return GetOrCreateCellXY(Coords.X, Coords.Y);
+	FVector2D Rounded = Coords.RoundToVector();
+	return GetOrCreateCellXY((int32)Rounded.X, (int32)Rounded.Y);
 }
 
 
@@ -869,9 +874,9 @@ UGridTemplateCell* UGridForgeBase::GetOrCreateCellNeighbor(const int32 X, const 
 }
 
 
-void UGridForgeBase::GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeDiagonal)
+void UGridForgeBase::GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeBlocked, const bool bIncludeDiagonal)
 {
-	NeighborCells.Empty(4);
+	NeighborCells.Empty(bIncludeDiagonal ? 8 : 4);
 	UGridTemplateCell* Cell;
 	const TArray<ETRDirection>* Directions;
 	if (bIncludeDiagonal) {
@@ -883,24 +888,23 @@ void UGridForgeBase::GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArr
 	for (ETRDirection Direction : *Directions)
 	{
 		Cell = GetOrCreateCellNeighbor(X, Y, Direction);
-		if (Cell != nullptr) { NeighborCells.Add(Cell); }
+		if (Cell != nullptr && (bIncludeBlocked || Cell->CellState != ETRGridCellState::Blocked )) { 
+			NeighborCells.Add(Cell); 
+		}
 	}
 }
 
 
 void UGridForgeBase::GetUnflaggedCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeBlocked, const bool bIncludeDiagonal)
 {
-	NeighborCells.Empty(4);
+	NeighborCells.Empty(bIncludeDiagonal ? 8 : 4);
 	TArray<UGridTemplateCell*> TmpNeighbors;
-	GetOrCreateCellNeighbors(X, Y, TmpNeighbors, bIncludeDiagonal);
+	GetOrCreateCellNeighbors(X, Y, TmpNeighbors, bIncludeBlocked, bIncludeDiagonal);
 	for (UGridTemplateCell* Cell : TmpNeighbors)
 	{
 		if (Cell != nullptr && !Cell->bFlagged) 
 		{ 
-			if (bIncludeBlocked || Cell->CellState != ETRGridCellState::Blocked)
-			{
-				NeighborCells.Add(Cell);
-			}
+			NeighborCells.Add(Cell);
 		}
 	}
 	DebugLog(FString::Printf(TEXT("GridForgeBase - GetUnflaggedCellNeighbors found %d neighbors of cell X:%d Y:%d"), NeighborCells.Num(), X, Y));

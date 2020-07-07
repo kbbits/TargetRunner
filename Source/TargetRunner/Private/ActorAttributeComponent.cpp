@@ -35,6 +35,27 @@ void UActorAttributeComponent::SetAttributeData(const FAttributeData& NewData)
 	AttributeData = NewData;
 }
 
+
+bool UActorAttributeComponent::UpdateFromAttributeDataMap(const TMap<FName, FAttributeData>& DataMap)
+{
+	if (DataMap.Contains(AttributeData.Name))
+	{
+		SetAttributeData(DataMap[AttributeData.Name]);
+		return true;
+	}
+	return false;
+}
+
+
+void UActorAttributeComponent::FillAttributeDataMap(TMap<FName, FAttributeData>& DataMap)
+{
+	if (!AttributeData.Name.IsNone())
+	{
+		DataMap.Add(AttributeData.Name, AttributeData);
+	}
+}
+
+
 // Called every frame
 void UActorAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {

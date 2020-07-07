@@ -27,7 +27,7 @@ public:
 
 	// The attribute data.
 	// Modifying this directly skips notifications and clamping logic.
-	UPROPERTY(EditAnywhere, Replicated, SaveGame, Category = "ItemAttributes")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, SaveGame, Category = "ItemAttributes")
 		FAttributeData AttributeData;
 
 	// The name of the attribute. ex: Energy
@@ -71,9 +71,17 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Call this to set attribute data for components created dynamically.
-	UFUNCTION(BlueprintCallable, Category = "ItemAttributess")
+	// Call this to set attribute data.
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void SetAttributeData(const FAttributeData& NewData);
+
+	// Call this to set attribute data that matches our current AttributeData.Name. Returns true if matching attribute data was found and set.
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
+		bool UpdateFromAttributeDataMap(const TMap<FName, FAttributeData>& DataMap);
+
+	// Fills the given attribute map with an entry for our attribute data, uses AttributeData.Name as key.
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
+		void FillAttributeDataMap(UPARAM(ref)TMap<FName, FAttributeData>& DataMap);
 
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

@@ -150,7 +150,7 @@ protected:
         UGridTemplateCell* GetOrCreateCellNeighbor(const int32 X, const int32 Y, const ETRDirection Direction);
     
     UFUNCTION(BlueprintCallable)
-        void GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeDiagonal = true);
+        void GetOrCreateCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeBlocked = true, const bool bIncludeDiagonal = true);
 
     UFUNCTION(BlueprintCallable)
         void GetUnflaggedCellNeighbors(const int32 X, const int32 Y, TArray<UGridTemplateCell*>& NeighborCells, const bool bIncludeBlocked = false, const bool bIncludeDiagonal = true);

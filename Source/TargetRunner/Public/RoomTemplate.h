@@ -37,6 +37,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bIsInterior;
 
+	// Distance (in room grid units) of this room to the start room.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 DistanceToStart = -1;
+
+	// Distance (in room grid units) of this room to the end room.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 DistanceToEnd = -1;
+
+	// Distance (in room grid units) of this room to the closest room on the shortest path from start to end.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 DistanceToShortestPath = -1;
+
 	// Total quantity of Resources contained in this room. Room generation logic may split these into different numbers of nodes, etc.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FResourceQuantity> Resources;

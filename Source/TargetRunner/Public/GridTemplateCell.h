@@ -32,6 +32,9 @@ public:
 		int32 DistanceToEnd = -1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 DistanceToShortestPath = -1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		ETRGridCellState CellState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -40,6 +43,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bFlagged;
 
+	// The parent cell in our tree, connecting to this one.
+	// Currently, there will only be one parent in this array.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<FVector2D> ConnectedFrom;
+
+	// The "child" cells this one is connected to as a "parent".
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FVector2D> ConnectedCells;
 

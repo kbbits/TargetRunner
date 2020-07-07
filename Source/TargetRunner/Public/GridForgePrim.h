@@ -27,6 +27,8 @@ public:
 
 protected:
 
-    FVector2D PickCoord(UPARAM(ref) FRandomStream& RandStream, const TArray<FVector2D>& CoordArray);
+    // Pick next coordinate to evaluate. Changing how this is done, changes the nature of the produced grid.
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+        FVector2D PickCoord(UPARAM(ref) FRandomStream& RandStream, const TArray<FVector2D>& CoordArray);
 
 };

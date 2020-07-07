@@ -14,7 +14,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttrMinimum);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttrMaximum);
 
 
-// Deprecated - Use ActorAttributes/TRActorAttributeComponent
+// Deprecated - Use ActorAttributeComponent
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TARGETRUNNER_API UTR_ActorAttributeComponent : public UActorComponent
 {

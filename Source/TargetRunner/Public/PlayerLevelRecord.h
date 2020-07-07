@@ -4,8 +4,8 @@
 #include "GoodsQuantity.h"
 #include "PlayerLevelRecord.generated.h"
 
-// Instances of these indicate a player's access and data related to the given level seed.
-// These PlayerLevelRecords are related to LevelTemplates by the level seed.
+// Instances of these indicate a player's access and data related to the given level ID.
+// These PlayerLevelRecords are related to LevelTemplates by the level ID.
 USTRUCT(BlueprintType)
 struct FPlayerLevelRecord : public FTableRowBase
 {

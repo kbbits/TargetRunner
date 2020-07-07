@@ -22,7 +22,7 @@ public:
 		FText DisplayName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		float MaxLevelCompleted;
+		float MaxTierCompleted;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float TotalRunsPlayed;
@@ -60,8 +60,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TMap<FName, float> HitCounts;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<ETRAmmoType, float> AmmoInventory;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	//	TMap<ETRAmmoType, float> AmmoInventory;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TMap<FName, float> GoodsInventory;
