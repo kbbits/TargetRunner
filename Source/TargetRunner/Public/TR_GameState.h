@@ -16,6 +16,8 @@ class TARGETRUNNER_API ATR_GameState : public AGameState
 {
 	GENERATED_BODY()
 
+	ATR_GameState();
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float CurrentDifficulty;
@@ -25,6 +27,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* ResourceTypeDataTable;
+
 
 public:
 

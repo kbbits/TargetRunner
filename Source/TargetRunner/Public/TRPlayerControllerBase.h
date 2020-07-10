@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "RoomPlatformGridMgr.h"
 #include "RoomGridTemplate.h"
+#include "TRPersistentDataComponent.h"
 #include "TRPlayerControllerBase.generated.h"
 
 /**
@@ -15,6 +16,15 @@ UCLASS()
 class TARGETRUNNER_API ATRPlayerControllerBase : public APlayerController
 {
 	GENERATED_BODY()
+
+public:
+
+	ATRPlayerControllerBase();
+
+public:
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
+		UTRPersistentDataComponent* PersistentDataComponent;
 	
 public:
 

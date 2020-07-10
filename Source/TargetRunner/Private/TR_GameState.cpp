@@ -4,6 +4,11 @@
 #include "TR_GameState.h"
 #include "ResourceFunctionLibrary.h"
 
+ATR_GameState::ATR_GameState()
+{
+	
+}
+
 FName ATR_GameState::GetGoodsNameForResource(const FResourceType& ResourceType)
 {
 	//FResourceTypeData ResourceData;

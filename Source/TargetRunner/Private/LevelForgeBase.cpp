@@ -21,8 +21,7 @@ ULevelForgeBase::ULevelForgeBase(const FObjectInitializer& OI)
 
 void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float DifficultyTier, FLevelTemplate& NewLevelTemplate, bool& Successful)
 {
-	DebugLog(FString::Printf(TEXT("GenerateNewLevelTemplate Start")));
-	//LevelTemplate = &NewLevelTemplate;
+	DebugLog(FString::Printf(TEXT("GenerateNewLevelTemplate Start. NewSeed: %d"), NewSeed));
 	Successful = false;
 	NewLevelTemplate.LevelSeed = NewSeed;
 	LevelStream.Initialize(NewSeed);
@@ -35,7 +34,7 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	if (!GenerateGridExtents(DifficultyTier, NewLevelTemplate)) { return; }
 	NewLevelTemplate.ResourcesAvailable.Empty();
 	if (!GenerateResourcesAvailable(DifficultyTier, NewLevelTemplate.ResourcesAvailable)) { return; }
-	NewLevelTemplate.UnlockCost = (FMath::Pow(DifficultyTier, UnlockCostScalingExp) * (BaseUnlockCost / 10.0f)) * 10.f;
+	NewLevelTemplate.UnlockCost = FMath::RoundFromZero(FMath::Pow(DifficultyTier, UnlockCostScalingExp) * (BaseUnlockCost / 10.0f)) * 10.f;
 	NewLevelTemplate.AvailableTime = FMath::Clamp<float>((FMath::Pow(DifficultyTier, AvailableTimeScaleExp) * (BaseAvailableTime / 10.0f)) * 10.0f, BaseAvailableTime, 14400.0f);
 	if (DifficultyTier > 3)
 	{

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
+#include "TRPersistentDataComponent.h"
 #include "TRGameModeLobby.generated.h"
 
 /**
@@ -13,5 +14,13 @@ UCLASS()
 class TARGETRUNNER_API ATRGameModeLobby : public AGameMode
 {
 	GENERATED_BODY()
-	
+
+public:
+	ATRGameModeLobby();
+
+
+public:
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
+		UTRPersistentDataComponent* PersistentDataComponent;	
 };

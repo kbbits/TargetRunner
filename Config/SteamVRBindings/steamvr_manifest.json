@@ -98,10 +98,6 @@
 			"type": "boolean"
 		},
 		{
-			"name": "/actions/main/in/GameOptions",
-			"type": "boolean"
-		},
-		{
 			"name": "/actions/main/in/VRMenuClick",
 			"type": "boolean"
 		},
@@ -111,6 +107,10 @@
 		},
 		{
 			"name": "/actions/main/in/Sprint",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/GameOptions",
 			"type": "boolean"
 		},
 		{
@@ -257,10 +257,10 @@
 			"/actions/main/in/Teleport": "Teleport",
 			"/actions/main/in/FireWeapon": "FireWeapon",
 			"/actions/main/in/Jump": "Jump",
-			"/actions/main/in/GameOptions": "GameOptions",
 			"/actions/main/in/VRMenuClick": "VRMenuClick",
 			"/actions/main/in/NextEquipment": "NextEquipment",
 			"/actions/main/in/Sprint": "Sprint",
+			"/actions/main/in/GameOptions": "GameOptions",
 			"/actions/main/in/WorldInteract": "WorldInteract",
 			"/actions/main/in/TeleportDirectionRight axis": "TeleportDirectionRight",
 			"/actions/main/in/MotionControllerThumbLeft_X,MotionControllerThumbLeft_Y X Y_axis2d": "MotionControllerThumbLeft",

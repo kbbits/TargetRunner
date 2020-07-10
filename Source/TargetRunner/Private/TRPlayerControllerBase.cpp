@@ -4,6 +4,19 @@
 #include "TRPlayerControllerBase.h"
 #include "Kismet/GameplayStatics.h"
 
+ATRPlayerControllerBase::ATRPlayerControllerBase()
+	: Super()
+{
+	PersistentDataComponent = CreateDefaultSubobject<UTRPersistentDataComponent>(TEXT("PersistentDataComponent"));
+	if (PersistentDataComponent)
+	{
+		AddOwnedComponent(PersistentDataComponent);
+		PersistentDataComponent->SetIsReplicated(true);
+	}
+}
+
+
+
 ARoomPlatformGridMgr* ATRPlayerControllerBase::FindGridManager()
 {
 	ARoomPlatformGridMgr* GridManager = nullptr;

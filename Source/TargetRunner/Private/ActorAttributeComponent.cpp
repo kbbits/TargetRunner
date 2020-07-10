@@ -64,7 +64,7 @@ void UActorAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// Don't do anything when we're not active
 	if (!IsActive()){ return; }
 	// Don't do anything if recharge is paused
-	if (bRechargePaused) { return; }
+	if (bRechargePaused || RechargeRate == 0.0f) { return; }
 
 	float NewValue = AttributeData.CurrentValue;
 	// If we recharge and we're not at one of the min/max
