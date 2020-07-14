@@ -3,6 +3,7 @@
 
 #include "TR_GameMode.h"
 #include "Kismet/GameplayStatics.h"
+#include "TRGameInstance.h"
 #include "RoomPlatformGridMgr.h"
 #include "ResourceDropperBase.h"
 #include "GridForgePrim.h"
@@ -12,6 +13,7 @@
 ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI) 
 	: Super(OI)
 {
+	bLevelTemplateReady = false;
 	GeneratorRandStream.Reset();
 	GridRandStream.Reset();
 	GoodsDropper = OI.CreateDefaultSubobject<UGoodsDropper>(this, TEXT("GoodsDropper"));
@@ -21,8 +23,20 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 
 void ATR_GameMode::BeginPlay()
 {
-	Super::BeginPlay();
-	
+	Super::BeginPlay();	
+	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+	if (GameInst)
+	{
+		SetNewLevelTemplate(GameInst->GetLevelTemplate());
+	}
+	else {
+		UE_LOG(LogTRGame, Error, TEXT("GameMode - BeginPlay - Could not get game instance."))
+	}
+}
+
+void ATR_GameMode::HandleMatchIsWaitingToStart()
+{
+	Super::HandleMatchIsWaitingToStart();
 }
 
 
@@ -43,8 +57,10 @@ void ATR_GameMode::BeginPlay()
 
 void ATR_GameMode::SetNewLevelTemplate(const FLevelTemplate& NewTemplate)
 {
+	if (NewTemplate.LevelSeed == 0) { UE_LOG(LogTRGame, Warning, TEXT("GameMode - SetNewLevelTemplate - Template has 0 seed.")); }
 	LevelTemplate = NewTemplate;
 	ReseedAllStreams(LevelTemplate.LevelSeed);
+	bLevelTemplateReady = true;
 }
 
 
@@ -62,7 +78,7 @@ bool ATR_GameMode::InitGridManager_Implementation()
 		UE_LOG(LogTRGame, Warning, TEXT("InitGridManager could not find any grid manager actors")); 
 		return false;
 	}
-	if (!LevelTemplate.IsValid()) { 
+	if (!GetLevelTemplate().IsValid()) { 
 		UE_LOG(LogTRGame, Warning, TEXT("InitGridManager invalid level tempate. LevelSeed: %d"), LevelTemplate.LevelSeed);
 		return false; 
 	}

@@ -2,12 +2,22 @@
 
 
 #include "TR_GameState.h"
+#include "TRGameInstance.h"
+#include "TR_GameMode.h"
 #include "ResourceFunctionLibrary.h"
 
 ATR_GameState::ATR_GameState()
 {
-	
 }
+
+//void ATR_GameState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+//{
+//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+//
+//	DOREPLIFETIME(ATR_GameState, CurrentLevelTemplate);
+//}
+
+
 
 FName ATR_GameState::GetGoodsNameForResource(const FResourceType& ResourceType)
 {

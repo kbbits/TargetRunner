@@ -16,7 +16,7 @@ public:
 		FGuid PlayerGuid;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		FName Name;
+		FName ProfileName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FText DisplayName;

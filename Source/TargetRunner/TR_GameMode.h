@@ -67,6 +67,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* GoodsDropperTable;
+
+protected:
+
+	UPROPERTY(BlueprintReadOnly)
+		bool bLevelTemplateReady;
 	
 private:
 
@@ -92,6 +97,8 @@ private:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void HandleMatchIsWaitingToStart() override;
 
 	// Spawn a new grid manager at the given transform.
 	// If there is already an existing grid manager, this will just return the existing one.

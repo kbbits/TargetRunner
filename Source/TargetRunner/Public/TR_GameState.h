@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
+#include "TRPersistentDataComponent.h"
 #include "ResourceTypeData.h"
 #include "ResourceType.h"
 #include "TR_GameState.generated.h"
@@ -19,6 +20,11 @@ class TARGETRUNNER_API ATR_GameState : public AGameState
 	ATR_GameState();
 
 public:
+
+	//// Level Template from GameMode
+	//UPROPERTY(EditInstanceOnly, Replicated, BlueprintReadWrite)
+	//	FLevelTemplate CurrentLevelTemplate;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float CurrentDifficulty;
 
@@ -27,6 +33,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* ResourceTypeDataTable;
+
 
 
 public:
@@ -40,4 +47,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Resource Functions")
 		bool GetResourceTypeData(const FResourceType& ForResourceType, FResourceTypeData& ResourceData);
 	
+
+
 };

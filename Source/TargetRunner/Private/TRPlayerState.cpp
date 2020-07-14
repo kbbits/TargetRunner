@@ -23,6 +23,7 @@ ATRPlayerState::ATRPlayerState()
 void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 {
 	SaveData.PlayerGuid = PlayerGuid;
+	SaveData.ProfileName = ProfileName;
 	SaveData.DisplayName = DisplayName;
 	SaveData.MaxTierCompleted = MaxTierCompleted;
 	SaveData.TotalRunsPlayed = TotalRunsPlayed;
@@ -39,6 +40,7 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
 	PlayerGuid = SaveData.PlayerGuid;
+	ProfileName = SaveData.ProfileName;
 	DisplayName = SaveData.DisplayName;
 	MaxTierCompleted = SaveData.MaxTierCompleted;
 	TotalRunsPlayed = SaveData.TotalRunsPlayed;

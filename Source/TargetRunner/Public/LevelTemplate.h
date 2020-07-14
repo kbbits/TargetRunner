@@ -3,6 +3,7 @@
 #include "Engine/DataTable.h"
 #include "ResourceQuantity.h"
 #include "GoodsQuantity.h"
+#include "PlayerLevelRecord.h"
 #include "LevelTemplate.generated.h"
 
 // Describes a playable level. Instances of these will be generated.
@@ -85,6 +86,9 @@ public:
 	// The total quantities of other goods available on this level.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FGoodsQuantity> OtherGoodsAvailable;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TMap<FGuid, FPlayerLevelRecord> PlayerLevelRecords;
 
 public:
 	FORCEINLINE bool IsValid() { return LevelSeed != 0; }

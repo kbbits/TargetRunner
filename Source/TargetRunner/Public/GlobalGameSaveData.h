@@ -17,6 +17,9 @@ public:
 		float LastSelectedSaveSlot;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 LastLevelGenSeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TSubclassOf<AGameMode> LastGameMode;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
