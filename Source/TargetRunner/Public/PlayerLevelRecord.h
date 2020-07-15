@@ -37,4 +37,27 @@ public:
 	// Total goods player has earned on this level.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FGoodsQuantity> TotalGoodsEarned;
+
+public:
+
+	bool operator==(const FPlayerLevelRecord& Other) const
+	{
+		if (PlayerGuid != Other.PlayerGuid) return false;
+		if (LevelId != Other.LevelId) return false;
+		return true;
+	}
+
+	bool operator==(const FPlayerLevelRecord& Other)
+	{
+		if (PlayerGuid != Other.PlayerGuid) return false;
+		if (LevelId != Other.LevelId) return false;
+		return true;
+	}
+
+	bool operator==(FPlayerLevelRecord& Other)
+	{
+		if (PlayerGuid != Other.PlayerGuid) return false;
+		if (LevelId != Other.LevelId) return false;
+		return true;
+	}
 };

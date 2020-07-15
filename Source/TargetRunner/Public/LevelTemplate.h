@@ -87,9 +87,24 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FGoodsQuantity> OtherGoodsAvailable;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<FGuid, FPlayerLevelRecord> PlayerLevelRecords;
-
 public:
-	FORCEINLINE bool IsValid() { return LevelSeed != 0; }
+	FORCEINLINE bool IsValid() { return (!LevelId.IsNone() && LevelSeed != 0); }
+
+	bool operator==(const FLevelTemplate& Other) const
+	{
+		if (LevelId != Other.LevelId) return false;
+		return true;
+	}
+
+	bool operator==(const FLevelTemplate& Other)
+	{
+		if (LevelId != Other.LevelId) return false;
+		return true;
+	}
+
+	bool operator==(FLevelTemplate& Other)
+	{
+		if (LevelId != Other.LevelId) return false;
+		return true;
+	}
 };

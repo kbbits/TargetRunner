@@ -7,11 +7,12 @@
 #include "Delegates/Delegate.h"
 #include "UnrealNetwork.h"
 #include "LevelTemplate.h"
+#include "LevelTemplateContextStruct.h"
 #include "TRPersistentDataComponent.generated.h"
 
 
 // Event dispatcher for when CurrentValue changes
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewLevelTemplatesPage, const TArray<FLevelTemplate>&, NewLevelTemplatesPage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewLevelTemplatesPage, const TArray<FLevelTemplateContextStruct>&, NewLevelTemplatesPage);
 
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -25,12 +26,8 @@ public:
 
 public:
 
-	// The current save profile. This is used in building file path/names for save files.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		FString SaveProfile;
-
 	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_LevelTemplatesPageLoaded)
-		TArray<FLevelTemplate> LevelTemplatesPage;
+		TArray<FLevelTemplateContextStruct> LevelTemplatesPage;
 		
 	// Delegate event when LevelTemplatesPage array has changed.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")

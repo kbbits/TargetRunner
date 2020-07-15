@@ -52,9 +52,9 @@ void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(c
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst)
 	{
-		FLevelTemplate NewTemplate = GameInst->GenerateNewLevelTemplate(Tier);
-		if (NewTemplate.IsValid()) {
-			LevelTemplatesPage.Add(NewTemplate);
+		ULevelTemplateContext* NewTemplate = GameInst->GenerateNewLevelTemplate(Tier);
+		if (NewTemplate && NewTemplate->LevelTemplate.IsValid()) {
+			LevelTemplatesPage.Add(NewTemplate->ToStruct());
 			// Manually call rep_notify on server
 			if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
 		}
@@ -109,7 +109,9 @@ void UTRPersistentDataComponent::ServerLoadLevelTemplatesData_Implementation()
 		if (GameInst->bLevelTemplatesLoaded)
 		{
 			// TODO: implement paging of results. Currenty putting them all in here.
-			LevelTemplatesPage = GameInst->LevelTemplates;
+			TArray<ULevelTemplateContext*> TmpLTCArray;
+			GameInst->LevelTemplatesMap.GenerateValueArray(TmpLTCArray);
+			LevelTemplatesPage = ULevelTemplateContext::ToStructArray(TmpLTCArray);
 			//LevelTemplatesRepTrigger++;
 			// Manually call rep_notify on server
 			if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
@@ -131,7 +133,7 @@ void UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Implementation(co
 {
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst) {
-		GameInst->SetLevelTemplate(LevelTemplate);
+		GameInst->SetSelectedLevelTemplate(LevelTemplate);
 	}
 	else {
 		UE_LOG(LogTRGame, Error, TEXT("ServerSetLevelTemplateForPlay - Could not get game instance."))

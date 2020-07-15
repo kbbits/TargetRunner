@@ -7,6 +7,7 @@
 #include "Delegates/Delegate.h"
 #include "LevelTemplate.h"
 #include "LevelForgeBase.h"
+#include "LevelTemplateContext.h"
 #include "PlayerLevelRecord.h"
 
 #include "TRGameInstance.generated.h"
@@ -36,8 +37,13 @@ public:
 
 	// [Server]
 	// Array of all level templates. Will only be valid on server.
+	//UPROPERTY(BlueprintReadWrite)
+	//	TArray<FLevelTemplate> LevelTemplates;
+
+	// [Server]
+	// Map of all level templates with LevelId as key. Will only be valid on server.
 	UPROPERTY(BlueprintReadWrite)
-		TArray<FLevelTemplate> LevelTemplates;
+		TMap<FName, ULevelTemplateContext*> LevelTemplatesMap;
 
 	UPROPERTY(BlueprintReadWrite)
 		bool bLevelTemplatesLoaded = false;
@@ -52,7 +58,7 @@ protected:
 
 	// Level Template selected by user to be used for next game match. Will be set in TRGameState.
 	// Between lobby and main game this keeps the selected level template.
-	UPROPERTY(BlueprintSetter=SetLevelTemplate, BlueprintGetter=GetLevelTemplate)
+	UPROPERTY(BlueprintSetter=SetSelectedLevelTemplate, BlueprintGetter=GetSelectedLevelTemplate)
 		FLevelTemplate SelectedLevelTemplate;
 
 	/* =======  Functions ======= */
@@ -64,23 +70,33 @@ protected:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		FString GetLevelTemplatesSaveFilename();
 
+	// [Server Only]
+	// The filename of the level templates data. 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		FString GetPlayerRecordsSaveFilename();
+
 public:
 
 	// [Server Only]
 	UFUNCTION(BlueprintCallable)
-		FLevelTemplate GenerateNewLevelTemplate(const float Tier);
+		ULevelTemplateContext* GenerateNewLevelTemplate(const float Tier);
 
 	// [Server only]
 	UFUNCTION(BlueprintCallable)
-		void SetLevelTemplate(const FLevelTemplate& LevelTemplate);
+		void SetSelectedLevelTemplate(const FLevelTemplate& LevelTemplate);
 
 	// [Server only]
 	UFUNCTION(BlueprintPure)
-		FLevelTemplate& GetLevelTemplate();
+		FLevelTemplate& GetSelectedLevelTemplate();
+
+	// [Server Only]
+	// This will call SavePlayerRecordsData. No need to call it manualy.
+	UFUNCTION(BlueprintNativeEvent)
+		void SaveLevelTemplatesData();
 
 	// [Server Only]
 	UFUNCTION(BlueprintNativeEvent)
-		void SaveLevelTemplatesData();
+		void SavePlayerRecordsData();
 
 	// [Server Only]
 	UFUNCTION(BlueprintNativeEvent)
@@ -90,9 +106,17 @@ public:
 	UFUNCTION()
 		void OnLevelTemplatesSaveComplete(const FString& SlotName, const int32 UserIndex, bool bSuccessful);
 
+	// [Async callback]
+	UFUNCTION()
+		void OnPlayerRecordsSaveComplete(const FString& SlotName, const int32 UserIndex, bool bSuccessful);
+
 	// [Server only]
 	UFUNCTION(BlueprintCallable)
-		FLevelTemplate UnlockLevelTemplateForPlayer(const FName LevelId, const FGuid PlayerGuid);
+		ULevelTemplateContext* UnlockLevelTemplateForPlayer(const FName LevelId, const FGuid PlayerGuid);
+
+	// [Server Only]
+	UFUNCTION(BlueprintCallable)
+		TArray<ULevelTemplateContext*> GetLevelTemplatesForPlayer(const FGuid PlayerGuid);
 
 	// [Server Only]
 	UFUNCTION(BlueprintCallable)

@@ -27,7 +27,7 @@ void ATR_GameMode::BeginPlay()
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst)
 	{
-		SetNewLevelTemplate(GameInst->GetLevelTemplate());
+		SetNewLevelTemplate(GameInst->GetSelectedLevelTemplate());
 	}
 	else {
 		UE_LOG(LogTRGame, Error, TEXT("GameMode - BeginPlay - Could not get game instance."))
