@@ -98,6 +98,7 @@ void UTRGameInstance::SavePlayerRecordsData_Implementation()
 
 void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 {
+	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Load level templates - Already loaded: %s"), bLevelTemplatesLoaded ? TEXT("true") : TEXT("false"));
 	if (bLevelTemplatesLoaded) { return; }
 	bLevelTemplatesLoaded = false;
 	LevelTemplatesMap.Empty();

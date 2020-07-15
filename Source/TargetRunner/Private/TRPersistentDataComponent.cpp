@@ -21,7 +21,7 @@ void UTRPersistentDataComponent::GetLifetimeReplicatedProps(TArray< FLifetimePro
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UTRPersistentDataComponent, LevelTemplatesPage); // owner only
-	//DOREPLIFETIME(UTRPersistentDataComponent, LevelTemplatesRepTrigger);
+	DOREPLIFETIME(UTRPersistentDataComponent, LevelTemplatesRepTrigger);
 }
 
 
@@ -43,6 +43,12 @@ void UTRPersistentDataComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 void UTRPersistentDataComponent::OnRep_LevelTemplatesPageLoaded()
 {
+	if (GetOwnerRole() == ROLE_Authority) {
+		UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - (Server) OnRep level templates loaded %d"), LevelTemplatesPage.Num());
+	}
+	else {
+		UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - (Client) OnRep level templates loaded %d"), LevelTemplatesPage.Num());
+	}
 	OnNewLevelTemplatesPage.Broadcast(LevelTemplatesPage);
 }
 
@@ -55,6 +61,7 @@ void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(c
 		ULevelTemplateContext* NewTemplate = GameInst->GenerateNewLevelTemplate(Tier);
 		if (NewTemplate && NewTemplate->LevelTemplate.IsValid()) {
 			LevelTemplatesPage.Add(NewTemplate->ToStruct());
+			LevelTemplatesRepTrigger++;
 			// Manually call rep_notify on server
 			if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
 		}
@@ -90,16 +97,6 @@ bool UTRPersistentDataComponent::ServerSaveLevelTemplatesData_Validate()
 }
 
 
-//void UTRPersistentDataComponent::ServerSaveLevelTemplatesDataImpl_Implementation()
-//{
-//	//UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent - Save level templates starting"));
-//	ULevelTemplatesSave* SaveGame = Cast<ULevelTemplatesSave>(UGameplayStatics::CreateSaveGameObject(ULevelTemplatesSave::StaticClass()));
-//	SaveGame->LevelTemplates = LevelTemplates;
-//	FAsyncSaveGameToSlotDelegate Callback = FAsyncSaveGameToSlotDelegate::CreateUObject(this, &UTRPersistentDataComponent::OnLevelTemplatesSaveComplete);
-//	UGameplayStatics::AsyncSaveGameToSlot(SaveGame, GetLevelTemplatesSaveFilename(), 0, Callback);
-//}
-
-
 void UTRPersistentDataComponent::ServerLoadLevelTemplatesData_Implementation()
 {
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
@@ -111,10 +108,16 @@ void UTRPersistentDataComponent::ServerLoadLevelTemplatesData_Implementation()
 			// TODO: implement paging of results. Currenty putting them all in here.
 			TArray<ULevelTemplateContext*> TmpLTCArray;
 			GameInst->LevelTemplatesMap.GenerateValueArray(TmpLTCArray);
-			LevelTemplatesPage = ULevelTemplateContext::ToStructArray(TmpLTCArray);
-			//LevelTemplatesRepTrigger++;
+			LevelTemplatesPage.Empty();
+			LevelTemplatesPage.Append(ULevelTemplateContext::ToStructArray(TmpLTCArray));
+			LevelTemplatesRepTrigger++;
+			UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - Load level templates loaded %d"), LevelTemplatesPage.Num());
 			// Manually call rep_notify on server
 			if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
+		}
+		else
+		{
+			UE_LOG(LogTRGame, Error, TEXT("PersistentDataComponent - ServerLoadLevelTemplatesData failed loading level template data."));
 		}
 	}
 	else

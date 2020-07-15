@@ -36,7 +36,7 @@ FLevelTemplateContextStruct ULevelTemplateContext::ToStruct()
 {
 	FLevelTemplateContextStruct NewStruct;
 	NewStruct.LevelTemplate = LevelTemplate;
-	NewStruct.PlayerRecords = PlayerRecords;
+	PlayerRecords.GenerateValueArray(NewStruct.PlayerRecords);
 	return NewStruct;
 }
 
@@ -56,6 +56,9 @@ void ULevelTemplateContext::FromStruct(const FLevelTemplateContextStruct& InStru
 {
 	ULevelTemplateContext* NewLTC = NewObject<ULevelTemplateContext>(Outer);
 	NewLTC->LevelTemplate = InStruct.LevelTemplate;
-	NewLTC->PlayerRecords = InStruct.PlayerRecords;
+	for (FPlayerLevelRecord TmpPlayerRecord : InStruct.PlayerRecords)
+	{
+		NewLTC->PlayerRecords.Add(TmpPlayerRecord.PlayerGuid, TmpPlayerRecord);
+	}
 	LevelTemplateContext = NewLTC;
 }

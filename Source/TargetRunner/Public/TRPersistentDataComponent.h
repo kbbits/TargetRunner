@@ -28,6 +28,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_LevelTemplatesPageLoaded)
 		TArray<FLevelTemplateContextStruct> LevelTemplatesPage;
+
+	UPROPERTY(ReplicatedUsing = OnRep_LevelTemplatesPageLoaded)
+		int32 LevelTemplatesRepTrigger;
 		
 	// Delegate event when LevelTemplatesPage array has changed.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")

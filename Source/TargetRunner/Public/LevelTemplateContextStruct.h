@@ -18,5 +18,5 @@ public:
 		FLevelTemplate LevelTemplate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TMap<FGuid, FPlayerLevelRecord> PlayerRecords;
+		TArray<FPlayerLevelRecord> PlayerRecords;
 };
