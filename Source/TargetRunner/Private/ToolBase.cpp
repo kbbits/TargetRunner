@@ -52,3 +52,10 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 		}
 	}
 }
+
+void UToolBase::FromToolData(const FToolData& InToolData, UPARAM(ref)UObject* Outer, UToolBase* Tool)
+{
+	UToolBase* NewTool = NewObject<UToolBase>(Outer, InToolData.ToolClass);
+	NewTool->UpdateFromToolData(InToolData);
+	Tool = NewTool;
+}

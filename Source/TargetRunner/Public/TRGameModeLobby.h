@@ -18,9 +18,4 @@ class TARGETRUNNER_API ATRGameModeLobby : public AGameMode
 public:
 	ATRGameModeLobby();
 
-
-public:
-
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
-		UTRPersistentDataComponent* PersistentDataComponent;	
 };

@@ -8,11 +8,14 @@
 #include "UnrealNetwork.h"
 #include "LevelTemplate.h"
 #include "LevelTemplateContextStruct.h"
+#include "PlayerSaveData.h"
 #include "TRPersistentDataComponent.generated.h"
 
 
 // Event dispatcher for when CurrentValue changes
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewLevelTemplatesPage, const TArray<FLevelTemplateContextStruct>&, NewLevelTemplatesPage);
+// Tool Data dispatcher
+//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewPlayerToolData, const TArray<FToolData>&, NewPlayerToolData);
 
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -35,6 +38,16 @@ public:
 	// Delegate event when LevelTemplatesPage array has changed.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnNewLevelTemplatesPage OnNewLevelTemplatesPage;
+
+	//UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_PlayerToolDataLoaded)
+	//	TArray<FToolData> PlayerToolData;
+
+	//UPROPERTY(ReplicatedUsing = OnRep_PlayerToolDataLoaded)
+	//	int32 PlayerToolDataRepTrigger;
+
+	//// Delegate event when PlayerToolData array has changed.
+	//UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+	//	FOnNewPlayerToolData OnNewPlayerToolData;
 
 // ##### Functions
 
@@ -65,7 +78,7 @@ public:
 		void ServerSaveLevelTemplatesData();
 	
 	// [Server]
-	// Just calls the overrideable ServerLoadLevelTemplatesImpl
+	// Loads level template data
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerLoadLevelTemplatesData();
 	
@@ -73,4 +86,20 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerSetLevelTemplateForPlay(const FLevelTemplate& LevelTemplate);
 
+	// Player Save Data
+
+	// [Server]
+	// Save the player's data
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerSavePlayerData();
+
+	// [Server]
+	// Load the player's data
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerLoadPlayerData();
+
+	// [Client]
+	// Echo loaded player data back to client
+	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
+		void ClientEchoLoadPlayerData(const FPlayerSaveData PlayerSaveData);
 };

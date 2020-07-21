@@ -9,6 +9,7 @@
 #include "ResourceDropperBase.h"
 #include "GoodsDropper.h"
 #include "PlatformGridMgr.h"
+#include "ToolBase.h"
 #include "ToolActorBase.h"
 #include "TR_GameMode.generated.h"
 
@@ -61,6 +62,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FName, TSubclassOf<AToolActorBase>> ToolClassMap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<TSubclassOf<UToolBase>> AllToolClasses;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UGoodsDropper* GoodsDropper;

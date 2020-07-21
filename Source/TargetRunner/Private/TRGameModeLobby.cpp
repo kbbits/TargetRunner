@@ -6,6 +6,5 @@
 ATRGameModeLobby::ATRGameModeLobby()
 	: Super()
 {
-	PersistentDataComponent = CreateDefaultSubobject<UTRPersistentDataComponent>(TEXT("PersistentDataComponent"));
-	AddOwnedComponent(PersistentDataComponent);
+	
 }

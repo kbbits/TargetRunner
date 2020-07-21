@@ -3,6 +3,9 @@
 
 #include "TRPersistentDataComponent.h"
 #include "..\Public\TRPersistentDataComponent.h"
+#include "TRPlayerControllerBase.h"
+#include "TRPlayerState.h"
+#include "PlayerSave.h"
 #include "Kismet/GameplayStatics.h"
 #include "TRGameInstance.h"
 
@@ -22,6 +25,8 @@ void UTRPersistentDataComponent::GetLifetimeReplicatedProps(TArray< FLifetimePro
 
 	DOREPLIFETIME(UTRPersistentDataComponent, LevelTemplatesPage); // owner only
 	DOREPLIFETIME(UTRPersistentDataComponent, LevelTemplatesRepTrigger);
+	//DOREPLIFETIME(UTRPersistentDataComponent, PlayerToolData); // owner only
+	//DOREPLIFETIME(UTRPersistentDataComponent, PlayerToolDataRepTrigger);	
 }
 
 
@@ -144,6 +149,79 @@ void UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Implementation(co
 }
 
 bool UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Validate(const FLevelTemplate& LevelTemplate)
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
+{
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (TRPlayerController)
+	{
+		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
+		if (TRPlayerState)
+		{
+			UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
+			FString PlayerSaveFilename = FString::Printf(TEXT("player_%s"), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+			TRPlayerController->GetPlayerSaveData(SaveGame->PlayerSaveData);
+			UGameplayStatics::SaveGameToSlot(SaveGame, PlayerSaveFilename, 0);
+		}
+	}
+}
+
+bool UTRPersistentDataComponent::ServerSavePlayerData_Validate()
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation()
+{
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (TRPlayerController)
+	{
+		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
+		if (TRPlayerState)
+		{
+			FString PlayerSaveFilename = FString::Printf(TEXT("player_%s"), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+			if (UGameplayStatics::DoesSaveGameExist(PlayerSaveFilename, 0))
+			{
+				UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(PlayerSaveFilename, 0));
+				if (SaveGame)
+				{
+					// Update data on server
+					TRPlayerController->UpdateFromPlayerSaveData(SaveGame->PlayerSaveData);
+					// Call client to update data
+					if (!TRPlayerController->IsLocalController()) {
+						ClientEchoLoadPlayerData(SaveGame->PlayerSaveData);
+					}
+				}
+			}
+		}
+	}
+}
+
+
+bool UTRPersistentDataComponent::ServerLoadPlayerData_Validate()
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const FPlayerSaveData PlayerSaveData)
+{
+	// Get parent PlayerController
+	// Controler UpdateFromPlayerSaveData - calls PlayerState.UpdateFromPlayerSaveData
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (TRPlayerController)
+	{
+		TRPlayerController->UpdateFromPlayerSaveData(PlayerSaveData);
+	}
+}
+
+
+bool UTRPersistentDataComponent::ClientEchoLoadPlayerData_Validate(const FPlayerSaveData PlayerSaveData)
 {
 	return true;
 }

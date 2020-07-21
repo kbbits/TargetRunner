@@ -76,4 +76,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void UpdateFromToolData(const FToolData& ToolData);
+
+	UFUNCTION(BlueprintCallable)
+		static void FromToolData(const FToolData& InToolData, UPARAM(ref) UObject* Outer, UToolBase* Tool);
 };
