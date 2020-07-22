@@ -63,6 +63,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float UnlockCost;
 
+	// Required to unlock the level.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TArray<FGoodsQuantity> UnlockGoods;
+
 	// Time available in the level run.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float AvailableTime;

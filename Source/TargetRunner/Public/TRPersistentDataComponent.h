@@ -81,12 +81,19 @@ public:
 	// Loads level template data
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerLoadLevelTemplatesData();
+
+	// [Server]
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerUnlockLevelTemplateForPlayer(const FName LevelId, const FGuid PlayerGuid);
 	
 	// [Server]
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerSetLevelTemplateForPlay(const FLevelTemplate& LevelTemplate);
 
 	// Player Save Data
+
+	UFUNCTION(BlueprintPure)
+		FString GetPlayerSaveFilename(); 
 
 	// [Server]
 	// Save the player's data

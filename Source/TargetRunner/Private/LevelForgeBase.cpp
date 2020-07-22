@@ -2,6 +2,7 @@
 #include "LevelForgeBase.h"
 #include "..\Public\LevelForgeBase.h"
 #include "TextRow.h"
+#include "TieredGoodsQuantityRange.h"
 #include "ResourceFunctionLibrary.h"
 
 ULevelForgeBase::ULevelForgeBase(const FObjectInitializer& OI)
@@ -34,7 +35,6 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	if (!GenerateGridExtents(DifficultyTier, NewLevelTemplate)) { return; }
 	NewLevelTemplate.ResourcesAvailable.Empty();
 	if (!GenerateResourcesAvailable(DifficultyTier, NewLevelTemplate.ResourcesAvailable)) { return; }
-	NewLevelTemplate.UnlockCost = FMath::RoundFromZero(FMath::Pow(DifficultyTier, UnlockCostScalingExp) * (BaseUnlockCost / 10.0f)) * 10.f;
 	NewLevelTemplate.AvailableTime = FMath::Clamp<float>((FMath::Pow(DifficultyTier, AvailableTimeScaleExp) * (BaseAvailableTime / 10.0f)) * 10.0f, BaseAvailableTime, 14400.0f);
 	if (DifficultyTier > 3)
 	{
@@ -44,6 +44,15 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	{
 		NewLevelTemplate.StartHourOfDay = 9.0f + LevelStream.FRandRange(-2.0f, 2.0f);
 	}
+	// Unlock cost
+	TArray<FGoodsQuantityRange> CostFactors;
+	NewLevelTemplate.UnlockCost = FMath::RoundFromZero(FMath::Pow(DifficultyTier, UnlockCostScalingExp) * (BaseUnlockCost / 10.0f)) * 10.f;
+	UnlockGoodsCostFactorForTier((int32)DifficultyTier, CostFactors);
+	for (FGoodsQuantityRange TmpRange : CostFactors)
+	{
+		NewLevelTemplate.UnlockGoods.Add(FGoodsQuantity(TmpRange.GoodsName, FMath::RoundFromZero((NewLevelTemplate.UnlockCost * LevelStream.FRandRange(TmpRange.QuantityMin, TmpRange.QuantityMax)) / 10.0f) * 10.0f));
+	}
+	
 	// TODO: Theme, ThemeTags, OtherResourcesAvailable
 
 	// Set the ID as compound key
@@ -52,6 +61,21 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	DebugLog(FString::Printf(TEXT("GenerateNewLevelTemplate Successful.")));
 	Successful = true;
 }
+
+
+void ULevelForgeBase::UnlockGoodsCostFactorForTier(const int32 Tier, TArray<FGoodsQuantityRange>& CostFactors)
+{
+	FTieredGoodsQuantityRange* TierRow = UnlockGoodsCostTable->FindRow<FTieredGoodsQuantityRange>(FName(FString::FromInt(Tier)), "", false);
+	if (TierRow)
+	{
+		CostFactors.Empty(TierRow->QuantityRanges.Num());
+		CostFactors.Append(TierRow->QuantityRanges);
+	}
+	else {
+		CostFactors.Empty();
+	}
+}
+
 
 /*===================  Protected "generator" functions called by public functions ===========*/
 

@@ -27,7 +27,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TSoftClassPtr<AActor> ActorClass;
 
-	// Represents a GameplayTag related to this GoodsType.
+	// Various tags related to this GoodsType.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName GoodsTags;
 };

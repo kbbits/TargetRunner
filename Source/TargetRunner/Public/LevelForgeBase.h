@@ -5,6 +5,7 @@
 #include "Engine/DataTable.h"
 #include "TargetRunner.h"
 #include "ResourceQuantity.h"
+#include "GoodsQuantityRange.h"
 #include "LevelTemplate.h"
 #include "LevelForgeBase.generated.h"
 
@@ -73,6 +74,11 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
         float AvailableTimeScaleExp;
 
+    // One row per tier. Each row (a FTieredGoodsQuantityRange) indicates a multiplier of goods quantities required for unlocking a level template of the given tier.
+    // Must be set before LevelForge can be used;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        UDataTable* UnlockGoodsCostTable;
+
     // A DataTable of FText rows
     // Must be set before LevelForge can be used;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -106,6 +112,9 @@ public:
     // Subclasses override this to provide different implementations. (if ever needed)
     UFUNCTION(BlueprintCallable)
         virtual void GenerateNewLevelTemplate(const int32 NewSeed, const float DifficultyTier, FLevelTemplate& NewLevelTemplate, bool& Successful);
+
+    UFUNCTION(BlueprintCallable)
+        void UnlockGoodsCostFactorForTier(const int32 Tier, TArray<FGoodsQuantityRange>& CostFactors);
     
 protected:
 

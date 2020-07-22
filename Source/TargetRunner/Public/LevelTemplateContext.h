@@ -32,8 +32,12 @@ public:
 	FPlayerLevelRecord* PlayerRecord(const FGuid PlayerGuid);
 
 	// Get the player record associated with the level template.
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintPure)
 		void GetPlayerRecord(const FGuid PlayerGuid, bool& bFound, FPlayerLevelRecord& PlayerRecord);
+
+	// Has this player guid unlocked this level template
+	UFUNCTION(BlueprintPure)
+		bool IsUnlockedForPlayer(const FGuid PlayerGuid);
 
 	UFUNCTION(BlueprintCallable)
 		FLevelTemplateContextStruct ToStruct();
@@ -42,7 +46,7 @@ public:
 		static TArray<FLevelTemplateContextStruct> ToStructArray(const TArray<ULevelTemplateContext*> InArray);
 
 	UFUNCTION(BlueprintCallable)
-		static void FromStruct(const FLevelTemplateContextStruct& InStruct, UPARAM(ref) UObject* Outer, ULevelTemplateContext* LevelTemplateContext);
+		static ULevelTemplateContext* FromStruct(const FLevelTemplateContextStruct& InStruct, UObject* Outer);
 
 	// Comparison overrides
 

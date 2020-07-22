@@ -66,7 +66,7 @@ FLevelTemplate& UTRGameInstance::GetSelectedLevelTemplate()
 
 void UTRGameInstance::SaveLevelTemplatesData_Implementation()
 {
-	//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save level templates starting"));
+	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save level templates: %d"), LevelTemplatesMap.Num());
 	ULevelTemplatesSave* SaveGame = Cast<ULevelTemplatesSave>(UGameplayStatics::CreateSaveGameObject(ULevelTemplatesSave::StaticClass()));
 	TArray<FLevelTemplate> AllTemplates;
 	for (TPair<FName, ULevelTemplateContext*> LtcElem : LevelTemplatesMap)
@@ -75,12 +75,14 @@ void UTRGameInstance::SaveLevelTemplatesData_Implementation()
 	}
 	SaveGame->LevelTemplates = AllTemplates;
 	FAsyncSaveGameToSlotDelegate Callback = FAsyncSaveGameToSlotDelegate::CreateUObject(this, &UTRGameInstance::OnLevelTemplatesSaveComplete);	
+	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Saving %d templates"), AllTemplates.Num());
 	UGameplayStatics::AsyncSaveGameToSlot(SaveGame, GetLevelTemplatesSaveFilename(), 0, Callback);
 }
 
 
 void UTRGameInstance::SavePlayerRecordsData_Implementation()
 {
+	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save player level records"));
 	UPlayerLevelRecordsSave* SaveGame = Cast<UPlayerLevelRecordsSave>(UGameplayStatics::CreateSaveGameObject(UPlayerLevelRecordsSave::StaticClass()));
 	FAsyncSaveGameToSlotDelegate Callback = FAsyncSaveGameToSlotDelegate::CreateUObject(this, &UTRGameInstance::OnPlayerRecordsSaveComplete);
 	// Put all player records in single array.
@@ -92,6 +94,7 @@ void UTRGameInstance::SavePlayerRecordsData_Implementation()
 		AllPLRs.Append(TmpPLRs);
 	}
 	SaveGame->PlayerRecords = AllPLRs;
+	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Saving %d player level records"), AllPLRs.Num());
 	UGameplayStatics::AsyncSaveGameToSlot(SaveGame, GetPlayerRecordsSaveFilename(), 0, Callback);
 }
 
@@ -115,12 +118,18 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 				LevelTemplatesMap.Add(NewLTC->LevelTemplate.LevelId, NewLTC);
 			}
 			bLevelTemplatesLoaded = true;
+			UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Load level templates loaded %d"), LevelTemplatesMap.Num());
+		}
+		else
+		{
+			UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - LoadLevelTemplates -  No level templates save file found."));
 		}
 	}
 	if (bLevelTemplatesLoaded)
 	{
 		if (UGameplayStatics::DoesSaveGameExist(GetPlayerRecordsSaveFilename(), 0))
 		{
+			int32 PlayerRecordsLoaded = 0;
 			UPlayerLevelRecordsSave* PlayerSaveGame = Cast<UPlayerLevelRecordsSave>(UGameplayStatics::LoadGameFromSlot(GetPlayerRecordsSaveFilename(), 0));
 			if (PlayerSaveGame)
 			{
@@ -131,12 +140,18 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 					if (TmpLTC)
 					{
 						TmpLTC->PlayerRecords.Add(TmpPlayerRecord.PlayerGuid, TmpPlayerRecord);
+						PlayerRecordsLoaded++;
+					}
+					else
+					{
+						UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - LoadLevelTemplates - No level template with id: %s"), *TmpPlayerRecord.LevelId.ToString());
 					}
 				}
+				UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Load level templates loaded %d player records"), PlayerRecordsLoaded);
 			}
 			else
 			{
-				UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - No player level records save file found."));
+				UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - LoadLevelTemplates - No player level records save file found."));
 			}
 		}
 	}
@@ -146,9 +161,11 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 void UTRGameInstance::OnLevelTemplatesSaveComplete(const FString& SlotName, const int32 UserIndex, bool bSuccessful)
 {
 	if (bSuccessful) { 
+		UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save level templates successful"));
 		SavePlayerRecordsData(); 
 	}
 	else { 
+		UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - Save level templates failed"));
 		OnLevelTemplatesSaved.Broadcast(bSuccessful); 
 	}	
 }
@@ -156,6 +173,7 @@ void UTRGameInstance::OnLevelTemplatesSaveComplete(const FString& SlotName, cons
 
 void UTRGameInstance::OnPlayerRecordsSaveComplete(const FString& SlotName, const int32 UserIndex, bool bSuccessful)
 {
+	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save player level records %s"), bSuccessful ? TEXT("success") : TEXT("failed"));
 	// Just calls the delegate for notifications
 	OnLevelTemplatesSaved.Broadcast(bSuccessful);
 }

@@ -53,6 +53,7 @@ public:
 		void ClientAddToolToInventory(TSubclassOf<UToolBase> ToolClass);
 
 	// [Any]
+	// Actually does the adding to inventory. Do not call directly. Call ServerAddToolToInventory.
 	UFUNCTION()
 		void AddToolToInventory(TSubclassOf<UToolBase> ToolClass);
 

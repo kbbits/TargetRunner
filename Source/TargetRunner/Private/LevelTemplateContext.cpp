@@ -16,6 +16,7 @@ FPlayerLevelRecord* ULevelTemplateContext::PlayerRecord(const FGuid PlayerGuid)
 	return TmpRecord;
 }
 
+
 void ULevelTemplateContext::GetPlayerRecord(const FGuid PlayerGuid, bool& bFound, FPlayerLevelRecord& PlayerLevelRecord)
 {
 	FPlayerLevelRecord* TmpRecord = PlayerRecord(PlayerGuid);
@@ -29,6 +30,13 @@ void ULevelTemplateContext::GetPlayerRecord(const FGuid PlayerGuid, bool& bFound
 		bFound = false;
 		PlayerLevelRecord = FPlayerLevelRecord();
 	}
+}
+
+
+bool ULevelTemplateContext::IsUnlockedForPlayer(const FGuid PlayerGuid)
+{
+	FPlayerLevelRecord* TmpPlayerRecord = PlayerRecord(PlayerGuid);
+	return TmpPlayerRecord && TmpPlayerRecord->Unlocked;
 }
 
 
@@ -52,7 +60,7 @@ TArray<FLevelTemplateContextStruct> ULevelTemplateContext::ToStructArray(const T
 }
 
 
-void ULevelTemplateContext::FromStruct(const FLevelTemplateContextStruct& InStruct, UObject* Outer, ULevelTemplateContext* LevelTemplateContext)
+ULevelTemplateContext* ULevelTemplateContext::FromStruct(const FLevelTemplateContextStruct& InStruct, UObject* Outer)
 {
 	ULevelTemplateContext* NewLTC = NewObject<ULevelTemplateContext>(Outer);
 	NewLTC->LevelTemplate = InStruct.LevelTemplate;
@@ -60,5 +68,5 @@ void ULevelTemplateContext::FromStruct(const FLevelTemplateContextStruct& InStru
 	{
 		NewLTC->PlayerRecords.Add(TmpPlayerRecord.PlayerGuid, TmpPlayerRecord);
 	}
-	LevelTemplateContext = NewLTC;
+	return NewLTC;
 }
