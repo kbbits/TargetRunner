@@ -8,6 +8,7 @@
 ATRPlayerControllerBase::ATRPlayerControllerBase()
 	: Super()
 {
+	CurrentTool = nullptr;
 	PersistentDataComponent = CreateDefaultSubobject<UTRPersistentDataComponent>(TEXT("PersistentDataComponent"));
 	if (PersistentDataComponent)
 	{
@@ -108,6 +109,7 @@ void ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 	}
 }
 
+
 void ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
 	UToolBase* TmpTool = nullptr;
@@ -121,7 +123,7 @@ void ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	{
 		if (ToolInventory.Contains(TmpGuid))
 		{
-			UToolBase::FromToolData(ToolInventory[TmpGuid], this, TmpTool);
+			UToolBase::CreateToolFromToolData(ToolInventory[TmpGuid], this, TmpTool);
 			if (TmpTool) {
 				EquippedTools.Add(TmpTool);
 			}

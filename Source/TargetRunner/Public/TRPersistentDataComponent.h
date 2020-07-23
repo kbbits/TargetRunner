@@ -92,8 +92,7 @@ public:
 
 	// Player Save Data
 
-	UFUNCTION(BlueprintPure)
-		FString GetPlayerSaveFilename(); 
+	FString GetPlayerSaveFilename(); 
 
 	// [Server]
 	// Save the player's data

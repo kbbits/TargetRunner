@@ -27,29 +27,35 @@ public:
 
 public:
 
+	// This component handles save/load and replication of data to client.
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		UTRPersistentDataComponent* PersistentDataComponent;
 
+	// All tools owned by player
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		TMap<FGuid, FToolData> ToolInventory;
 
+	// Currently equipped tools
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		TArray<UToolBase*> EquippedTools;
 
+	// Tool currently in use
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		UToolBase* CurrentTool;
 
-	// Delegate event when Tool has been added to ToolInventory.
+	// Delegate event notification when Tool has been added to ToolInventory.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnToolInventoryAdded OnToolInventoryAdded;
 	
 public:
 
 	// [Server]
+	// Call this to add a tool to player's inventory. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerAddToolToInventory(TSubclassOf<UToolBase> ToolClass);
 
-	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
+	// [Client]
+	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientAddToolToInventory(TSubclassOf<UToolBase> ToolClass);
 
 	// [Any]
@@ -57,6 +63,7 @@ public:
 	UFUNCTION()
 		void AddToolToInventory(TSubclassOf<UToolBase> ToolClass);
 
+	// [Any]
 	// Finds the current grid manager in the level.
 	// Returns nullptr if no grid manager could be found.
 	UFUNCTION(BlueprintCallable)
@@ -66,9 +73,13 @@ public:
 	UFUNCTION(BlueprintCallable, Client, Reliable)
 		void ClientUpdateRoomGridTemplate(const FRoomGridTemplate& UpdatedTemplate, const TArray<FVector2D>& RoomCoords, const TArray<FRoomTemplate>& RoomTemplates);
 
+	// [Server]
+	// Gets player save data from controller and player state.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void GetPlayerSaveData(FPlayerSaveData& SaveData);
 
+	// [Any]
+	// updates the controller and player state from serialized data.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void UpdateFromPlayerSaveData(const FPlayerSaveData& SaveData);
 };

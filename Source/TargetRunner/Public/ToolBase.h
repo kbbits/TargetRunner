@@ -66,18 +66,21 @@ public:
 
 protected:
 
-	const FName DAMAGE_RATES_NAME = FName(TEXT("DamageRates"));
-	const FName EXTRACTION_RATES_NAME = FName(TEXT("ExtractionRates"));
+	static const FName DAMAGE_RATES_NAME; // = FName(TEXT("DamageRates"));
+	static const FName EXTRACTION_RATES_NAME; // = FName(TEXT("ExtractionRates"));
+	static const FName BUY_VALUE_NAME; // = FName(TEXT("BuyValue"));
 
 public:
 
+	// Transform this tool to a ToolData struct.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void ToToolData(FToolData& ToolData);
 
+	// update this tool with data from ToolData struct.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void UpdateFromToolData(const FToolData& ToolData);
 
 	// Construct a new tool from a ToolData struct
 	UFUNCTION(BlueprintCallable)
-		static void FromToolData(const FToolData& InToolData, UPARAM(ref) UObject* Outer, UToolBase* Tool);
+		static void CreateToolFromToolData(const FToolData& InToolData, UPARAM(ref) UObject* Outer, UToolBase* Tool);
 };

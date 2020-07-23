@@ -5,6 +5,10 @@
 #include "..\Public\ToolBase.h"
 #include "ResourceRateFilterSet.h"
 
+const FName UToolBase::DAMAGE_RATES_NAME = FName(TEXT("DamageRates"));
+const FName UToolBase::EXTRACTION_RATES_NAME = FName(TEXT("ExtractionRates"));
+const FName UToolBase::BUY_VALUE_NAME = FName(TEXT("BuyValue"));
+
 // Sets default values
 UToolBase::UToolBase()
 	: Super()
@@ -18,12 +22,13 @@ void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 {
 	ToolData.ToolClass = StaticClass();
 	ToolData.AttributeData.ItemGuid = ItemGuid;
-	ToolData.AttributeData.FloatAttributes.Add(FName(TEXT("BuyValue")), BuyValue);
+	ToolData.AttributeData.FloatAttributes.Add(BUY_VALUE_NAME, BuyValue);
 	ToolData.AttributeData.Attributes.Add(EnergyPerShot.Name, EnergyPerShot);
 	ToolData.AttributeData.Attributes.Add(BaseDamage.Name, BaseDamage);
 	ToolData.AttributeData.ResourceRateAttributes.Add(DAMAGE_RATES_NAME, FResourceRateFilterSet(BaseDamageRates));
 	ToolData.AttributeData.ResourceRateAttributes.Add(EXTRACTION_RATES_NAME, FResourceRateFilterSet(BaseResourceExtractionRates));
 }
+
 
 void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 {
@@ -35,8 +40,8 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 			}
 			ItemGuid = ToolData.AttributeData.ItemGuid;
 		}
-		if (ToolData.AttributeData.FloatAttributes.Contains(FName(TEXT("BuyValue")))) {
-			BuyValue = ToolData.AttributeData.FloatAttributes[FName(TEXT("BuyValue"))];
+		if (ToolData.AttributeData.FloatAttributes.Contains(BUY_VALUE_NAME)) {
+			BuyValue = ToolData.AttributeData.FloatAttributes[BUY_VALUE_NAME];
 		}
 		if (ToolData.AttributeData.Attributes.Contains(EnergyPerShot.Name)) { 
 			EnergyPerShot = ToolData.AttributeData.Attributes[EnergyPerShot.Name]; 
@@ -53,7 +58,8 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 	}
 }
 
-void UToolBase::FromToolData(const FToolData& InToolData, UPARAM(ref)UObject* Outer, UToolBase* Tool)
+
+void UToolBase::CreateToolFromToolData(const FToolData& InToolData, UPARAM(ref)UObject* Outer, UToolBase* Tool)
 {
 	UToolBase* NewTool = NewObject<UToolBase>(Outer, InToolData.ToolClass);
 	NewTool->UpdateFromToolData(InToolData);

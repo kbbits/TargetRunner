@@ -60,7 +60,7 @@ TArray<FLevelTemplateContextStruct> ULevelTemplateContext::ToStructArray(const T
 }
 
 
-ULevelTemplateContext* ULevelTemplateContext::FromStruct(const FLevelTemplateContextStruct& InStruct, UObject* Outer)
+ULevelTemplateContext* ULevelTemplateContext::LevelTemplateContextFromStruct(const FLevelTemplateContextStruct& InStruct, UObject* Outer)
 {
 	ULevelTemplateContext* NewLTC = NewObject<ULevelTemplateContext>(Outer);
 	NewLTC->LevelTemplate = InStruct.LevelTemplate;

@@ -46,7 +46,7 @@ public:
 		static TArray<FLevelTemplateContextStruct> ToStructArray(const TArray<ULevelTemplateContext*> InArray);
 
 	UFUNCTION(BlueprintCallable)
-		static ULevelTemplateContext* FromStruct(const FLevelTemplateContextStruct& InStruct, UObject* Outer);
+		static ULevelTemplateContext* LevelTemplateContextFromStruct(const FLevelTemplateContextStruct& InStruct, UObject* Outer);
 
 	// Comparison overrides
 
