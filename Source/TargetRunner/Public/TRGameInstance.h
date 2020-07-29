@@ -27,6 +27,16 @@ public:
 	UTRGameInstance();
 
 public:
+	// [Client]
+	// Store the local client's profile name in the game instance so it is always available locally.
+	UPROPERTY(BlueprintReadWrite)
+		FName ClientLocalProfileName;
+
+	// [Client]
+	// Store the local client's profile name in the game instance so it is always available locally.
+	UPROPERTY(BlueprintReadWrite)
+		FGuid ClientLocalPlayerGuid;
+
 	// [Server]
 	UPROPERTY(BlueprintReadWrite)
 		FName HostProfileName;

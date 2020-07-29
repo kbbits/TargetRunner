@@ -4,10 +4,12 @@
 #include "TRPlayerControllerBase.h"
 #include "TRPlayerState.h"
 #include "Kismet/GameplayStatics.h"
+#include "..\Public\TRPlayerControllerBase.h"
 
 ATRPlayerControllerBase::ATRPlayerControllerBase()
 	: Super()
 {
+	MaxEquippedWeapons = 2;
 	CurrentTool = nullptr;
 	PersistentDataComponent = CreateDefaultSubobject<UTRPersistentDataComponent>(TEXT("PersistentDataComponent"));
 	if (PersistentDataComponent)
@@ -15,6 +17,14 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 		AddOwnedComponent(PersistentDataComponent);
 		PersistentDataComponent->SetIsReplicated(true);
 	}
+}
+
+
+void ATRPlayerControllerBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATRPlayerControllerBase, MaxEquippedWeapons);
 }
 
 
@@ -47,6 +57,20 @@ bool ATRPlayerControllerBase::ClientAddToolToInventory_Validate(TSubclassOf<UToo
 }
 
 
+void ATRPlayerControllerBase::GetMarketTools_Implementation(TArray<TSubclassOf<UToolBase>>& AvailableMarketToolClasses)
+{
+	AvailableMarketToolClasses.Empty(MarketToolClasses.Num());
+	AvailableMarketToolClasses.Append(MarketToolClasses);
+}
+
+
+void ATRPlayerControllerBase::SetMarketTools_Implementation(const TArray<TSubclassOf<UToolBase>>& AvailableMarketToolClasses)
+{
+	MarketToolClasses.Empty(AvailableMarketToolClasses.Num());
+	MarketToolClasses.Append(AvailableMarketToolClasses);
+}
+
+
 void ATRPlayerControllerBase::AddToolToInventory(TSubclassOf<UToolBase> ToolClass)
 {
 	UToolBase* TmpTool = NewObject<UToolBase>(this, ToolClass);
@@ -58,6 +82,106 @@ void ATRPlayerControllerBase::AddToolToInventory(TSubclassOf<UToolBase> ToolClas
 		ToolInventory.Add(TmpTool->ItemGuid, TmpToolData);
 		OnToolInventoryAdded.Broadcast(TmpToolData);
 	}
+}
+
+
+void ATRPlayerControllerBase::ServerEquipTool_Implementation(FToolData ToolData)
+{
+	while (EquippedTools.Num() >= MaxEquippedWeapons)
+	{
+		EquippedTools.RemoveAt(0);
+	}
+	UToolBase* TmpTool = UToolBase::CreateToolFromToolData(ToolData, this);
+	if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
+		EquippedTools.Add(TmpTool);
+		OnEquippedToolsChanged.Broadcast();
+		if (!IsLocalController())
+		{
+			ClientEquipTool(ToolData);
+		}
+	}
+}
+
+bool ATRPlayerControllerBase::ServerEquipTool_Validate(FToolData ToolData)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::ClientEquipTool_Implementation(FToolData ToolData)
+{
+	if (IsLocalController())
+	{
+		while (EquippedTools.Num() >= MaxEquippedWeapons)
+		{
+			EquippedTools.RemoveAt(0);
+		}
+		UToolBase* TmpTool = UToolBase::CreateToolFromToolData(ToolData, this);
+		if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
+			EquippedTools.Add(TmpTool);
+			OnEquippedToolsChanged.Broadcast();
+		}
+	}
+}
+
+bool ATRPlayerControllerBase::ClientEquipTool_Validate(FToolData ToolData)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::ServerUnequipTool_Implementation(FGuid ToolGuid)
+{
+	UToolBase* FoundTool = nullptr;
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		if (TmpTool->ItemGuid == ToolGuid)
+		{
+			FoundTool = TmpTool;
+			break;
+		}
+	}
+	if (FoundTool)
+	{
+		EquippedTools.Remove(FoundTool);
+		OnEquippedToolsChanged.Broadcast();
+		if (!IsLocalController())
+		{
+			ClientUnequipTool(ToolGuid);
+		}
+	}	
+}
+
+bool ATRPlayerControllerBase::ServerUnequipTool_Validate(FGuid ToolGuid)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::ClientUnequipTool_Implementation(FGuid ToolGuid)
+{
+	if (IsLocalController())
+	{
+		UToolBase* FoundTool = nullptr;
+		for (UToolBase* TmpTool : EquippedTools)
+		{
+			if (TmpTool->ItemGuid == ToolGuid)
+			{
+				FoundTool = TmpTool;
+				break;
+			}
+		}
+		if (FoundTool)
+		{
+			EquippedTools.Remove(FoundTool);
+			OnEquippedToolsChanged.Broadcast();
+		}
+	}
+}
+
+bool ATRPlayerControllerBase::ClientUnequipTool_Validate(FGuid ToolGuid)
+{
+	return true;
 }
 
 
@@ -98,6 +222,7 @@ void ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 	{
 		SaveData.LastEquippedItems.Add(TmpTool->ItemGuid);
 	}
+	SaveData.AttributeData.FloatAttributes.Add(FName(TEXT("MaxEquippedWeapons")), static_cast<float>(MaxEquippedWeapons));
 	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
 	if (TRPlayerState)
 	{
@@ -118,13 +243,15 @@ void ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	{
 		ToolInventory.Add(CurToolData.AttributeData.ItemGuid, CurToolData);
 	}
+	MaxEquippedWeapons = static_cast<int32>(SaveData.AttributeData.FloatAttributes.FindRef(FName(TEXT("MaxEquippedWeapons"))));
+	MaxEquippedWeapons = MaxEquippedWeapons < 2 ? 2 : MaxEquippedWeapons;
 	EquippedTools.Empty(SaveData.LastEquippedItems.Num());
 	for (FGuid TmpGuid : SaveData.LastEquippedItems)
 	{
 		if (ToolInventory.Contains(TmpGuid))
 		{
-			UToolBase::CreateToolFromToolData(ToolInventory[TmpGuid], this, TmpTool);
-			if (TmpTool) {
+			TmpTool = UToolBase::CreateToolFromToolData(ToolInventory[TmpGuid], this);
+			if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
 				EquippedTools.Add(TmpTool);
 			}
 		}

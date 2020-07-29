@@ -20,7 +20,8 @@ UToolBase::UToolBase()
 
 void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 {
-	ToolData.ToolClass = StaticClass();
+	ToolData.ToolClass = this->GetClass();
+	ToolData.AttributeData.ItemDisplayName = DisplayName;
 	ToolData.AttributeData.ItemGuid = ItemGuid;
 	ToolData.AttributeData.FloatAttributes.Add(BUY_VALUE_NAME, BuyValue);
 	ToolData.AttributeData.Attributes.Add(EnergyPerShot.Name, EnergyPerShot);
@@ -40,6 +41,7 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 			}
 			ItemGuid = ToolData.AttributeData.ItemGuid;
 		}
+		DisplayName = ToolData.AttributeData.ItemDisplayName;
 		if (ToolData.AttributeData.FloatAttributes.Contains(BUY_VALUE_NAME)) {
 			BuyValue = ToolData.AttributeData.FloatAttributes[BUY_VALUE_NAME];
 		}
@@ -59,9 +61,9 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 }
 
 
-void UToolBase::CreateToolFromToolData(const FToolData& InToolData, UPARAM(ref)UObject* Outer, UToolBase* Tool)
+UToolBase* UToolBase::CreateToolFromToolData(const FToolData& InToolData, UObject* Outer)
 {
 	UToolBase* NewTool = NewObject<UToolBase>(Outer, InToolData.ToolClass);
 	NewTool->UpdateFromToolData(InToolData);
-	Tool = NewTool;
+	return NewTool;
 }

@@ -64,7 +64,7 @@ public:
 	//}
 	
 		
-	bool operator==(const FResourceType& Other) const
+	FORCEINLINE bool operator==(const FResourceType& Other) const
 	{
 		if (Code != Other.Code) return false;
 		if (Category != Other.Category) return false;
@@ -74,7 +74,7 @@ public:
 		return true;
 	}
 
-	bool operator==(const FResourceType& Other)
+	FORCEINLINE bool operator==(const FResourceType& Other)
 	{
 		if (Category != Other.Category) return false;
 		if (Type != Other.Type) return false;
@@ -83,7 +83,7 @@ public:
 		return true;
 	}
 
-	bool operator==(FResourceType& Other)
+	FORCEINLINE bool operator==(FResourceType& Other)
 	{
 		if (Category != Other.Category) return false;
 		if (Type != Other.Type) return false;
@@ -92,17 +92,17 @@ public:
 		return true;
 	}
 
-	bool operator!=(const FResourceType& Other) const
+	FORCEINLINE bool operator!=(const FResourceType& Other) const
 	{
 		return !(*this == Other);
 	}
 
-	bool operator!=(const FResourceType& Other)
+	FORCEINLINE bool operator!=(const FResourceType& Other)
 	{
 		return !(*this == Other);
 	}
 
-	bool operator!=(FResourceType& Other)
+	FORCEINLINE bool operator!=(FResourceType& Other)
 	{
 		return !(*this == Other);
 	}

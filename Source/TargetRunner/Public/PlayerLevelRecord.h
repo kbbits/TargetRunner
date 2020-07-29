@@ -40,21 +40,21 @@ public:
 
 public:
 
-	bool operator==(const FPlayerLevelRecord& Other) const
+	FORCEINLINE bool operator==(const FPlayerLevelRecord& Other) const
 	{
 		if (PlayerGuid != Other.PlayerGuid) return false;
 		if (LevelId != Other.LevelId) return false;
 		return true;
 	}
 
-	bool operator==(const FPlayerLevelRecord& Other)
+	FORCEINLINE bool operator==(const FPlayerLevelRecord& Other)
 	{
 		if (PlayerGuid != Other.PlayerGuid) return false;
 		if (LevelId != Other.LevelId) return false;
 		return true;
 	}
 
-	bool operator==(FPlayerLevelRecord& Other)
+	FORCEINLINE bool operator==(FPlayerLevelRecord& Other)
 	{
 		if (PlayerGuid != Other.PlayerGuid) return false;
 		if (LevelId != Other.LevelId) return false;

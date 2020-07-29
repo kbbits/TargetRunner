@@ -82,5 +82,5 @@ public:
 
 	// Construct a new tool from a ToolData struct
 	UFUNCTION(BlueprintCallable)
-		static void CreateToolFromToolData(const FToolData& InToolData, UPARAM(ref) UObject* Outer, UToolBase* Tool);
+		static UToolBase* CreateToolFromToolData(const FToolData& InToolData, UObject* Outer);
 };

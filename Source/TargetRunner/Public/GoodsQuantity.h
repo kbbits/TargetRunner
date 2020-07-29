@@ -30,14 +30,14 @@ public:
 		Quantity = NewQuantity;
 	}
 
-	bool operator==(const FGoodsQuantity& Other) const
+	FORCEINLINE bool operator==(const FGoodsQuantity& Other) const
 	{
 		if (Name != Other.Name) return false;
 		if (Quantity != Other.Quantity) return false;
 		return true;
 	}
 
-	bool operator==(const FName& OtherName) const
+	FORCEINLINE bool operator==(const FName& OtherName) const
 	{
 		if (Name != OtherName) return false;
 		return true;

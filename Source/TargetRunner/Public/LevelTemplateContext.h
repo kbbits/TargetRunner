@@ -50,19 +50,19 @@ public:
 
 	// Comparison overrides
 
-	bool operator==(const ULevelTemplateContext& Other) const
+	FORCEINLINE bool operator==(const ULevelTemplateContext& Other) const
 	{
 		if (LevelTemplate == Other.LevelTemplate) return true;
 		return false;
 	}
 
-	bool operator==(const ULevelTemplateContext& Other)
+	FORCEINLINE bool operator==(const ULevelTemplateContext& Other)
 	{
 		if (LevelTemplate == Other.LevelTemplate) return true;
 		return false;
 	}
 
-	bool operator==(ULevelTemplateContext& Other)
+	FORCEINLINE bool operator==(ULevelTemplateContext& Other)
 	{
 		if (LevelTemplate == Other.LevelTemplate) return true;
 		return false;

@@ -13,6 +13,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToolInventoryAdded, const FToolData&, ToolDataAdded);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedToolsChanged);
+
 /**
  * 
  */
@@ -39,6 +41,9 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		TArray<UToolBase*> EquippedTools;
 
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Replicated)
+		int32 MaxEquippedWeapons;
+
 	// Tool currently in use
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		UToolBase* CurrentTool;
@@ -46,8 +51,28 @@ public:
 	// Delegate event notification when Tool has been added to ToolInventory.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnToolInventoryAdded OnToolInventoryAdded;
+
+	// Delegate event notification when Tool has been equipped or unequipped.
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnEquippedToolsChanged OnEquippedToolsChanged;
+
+protected:
+
+	// All tool types available for purchase in the market
+	UPROPERTY(EditAnywhere)
+		TArray<TSubclassOf<UToolBase>> MarketToolClasses;
 	
 public:
+
+	// [Any]
+	// The Tools available for purchase in the market.
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure)
+		void GetMarketTools(TArray<TSubclassOf<UToolBase>>& AvailableMarketToolClasses);
+
+	// [Any]
+	// Set the Tools available for purchase in the market.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void SetMarketTools(const TArray<TSubclassOf<UToolBase>>& AvailableMarketToolClasses);
 
 	// [Server]
 	// Call this to add a tool to player's inventory. This handles rep. to client.
@@ -62,6 +87,24 @@ public:
 	// Actually does the adding to inventory. Do not call directly. Call ServerAddToolToInventory.
 	UFUNCTION()
 		void AddToolToInventory(TSubclassOf<UToolBase> ToolClass);
+
+	// [Server]
+	// Call this to equip a tool from player's inventory. This handles rep. to client.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerEquipTool(FToolData ToolData);
+
+	// [Client]
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientEquipTool(FToolData ToolData);
+
+	// [Server]
+	// Call this to unequip a tool from player. This handles rep. to client.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerUnequipTool(FGuid ToolGuid);
+
+	// [Client]
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientUnequipTool(FGuid ToolGuid);
 
 	// [Any]
 	// Finds the current grid manager in the level.

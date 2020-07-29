@@ -33,21 +33,21 @@ public:
 		Rate = NewRate;
 	}
 
-	bool operator==(const FResourceRateFilter& Other) const
+	FORCEINLINE bool operator==(const FResourceRateFilter& Other) const
 	{
 		if (ResourceTypeFilter != Other.ResourceTypeFilter) return false;
 		if (Rate != Other.Rate) return false;
 		return true;
 	}
 
-	bool operator==(const FResourceRateFilter& Other)
+	FORCEINLINE bool operator==(const FResourceRateFilter& Other)
 	{
 		if (ResourceTypeFilter != Other.ResourceTypeFilter) return false;
 		if (Rate != Other.Rate) return false;
 		return true;
 	}
 
-	bool operator==(FResourceRateFilter& Other)
+	FORCEINLINE bool operator==(FResourceRateFilter& Other)
 	{
 		if (ResourceTypeFilter != Other.ResourceTypeFilter) return false;
 		if (Rate != Other.Rate) return false;

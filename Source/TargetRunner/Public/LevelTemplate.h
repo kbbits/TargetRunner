@@ -94,19 +94,19 @@ public:
 public:
 	FORCEINLINE bool IsValid() { return (!LevelId.IsNone() && LevelSeed != 0); }
 
-	bool operator==(const FLevelTemplate& Other) const
+	FORCEINLINE bool operator==(const FLevelTemplate& Other) const
 	{
 		if (LevelId != Other.LevelId) return false;
 		return true;
 	}
 
-	bool operator==(const FLevelTemplate& Other)
+	FORCEINLINE bool operator==(const FLevelTemplate& Other)
 	{
 		if (LevelId != Other.LevelId) return false;
 		return true;
 	}
 
-	bool operator==(FLevelTemplate& Other)
+	FORCEINLINE bool operator==(FLevelTemplate& Other)
 	{
 		if (LevelId != Other.LevelId) return false;
 		return true;

@@ -2,6 +2,8 @@
 
 
 #include "TRPlayerState.h"
+#include "Kismet/GameplayStatics.h"
+#include "TRGameInstance.h"
 
 
 ATRPlayerState::ATRPlayerState()
@@ -20,6 +22,22 @@ ATRPlayerState::ATRPlayerState()
 	HealthAttribute->AttributeData.Name = FName(TEXT("Health"));
 }
 
+
+void ATRPlayerState::BeginPlay()
+{
+	Super::BeginPlay();
+	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+	if (GameInst)
+	{
+		ProfileName = GameInst->ClientLocalProfileName;
+		PlayerGuid = GameInst->ClientLocalPlayerGuid;
+	}
+	else {
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerState - BeginPlay - Could not get game instance."))
+	}
+}
+
+
 void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 {
 	SaveData.PlayerGuid = PlayerGuid;
@@ -36,6 +54,7 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 		Attr->FillAttributeDataMap(SaveData.AttributeData.Attributes);
 	}
 }
+
 
 void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {

@@ -48,6 +48,9 @@ public:
 		float TotalPlaytimeInRuns;
 	
 public:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void GetPlayerSaveData(FPlayerSaveData& SaveData);
 

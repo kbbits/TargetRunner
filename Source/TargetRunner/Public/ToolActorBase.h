@@ -131,6 +131,8 @@ public:
 		TAssetPtr<USoundBase> GetReloadSound();
 	virtual TAssetPtr<USoundBase> GetReloadSound_Implementation();
 
+
+
 	UFUNCTION(BlueprintPure, Category = "Player Weapons")
 		TArray<FResourceRateFilter> GetDamageRates();
 

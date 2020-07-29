@@ -15,6 +15,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
 		FGuid ItemGuid;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
+		FText ItemDisplayName;
+
 	// Attribute Data
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
 		TMap<FName, FAttributeData> Attributes;

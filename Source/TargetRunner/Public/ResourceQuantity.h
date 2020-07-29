@@ -33,21 +33,21 @@ public:
 		Quantity = NewQuantity;
 	}
 
-	bool operator==(const FResourceQuantity& Other) const
+	FORCEINLINE bool operator==(const FResourceQuantity& Other) const
 	{
 		if (ResourceType != Other.ResourceType) return false;
 		if (Quantity != Other.Quantity) return false;
 		return true;
 	}
 
-	bool operator==(const FResourceQuantity& Other)
+	FORCEINLINE bool operator==(const FResourceQuantity& Other)
 	{
 		if (ResourceType != Other.ResourceType) return false;
 		if (Quantity != Other.Quantity) return false;
 		return true;
 	}
 	
-	bool operator==(FResourceQuantity& Other)
+	FORCEINLINE bool operator==(FResourceQuantity& Other)
 	{
 		if (ResourceType != Other.ResourceType) return false;
 		if (Quantity != Other.Quantity) return false;
