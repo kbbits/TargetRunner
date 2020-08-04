@@ -164,7 +164,7 @@ void UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Implementation(co
 {
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst) {
-		GameInst->SetSelectedLevelTemplate(LevelTemplate);
+		GameInst->SetSelectedLevelTemplate(LevelTemplate);		
 	}
 	else {
 		UE_LOG(LogTRGame, Error, TEXT("ServerSetLevelTemplateForPlay - Could not get game instance."));

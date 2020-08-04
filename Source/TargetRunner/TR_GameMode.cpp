@@ -24,13 +24,23 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 void ATR_GameMode::BeginPlay()
 {
 	Super::BeginPlay();	
-	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+	UGameInstance* GameInst = GetGameInstance();
+	UTRGameInstance* TRGameInst = Cast<UTRGameInstance>(GetGameInstance());
 	if (GameInst)
-	{
-		SetNewLevelTemplate(GameInst->GetSelectedLevelTemplate());
+	{   
+		if (TRGameInst) 
+		{
+			// Debug log
+			UE_LOG(LogTRGame, Log, TEXT("TRGameMode - BeginPlay setting level template"));
+			SetNewLevelTemplate(TRGameInst->GetSelectedLevelTemplate());
+		}
+		else
+		{
+			UE_LOG(LogTRGame, Log, TEXT("TRGameMode - BeginPlay incorrect game instance class %s"), *GameInst->GetClass()->GetName());
+		}
 	}
 	else {
-		UE_LOG(LogTRGame, Error, TEXT("GameMode - BeginPlay - Could not get game instance."))
+		UE_LOG(LogTRGame, Error, TEXT("GameMode - BeginPlay - Could not get game instance."));
 	}
 }
 
@@ -61,6 +71,9 @@ void ATR_GameMode::SetNewLevelTemplate(const FLevelTemplate& NewTemplate)
 	LevelTemplate = NewTemplate;
 	ReseedAllStreams(LevelTemplate.LevelSeed);
 	bLevelTemplateReady = true;
+
+	// Debug log
+	UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate %s ID: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
 }
 
 
