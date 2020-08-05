@@ -26,7 +26,7 @@ ATRPlayerState::ATRPlayerState()
 void ATRPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
-	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+	UTRGameInstance* GameInst = Cast<UTRGameInstance>(GetGameInstance());
 	if (GameInst)
 	{
 		ProfileName = GameInst->ClientLocalProfileName;

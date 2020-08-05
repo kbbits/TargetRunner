@@ -102,7 +102,7 @@ public:
 	// [Server]
 	// Load the player's data
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerLoadPlayerData();
+		void ServerLoadPlayerData(const FName PlayerProfile);
 
 	// [Client]
 	// Echo loaded player data back to client

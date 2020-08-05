@@ -37,7 +37,33 @@ public:
 		return true;
 	}
 
+	FORCEINLINE bool operator==(const FGoodsQuantity& Other)
+	{
+		if (Name != Other.Name) return false;
+		if (Quantity != Other.Quantity) return false;
+		return true;
+	}
+
+	FORCEINLINE bool operator==(FGoodsQuantity& Other)
+	{
+		if (Name != Other.Name) return false;
+		if (Quantity != Other.Quantity) return false;
+		return true;
+	}
+
 	FORCEINLINE bool operator==(const FName& OtherName) const
+	{
+		if (Name != OtherName) return false;
+		return true;
+	}
+
+	FORCEINLINE bool operator==(const FName& OtherName)
+	{
+		if (Name != OtherName) return false;
+		return true;
+	}
+
+	FORCEINLINE bool operator==(FName& OtherName)
 	{
 		if (Name != OtherName) return false;
 		return true;

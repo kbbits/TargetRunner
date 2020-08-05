@@ -30,10 +30,20 @@ void ATRPlayerControllerBase::GetLifetimeReplicatedProps(TArray< FLifetimeProper
 
 void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(TSubclassOf<UToolBase> ToolClass)
 {
-	AddToolToInventory(ToolClass);
+	UToolBase* TmpTool = NewObject<UToolBase>(this, ToolClass);
+	if (TmpTool)
+	{
+		FToolData TmpToolData;
+		TmpTool->ItemGuid = FGuid::NewGuid();
+		TmpTool->ToToolData(TmpToolData);
+		ToolInventory.Add(TmpTool->ItemGuid, TmpToolData);
+		OnToolInventoryAdded.Broadcast(TmpToolData);
+	}
+	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory added tool guid %s."), *TmpTool->ItemGuid.ToString());
 	if (!IsLocalController())
 	{
-		ClientAddToolToInventory(ToolClass);
+		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory calling client."));
+		ClientAddToolToInventory(ToolClass, TmpTool->ItemGuid);
 	}
 }
 
@@ -43,15 +53,21 @@ bool ATRPlayerControllerBase::ServerAddToolToInventory_Validate(TSubclassOf<UToo
 }
 
 
-void ATRPlayerControllerBase::ClientAddToolToInventory_Implementation(TSubclassOf<UToolBase> ToolClass)
+void ATRPlayerControllerBase::ClientAddToolToInventory_Implementation(TSubclassOf<UToolBase> ToolClass, const FGuid AddedGuid)
 {
-	if (IsLocalController())
+	UToolBase* TmpTool = NewObject<UToolBase>(this, ToolClass);
+	if (TmpTool)
 	{
-		AddToolToInventory(ToolClass);
+		FToolData TmpToolData;
+		TmpTool->ItemGuid = AddedGuid;
+		TmpTool->ToToolData(TmpToolData);
+		ToolInventory.Add(TmpTool->ItemGuid, TmpToolData);
+		OnToolInventoryAdded.Broadcast(TmpToolData);
 	}
+	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientAddToolToInventory added tool guid %s."), *TmpTool->ItemGuid.ToString());
 }
 
-bool ATRPlayerControllerBase::ClientAddToolToInventory_Validate(TSubclassOf<UToolBase> ToolClass)
+bool ATRPlayerControllerBase::ClientAddToolToInventory_Validate(TSubclassOf<UToolBase> ToolClass, const FGuid AddedGuid)
 {
 	return true;
 }
@@ -71,60 +87,58 @@ void ATRPlayerControllerBase::SetMarketTools_Implementation(const TArray<TSubcla
 }
 
 
-void ATRPlayerControllerBase::AddToolToInventory(TSubclassOf<UToolBase> ToolClass)
+void ATRPlayerControllerBase::ServerEquipTool_Implementation(FGuid ToolGuid)
 {
-	UToolBase* TmpTool = NewObject<UToolBase>(this, ToolClass);
-	if (TmpTool)
+	FToolData* ToolData = ToolInventory.Find(ToolGuid);
+	if (ToolData == nullptr)
 	{
-		FToolData TmpToolData;
-		TmpTool->ItemGuid = FGuid::NewGuid();
-		TmpTool->ToToolData(TmpToolData);
-		ToolInventory.Add(TmpTool->ItemGuid, TmpToolData);
-		OnToolInventoryAdded.Broadcast(TmpToolData);
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase - ServerEquipTool tool guid %s not found in inventory."), *ToolGuid.ToString());
+		return;
 	}
-}
-
-
-void ATRPlayerControllerBase::ServerEquipTool_Implementation(FToolData ToolData)
-{
 	while (EquippedTools.Num() >= MaxEquippedWeapons)
 	{
 		EquippedTools.RemoveAt(0);
 	}
-	UToolBase* TmpTool = UToolBase::CreateToolFromToolData(ToolData, this);
+	UToolBase* TmpTool = UToolBase::CreateToolFromToolData(*ToolData, this);
 	if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
 		EquippedTools.Add(TmpTool);
 		OnEquippedToolsChanged.Broadcast();
+		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerEquipTool tool %s equipped."), *ToolData->AttributeData.ItemDisplayName.ToString());
 		if (!IsLocalController())
 		{
-			ClientEquipTool(ToolData);
+			UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerEquipTool calling client rpc."));
+			ClientEquipTool(ToolGuid);
 		}
 	}
 }
 
-bool ATRPlayerControllerBase::ServerEquipTool_Validate(FToolData ToolData)
+bool ATRPlayerControllerBase::ServerEquipTool_Validate(FGuid ToolGuid)
 {
 	return true;
 }
 
 
-void ATRPlayerControllerBase::ClientEquipTool_Implementation(FToolData ToolData)
+void ATRPlayerControllerBase::ClientEquipTool_Implementation(FGuid ToolGuid)
 {
-	if (IsLocalController())
+	FToolData* ToolData = ToolInventory.Find(ToolGuid);
+	if (ToolData == nullptr)
 	{
-		while (EquippedTools.Num() >= MaxEquippedWeapons)
-		{
-			EquippedTools.RemoveAt(0);
-		}
-		UToolBase* TmpTool = UToolBase::CreateToolFromToolData(ToolData, this);
-		if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
-			EquippedTools.Add(TmpTool);
-			OnEquippedToolsChanged.Broadcast();
-		}
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase - ClientEquipTool tool guid %s not found in inventory."), *ToolGuid.ToString());
+		return;
+	}
+	while (EquippedTools.Num() >= MaxEquippedWeapons)
+	{
+		EquippedTools.RemoveAt(0);
+	}
+	UToolBase* TmpTool = UToolBase::CreateToolFromToolData(*ToolData, this);
+	if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
+		EquippedTools.Add(TmpTool);
+		OnEquippedToolsChanged.Broadcast();
+		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientEquipTool tool %s equipped."), *ToolData->AttributeData.ItemDisplayName.ToString());
 	}
 }
 
-bool ATRPlayerControllerBase::ClientEquipTool_Validate(FToolData ToolData)
+bool ATRPlayerControllerBase::ClientEquipTool_Validate(FGuid ToolGuid)
 {
 	return true;
 }
@@ -160,22 +174,19 @@ bool ATRPlayerControllerBase::ServerUnequipTool_Validate(FGuid ToolGuid)
 
 void ATRPlayerControllerBase::ClientUnequipTool_Implementation(FGuid ToolGuid)
 {
-	if (IsLocalController())
+	UToolBase* FoundTool = nullptr;
+	for (UToolBase* TmpTool : EquippedTools)
 	{
-		UToolBase* FoundTool = nullptr;
-		for (UToolBase* TmpTool : EquippedTools)
+		if (TmpTool->ItemGuid == ToolGuid)
 		{
-			if (TmpTool->ItemGuid == ToolGuid)
-			{
-				FoundTool = TmpTool;
-				break;
-			}
+			FoundTool = TmpTool;
+			break;
 		}
-		if (FoundTool)
-		{
-			EquippedTools.Remove(FoundTool);
-			OnEquippedToolsChanged.Broadcast();
-		}
+	}
+	if (FoundTool)
+	{
+		EquippedTools.Remove(FoundTool);
+		OnEquippedToolsChanged.Broadcast();
 	}
 }
 

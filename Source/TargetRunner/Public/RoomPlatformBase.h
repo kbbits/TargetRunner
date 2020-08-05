@@ -35,6 +35,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_RoomTemplate)
 		FRoomTemplate RoomTemplate;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		bool bRoomTemplateSet;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

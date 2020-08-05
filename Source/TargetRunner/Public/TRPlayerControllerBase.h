@@ -81,21 +81,16 @@ public:
 
 	// [Client]
 	UFUNCTION(Client, Reliable, WithValidation)
-		void ClientAddToolToInventory(TSubclassOf<UToolBase> ToolClass);
-
-	// [Any]
-	// Actually does the adding to inventory. Do not call directly. Call ServerAddToolToInventory.
-	UFUNCTION()
-		void AddToolToInventory(TSubclassOf<UToolBase> ToolClass);
+		void ClientAddToolToInventory(TSubclassOf<UToolBase> ToolClass, const FGuid AddedGuid);
 
 	// [Server]
 	// Call this to equip a tool from player's inventory. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerEquipTool(FToolData ToolData);
+		void ServerEquipTool(FGuid ToolGuid);
 
 	// [Client]
 	UFUNCTION(Client, Reliable, WithValidation)
-		void ClientEquipTool(FToolData ToolData);
+		void ClientEquipTool(FGuid ToolGuid);
 
 	// [Server]
 	// Call this to unequip a tool from player. This handles rep. to client.

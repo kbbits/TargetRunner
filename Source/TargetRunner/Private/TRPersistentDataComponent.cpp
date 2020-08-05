@@ -225,7 +225,7 @@ bool UTRPersistentDataComponent::ServerSavePlayerData_Validate()
 }
 
 
-void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation()
+void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FName PlayerProfile)
 {
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
 	if (TRPlayerController)
@@ -233,6 +233,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation()
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState)
 		{
+			TRPlayerState->ProfileName = PlayerProfile;
 			FString PlayerSaveFilename = GetPlayerSaveFilename();
 			if (!PlayerSaveFilename.IsEmpty())
 			{
@@ -273,7 +274,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation()
 }
 
 
-bool UTRPersistentDataComponent::ServerLoadPlayerData_Validate()
+bool UTRPersistentDataComponent::ServerLoadPlayerData_Validate(const FName PlayerProfile)
 {
 	return true;
 }
@@ -287,6 +288,7 @@ void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const F
 	if (TRPlayerController)
 	{
 		TRPlayerController->UpdateFromPlayerSaveData(PlayerSaveData);
+		UE_LOG(LogTRGame, Log, TEXT("ClientEchoLoadPlayerData - updated player data for: %s."), *PlayerSaveData.PlayerGuid.ToString());
 	}
 }
 

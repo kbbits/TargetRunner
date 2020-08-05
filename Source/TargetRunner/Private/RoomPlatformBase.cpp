@@ -13,6 +13,7 @@ ARoomPlatformBase::ARoomPlatformBase()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
+	bRoomTemplateSet = false;
 	RoomRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	SetRootComponent(RoomRoot);
 	RoomSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RoomScene"));
@@ -47,6 +48,7 @@ void ARoomPlatformBase::Tick(float DeltaTime)
 
 void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
 {
+	bRoomTemplateSet = true;
 }
 
 

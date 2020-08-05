@@ -10,7 +10,7 @@ struct FGoodsType : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	// Internal name of this GoodsType
+	// Internal name of this GoodsType. Must be unique.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Name;
 
@@ -30,4 +30,40 @@ public:
 	// Various tags related to this GoodsType.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName GoodsTags;
+
+	FORCEINLINE bool operator==(const FGoodsType& OtherType) const
+	{
+		if (Name != OtherType.Name) return false;
+		return true;
+	}
+
+	FORCEINLINE bool operator==(const FGoodsType& OtherType)
+	{
+		if (Name != OtherType.Name) return false;
+		return true;
+	}
+
+	FORCEINLINE bool operator==(FGoodsType& OtherType)
+	{
+		if (Name != OtherType.Name) return false;
+		return true;
+	}
+
+	FORCEINLINE bool operator==(const FName& OtherName) const
+	{
+		if (Name != OtherName) return false;
+		return true;
+	}
+
+	FORCEINLINE bool operator==(const FName& OtherName)
+	{
+		if (Name != OtherName) return false;
+		return true;
+	}
+
+	FORCEINLINE bool operator==(FName& OtherName)
+	{
+		if (Name != OtherName) return false;
+		return true;
+	}
 };

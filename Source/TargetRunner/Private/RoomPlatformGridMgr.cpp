@@ -255,6 +255,7 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	{
 		NewRoom->MyGridManager = this;
 		NewRoom->RoomTemplate = *RoomTemplate;
+		NewRoom->bRoomTemplateSet = true;
 		// TODO: Seed platform rand stream
 		NewRoom->GridX = GridCoords.X;
 		NewRoom->GridY = GridCoords.Y;
