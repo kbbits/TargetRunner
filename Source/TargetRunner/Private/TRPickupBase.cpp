@@ -7,8 +7,8 @@ ATRPickupBase::ATRPickupBase(const FObjectInitializer& OI) : Super(OI)
 	// Turn off tick
 	PrimaryActorTick.bCanEverTick = false;
 
-	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene"));
-	SetRootComponent(RootScene);
+	//RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene"));
+	//SetRootComponent(RootScene);
 }
 
 // Called when the game starts or when spawned

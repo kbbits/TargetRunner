@@ -26,8 +26,8 @@ public:
 		bool bCollected;
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		USceneComponent* RootScene;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	//	USceneComponent* RootScene;
 
 protected:
 	// Called when the game starts or when spawned
