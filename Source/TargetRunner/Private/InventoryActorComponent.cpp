@@ -2,6 +2,7 @@
 
 
 #include "InventoryActorComponent.h"
+#include "TargetRunner.h"
 #include "GameFramework/PlayerController.h"
 
 // Sets default values for this component's properties
@@ -46,6 +47,7 @@ bool UInventoryActorComponent::ShouldUpdateClient()
 		ENetMode NetMode = GetNetMode();
 		bUpdateClient = NetMode != NM_Client && NetMode != NM_Standalone;
 	}
+	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ShouldUpdateClient: %s."), bUpdateClient ? TEXT("True") : TEXT("False"));
 	return bUpdateClient;
 }
 
@@ -111,7 +113,7 @@ void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGood
 		FGoodsQuantity& TmpGoodsQuantity = Inventory[Index];
 		GoodsQuantity = TmpGoodsQuantity;
 	}
-	
+	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoods current: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
 	NetQuantity = GoodsQuantity.Quantity - GoodsDelta.Quantity;
 	if (NetQuantity < 0.0f) { return; }
 	else
@@ -134,6 +136,7 @@ void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGood
 			ClientUpdateInventoryQuantity(GoodsQuantity);
 		}
 	}
+	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoods new: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
 }
 
 bool UInventoryActorComponent::ServerAddSubtractGoods_Validate(const FGoodsQuantity& GoodsDelta)
@@ -194,6 +197,7 @@ void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const 
 	FGoodsQuantity GoodsQuantity;
 	float NetQuantity;
 	int32 Index = INDEX_NONE;
+
 	for (FGoodsQuantity TmpGoodsDelta : GoodsDeltas)
 	{
 		Index = Inventory.IndexOfByKey(TmpGoodsDelta.Name);
@@ -207,6 +211,7 @@ void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const 
 			FGoodsQuantity& TmpGoodsQuantity = Inventory[Index];
 			GoodsQuantity = TmpGoodsQuantity;
 		}
+		UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoodsArray curret New item: %s, %s: %d."), Index == INDEX_NONE ? TEXT("True") : TEXT("False"), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
 		NetQuantity = GoodsQuantity.Quantity - TmpGoodsDelta.Quantity;
 		if (NetQuantity < 0.0f) {
 			return;
@@ -227,6 +232,7 @@ void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const 
 		{
 			Inventory[Index].Quantity = NewGoodsItem.Quantity;
 		}
+		UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoodsArray updated New item: %s, %s: %d."), Index == INDEX_NONE ? TEXT("True") : TEXT("False"), *NewGoodsItem.Name.ToString(), (int32)NewGoodsItem.Quantity);
 	}
 	OnInventoryChanged.Broadcast(NewGoods);
 	if (ShouldUpdateClient())
@@ -244,6 +250,7 @@ bool UInventoryActorComponent::ServerAddSubtractGoodsArray_Validate(const TArray
 void UInventoryActorComponent::ClientUpdateInventoryQuantity_Implementation(const FGoodsQuantity NewQuantity)
 {
 	int32 Index = Inventory.IndexOfByKey(NewQuantity.Name);
+	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ClientUpdateInventoryQuantity New item: %s, %s: %d."), Index == INDEX_NONE ? TEXT("True") : TEXT("False"), *NewQuantity.Name.ToString(), (int32)NewQuantity.Quantity);
 	if (Index == INDEX_NONE)
 	{
 		Inventory.Add(NewQuantity);
@@ -269,6 +276,7 @@ void UInventoryActorComponent::ClientUpdateInventoryQuantities_Implementation(co
 	for (FGoodsQuantity NewGoodsItem : NewQuantities)
 	{
 		Index = Inventory.IndexOfByKey(NewGoodsItem.Name);
+		UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ClientUpdateInventoryQuantities New item: %s, %s: %d."), Index == INDEX_NONE ? TEXT("True") : TEXT("False"), *NewGoodsItem.Name.ToString(), (int32)NewGoodsItem.Quantity);
 		if (Index == INDEX_NONE)
 		{
 			Inventory.Add(NewGoodsItem);

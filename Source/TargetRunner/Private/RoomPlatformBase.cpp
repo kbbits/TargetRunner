@@ -60,7 +60,8 @@ void ARoomPlatformBase::GenerateRoom_Implementation()
 	}
 	if (CalculateWalls())
 	{
-		SpawnWalls();
+		SpawnFloor();
+		SpawnWalls();		
 		SpawnContents(); // Calls SpawnResources
 	}
 }
@@ -128,6 +129,12 @@ bool ARoomPlatformBase::CalculateWalls()
 
 
 void ARoomPlatformBase::SpawnWalls_Implementation()
+{
+	// Override and implement in BP.
+}
+
+
+void ARoomPlatformBase::SpawnFloor_Implementation()
 {
 	// Override and implement in BP.
 }

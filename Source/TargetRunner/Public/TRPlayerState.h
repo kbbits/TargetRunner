@@ -29,13 +29,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		UActorAttributeComponent* HealthAttribute;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Replicated, SaveGame)
 		FGuid PlayerGuid;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Replicated, SaveGame)
 		FName ProfileName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, SaveGame)
 		FText DisplayName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)

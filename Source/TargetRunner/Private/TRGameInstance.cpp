@@ -15,6 +15,14 @@ UTRGameInstance::UTRGameInstance()
 }
 
 
+void UTRGameInstance::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UTRGameInstance, HostProfileName);
+}
+
+
 FString UTRGameInstance::GetLevelTemplatesSaveFilename_Implementation()
 {
 	return FString::Printf(TEXT("%s_LevelTemplates"), *HostProfileName.ToString());
@@ -38,7 +46,7 @@ ULevelTemplateContext* UTRGameInstance::GenerateNewLevelTemplate(const float Tie
 	ULevelTemplateContext* NewLTC = NewObject<ULevelTemplateContext>(this);
 	//FLevelTemplate TmpLevelTemplate = FLevelTemplate();
 	int32 NewSeed = static_cast<int32>(LevelRandStream.FRandRange(static_cast<float>(INT_MIN + 10), static_cast<float>(INT_MAX - 10)));
-	UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent - generating new level template for seed: %d. (stream seed: %d)"), NewSeed, LevelRandStream.GetCurrentSeed());
+	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - generating new level template for seed: %d. (stream seed: %d)"), NewSeed, LevelRandStream.GetCurrentSeed());
 	LevelForge->GenerateNewLevelTemplate(NewSeed, Tier, NewLTC->LevelTemplate, bSuccessful);
 	if (bSuccessful)
 	{
@@ -106,7 +114,7 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Load level templates - Already loaded: %s"), bLevelTemplatesLoaded ? TEXT("true") : TEXT("false"));
 	if (bLevelTemplatesLoaded) { return; }
 	bLevelTemplatesLoaded = false;
-	LevelTemplatesMap.Empty();
+	//LevelTemplatesMap.Empty();
 	if (UGameplayStatics::DoesSaveGameExist(GetLevelTemplatesSaveFilename(), 0))
 	{
 		ULevelTemplatesSave* SaveGame = Cast<ULevelTemplatesSave>(UGameplayStatics::LoadGameFromSlot(GetLevelTemplatesSaveFilename(), 0));
@@ -190,6 +198,7 @@ ULevelTemplateContext* UTRGameInstance::UnlockLevelTemplateForPlayer(const FName
 	{
 		if (TargetTemplate->PlayerRecords.Contains(PlayerGuid))
 		{
+			UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - UnlockLevelTemplateForPlayer updating for player: %s"), *PlayerGuid.ToString(EGuidFormats::Digits));
 			TargetTemplate->PlayerRecords[PlayerGuid].Unlocked = true;
 			TargetTemplate->PlayerRecords[PlayerGuid].UnlockedAt = FDateTime::Now();
 		}
@@ -201,6 +210,7 @@ ULevelTemplateContext* UTRGameInstance::UnlockLevelTemplateForPlayer(const FName
 			NewLevelRecord.Unlocked = true;
 			NewLevelRecord.UnlockedAt = FDateTime::Now();
 			TargetTemplate->PlayerRecords.Add(PlayerGuid, NewLevelRecord);
+			UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - UnlockLevelTemplateForPlayer new record for player: %s"), *PlayerGuid.ToString(EGuidFormats::Digits));
 		}
 		return TargetTemplate;
 	}	

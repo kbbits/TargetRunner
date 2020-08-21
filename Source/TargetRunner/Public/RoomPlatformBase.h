@@ -50,26 +50,37 @@ public:
 		void OnRep_RoomTemplate();
 	void OnRep_RoomTemplate_Implementation();
 
+	// [Server]
 	// Generates the entire room, including walls, etc.
 	// Must set the WallTemplate member var before calling.
 	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 		void GenerateRoom();
 
+	// [Server]
 	// Generates the outer walls for the room. Called by GenerateRoom.
 	UFUNCTION(BlueprintCallable, CallInEditor)
 		bool CalculateWalls();
 	
+	// [Server]
 	// Spawns the walls.
 	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void SpawnWalls();
 
+	// [Server]
+	// Spawns the walls.
+	// Call this on server!
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		void SpawnFloor();
+
+	// [Server]
 	// Spawns room contents. By default this just calls SpawnResources.
 	// If you override this, remember to call Parent.
 	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		bool SpawnContents();
 
+	// [Server]
 	// Spawns the resources.
 	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)

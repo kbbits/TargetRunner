@@ -23,17 +23,27 @@ ATRPlayerState::ATRPlayerState()
 }
 
 
+void ATRPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATRPlayerState, PlayerGuid);
+	DOREPLIFETIME(ATRPlayerState, ProfileName);
+	DOREPLIFETIME(ATRPlayerState, DisplayName);
+}
+
+
 void ATRPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(GetGameInstance());
 	if (GameInst)
 	{
-		ProfileName = GameInst->ClientLocalProfileName;
-		PlayerGuid = GameInst->ClientLocalPlayerGuid;
+		if (!GameInst->ClientLocalProfileName.IsNone()) { ProfileName = GameInst->ClientLocalProfileName; }
+		if (GameInst->ClientLocalPlayerGuid.IsValid()) { PlayerGuid = GameInst->ClientLocalPlayerGuid; }
 	}
 	else {
-		UE_LOG(LogTRGame, Error, TEXT("TRPlayerState - BeginPlay - Could not get game instance."))
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerState - BeginPlay - Could not get game instance."));
 	}
 }
 
@@ -58,6 +68,7 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 
 void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
+	UE_LOG(LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - new player guid: %s."), *SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
 	PlayerGuid = SaveData.PlayerGuid;
 	ProfileName = SaveData.ProfileName;
 	DisplayName = SaveData.DisplayName;

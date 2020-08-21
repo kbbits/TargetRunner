@@ -38,7 +38,7 @@ public:
 		FGuid ClientLocalPlayerGuid;
 
 	// [Server]
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Replicated)
 		FName HostProfileName;
 
 	// The LevelForge class to use.

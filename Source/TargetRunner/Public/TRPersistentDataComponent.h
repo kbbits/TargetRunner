@@ -84,7 +84,7 @@ public:
 
 	// [Server]
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerUnlockLevelTemplateForPlayer(const FName LevelId, const FGuid PlayerGuid);
+		void ServerUnlockLevelTemplateForPlayer(const FName LevelId);
 	
 	// [Server]
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
@@ -93,6 +93,10 @@ public:
 	// Player Save Data
 
 	FString GetPlayerSaveFilename(); 
+
+	// returns a list of all save games in /Saved/SaveGames folder, without the .sav extension (filename only)
+	UFUNCTION(BlueprintPure)
+		static TArray<FName> GetAllSaveProfileNames();
 
 	// [Server]
 	// Save the player's data

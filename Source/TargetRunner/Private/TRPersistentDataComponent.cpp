@@ -7,6 +7,11 @@
 #include "TRPlayerState.h"
 #include "PlayerSave.h"
 #include "Kismet/GameplayStatics.h"
+#include "Paths.h"
+#include "PlatformFile.h"
+#include "PlatformFilemanager.h"
+#include "PlatformFeatures.h"
+#include "GameFramework/SaveGame.h"
 #include "TRGameInstance.h"
 
 // Sets default values for this component's properties
@@ -137,24 +142,43 @@ bool UTRPersistentDataComponent::ServerLoadLevelTemplatesData_Validate()
 }
 
 
-void UTRPersistentDataComponent::ServerUnlockLevelTemplateForPlayer_Implementation(const FName LevelId, const FGuid PlayerGuid)
+void UTRPersistentDataComponent::ServerUnlockLevelTemplateForPlayer_Implementation(const FName LevelId)
 {
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst)
 	{
-		GameInst->UnlockLevelTemplateForPlayer(LevelId, PlayerGuid);
-		TArray<ULevelTemplateContext*> TmpLTCArray;
-		GameInst->LevelTemplatesMap.GenerateValueArray(TmpLTCArray);
-		LevelTemplatesPage.Empty();
-		LevelTemplatesPage.Append(ULevelTemplateContext::ToStructArray(TmpLTCArray));
-		LevelTemplatesRepTrigger++;
-		UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - level template %s unlocked for player %s"), *LevelId.ToString(), *PlayerGuid.ToString(EGuidFormats::Digits));
-		// Manually call rep_notify on server
-		if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
+		ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+		if (TRPlayerController)
+		{
+			ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
+			if (TRPlayerState) {
+				ULevelTemplateContext* UnlockedTemplate = GameInst->UnlockLevelTemplateForPlayer(LevelId, TRPlayerState->PlayerGuid);
+				if (UnlockedTemplate)
+				{
+					TArray<ULevelTemplateContext*> TmpLTCArray;
+					GameInst->LevelTemplatesMap.GenerateValueArray(TmpLTCArray);
+					LevelTemplatesPage.Empty();
+					LevelTemplatesPage.Append(ULevelTemplateContext::ToStructArray(TmpLTCArray));
+					LevelTemplatesRepTrigger++;
+					UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - level template %s unlocked for player %s"), *LevelId.ToString(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+					for (FLevelTemplateContextStruct TmpLTCS : LevelTemplatesPage)
+					{
+						UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - template now has %s player records: %d"), *TmpLTCS.LevelTemplate.LevelId.ToString(), TmpLTCS.PlayerRecords.Num());
+					}
+
+					// Manually call rep_notify on server
+					if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
+				}
+				else
+				{
+					UE_LOG(LogTRGame, Error, TEXT("UTRPersistentDataComponent - Could not unlock level template %s for player %s"), *LevelId.ToString(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+				}
+			}
+		}
 	}
 }
 
-bool UTRPersistentDataComponent::ServerUnlockLevelTemplateForPlayer_Validate(const FName LevelId, const FGuid PlayerGuid)
+bool UTRPersistentDataComponent::ServerUnlockLevelTemplateForPlayer_Validate(const FName LevelId)
 {
 	return true;
 }
@@ -185,7 +209,7 @@ FString UTRPersistentDataComponent::GetPlayerSaveFilename()
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState) {
 			if (!TRPlayerState->ProfileName.IsNone()) {
-				return FString::Printf(TEXT("player_%s"), *TRPlayerState->ProfileName.ToString());
+				return FString::Printf(TEXT("trprofile_%s"), *TRPlayerState->ProfileName.ToString());
 			}
 			else {
 				UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveFilename - player profile is null."));
@@ -194,6 +218,56 @@ FString UTRPersistentDataComponent::GetPlayerSaveFilename()
 	}
 	UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveFilename could not get profile name."));
 	return FString();
+}
+
+
+TArray<FName> UTRPersistentDataComponent::GetAllSaveProfileNames()
+{
+	//////////////////////////////////////////////////////////////////////////////
+	class FFindSavesVisitor : public IPlatformFile::FDirectoryVisitor
+	{
+	public:
+		FFindSavesVisitor() {}
+
+		virtual bool Visit(const TCHAR* FilenameOrDirectory, bool bIsDirectory)
+		{
+			if (!bIsDirectory)
+			{
+				UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - potential file: %s."), FilenameOrDirectory);
+				FString FullFilePath(FilenameOrDirectory);
+				if (FPaths::GetExtension(FullFilePath) == TEXT("sav"))
+				{
+					FString CleanFilename = FPaths::GetBaseFilename(FullFilePath);
+					if (CleanFilename.StartsWith(TEXT("trprofile_")))
+					{
+						CleanFilename = CleanFilename.Replace(TEXT(".sav"), TEXT(""));
+						CleanFilename = CleanFilename.Replace(TEXT("trprofile_"), TEXT(""));
+						SavesFound.Add(CleanFilename);
+						UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - found file: %s."), *CleanFilename);
+					}
+				}
+			}
+			return true;
+		}
+		TArray<FString> SavesFound;
+	};
+	//////////////////////////////////////////////////////////////////////////////
+
+	TArray<FName> Saves;
+	const FString SavesFolder = FPaths::ProjectSavedDir() + TEXT("SaveGames");
+
+	UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - checking dir: %s."), *SavesFolder)
+	if (!SavesFolder.IsEmpty())
+	{
+		FFindSavesVisitor Visitor;
+		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*SavesFolder, Visitor);
+		for (FString SaveProfile : Visitor.SavesFound)
+		{
+			Saves.Add(FName(SaveProfile));
+		}
+	}
+
+	return Saves;
 }
 
 
@@ -208,7 +282,7 @@ void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
 			UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
 			TRPlayerController->GetPlayerSaveData(SaveGame->PlayerSaveData);
 			UGameplayStatics::SaveGameToSlot(SaveGame, GetPlayerSaveFilename(), 0);
-			UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Player data saved to: %s."), *GetPlayerSaveFilename())
+			UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Player data saved to: %s."), *GetPlayerSaveFilename());
 		}
 		else {
 			UE_LOG(LogTRGame, Error, TEXT("ServerSavePlayerData - Could not get player state."));
@@ -255,7 +329,24 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FName
 					}
 				}
 				else {
-					TRPlayerState->PlayerGuid = FGuid::NewGuid();
+					if (!TRPlayerState->PlayerGuid.IsValid()) { TRPlayerState->PlayerGuid = FGuid::NewGuid(); }
+					if (TRPlayerController->IsLocalController())
+					{
+						// Update game instance with our local info
+						UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+						if (GameInst)
+						{
+							GameInst->ClientLocalProfileName = TRPlayerState->ProfileName;
+							GameInst->ClientLocalPlayerGuid = TRPlayerState->PlayerGuid;
+						}
+					}
+					else
+					{
+						// Call client to update data
+						FPlayerSaveData NewSaveData;
+						TRPlayerState->GetPlayerSaveData(NewSaveData);
+						ClientEchoLoadPlayerData(NewSaveData);
+					}
 					UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - no save file found, setting new player guid: %s."), *TRPlayerState->PlayerGuid.ToString());
 				}
 			}
@@ -289,6 +380,12 @@ void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const F
 	{
 		TRPlayerController->UpdateFromPlayerSaveData(PlayerSaveData);
 		UE_LOG(LogTRGame, Log, TEXT("ClientEchoLoadPlayerData - updated player data for: %s."), *PlayerSaveData.PlayerGuid.ToString());
+	}
+	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+	if (GameInst)
+	{
+		GameInst->ClientLocalProfileName = PlayerSaveData.ProfileName;
+		GameInst->ClientLocalPlayerGuid = PlayerSaveData.PlayerGuid;
 	}
 }
 
