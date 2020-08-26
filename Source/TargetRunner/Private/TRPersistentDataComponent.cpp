@@ -14,6 +14,8 @@
 #include "GameFramework/SaveGame.h"
 #include "TRGameInstance.h"
 
+const FString UTRPersistentDataComponent::PlayerFilenamePrefix = FString(TEXT("trprof_"));
+
 // Sets default values for this component's properties
 UTRPersistentDataComponent::UTRPersistentDataComponent()
 	: Super()
@@ -208,20 +210,20 @@ FString UTRPersistentDataComponent::GetPlayerSaveFilename()
 	{
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState) {
-			if (!TRPlayerState->ProfileName.IsNone()) {
-				return FString::Printf(TEXT("trprofile_%s"), *TRPlayerState->ProfileName.ToString());
+			if (TRPlayerState->PlayerGuid.IsValid()) {
+				return PlayerFilenamePrefix + TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits);
 			}
 			else {
-				UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveFilename - player profile is null."));
+				UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveFilename - player guid is not valid."));
 			}
 		}
 	}
-	UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveFilename could not get profile name."));
+	UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveFilename - Could not determine save filename."));
 	return FString();
 }
 
 
-TArray<FName> UTRPersistentDataComponent::GetAllSaveProfileNames()
+TArray<FString> UTRPersistentDataComponent::GetAllSaveProfileFilenames()
 {
 	//////////////////////////////////////////////////////////////////////////////
 	class FFindSavesVisitor : public IPlatformFile::FDirectoryVisitor
@@ -238,10 +240,10 @@ TArray<FName> UTRPersistentDataComponent::GetAllSaveProfileNames()
 				if (FPaths::GetExtension(FullFilePath) == TEXT("sav"))
 				{
 					FString CleanFilename = FPaths::GetBaseFilename(FullFilePath);
-					if (CleanFilename.StartsWith(TEXT("trprofile_")))
+					if (CleanFilename.StartsWith(*UTRPersistentDataComponent::PlayerFilenamePrefix))
 					{
-						CleanFilename = CleanFilename.Replace(TEXT(".sav"), TEXT(""));
-						CleanFilename = CleanFilename.Replace(TEXT("trprofile_"), TEXT(""));
+						//CleanFilename = CleanFilename.Replace(TEXT(".sav"), TEXT(""));
+						//CleanFilename = CleanFilename.Replace(*PLAYER_FILENAME_PREFIX, TEXT(""));
 						SavesFound.Add(CleanFilename);
 						UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - found file: %s."), *CleanFilename);
 					}
@@ -253,21 +255,33 @@ TArray<FName> UTRPersistentDataComponent::GetAllSaveProfileNames()
 	};
 	//////////////////////////////////////////////////////////////////////////////
 
-	TArray<FName> Saves;
 	const FString SavesFolder = FPaths::ProjectSavedDir() + TEXT("SaveGames");
-
 	UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - checking dir: %s."), *SavesFolder)
 	if (!SavesFolder.IsEmpty())
 	{
 		FFindSavesVisitor Visitor;
 		FPlatformFileManager::Get().GetPlatformFile().IterateDirectory(*SavesFolder, Visitor);
-		for (FString SaveProfile : Visitor.SavesFound)
+		return Visitor.SavesFound;
+	}
+	return TArray<FString>();
+}
+
+TArray<FPlayerSaveData> UTRPersistentDataComponent::GetAllSaveProfileData()
+{
+	TArray<FPlayerSaveData> AllFoundData;
+	TArray<FString> AllFilenames = GetAllSaveProfileFilenames();
+	for (FString TmpFilename : AllFilenames)
+	{
+		if (UGameplayStatics::DoesSaveGameExist(TmpFilename, 0))
 		{
-			Saves.Add(FName(SaveProfile));
+			UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(TmpFilename, 0));
+			if (SaveGame)
+			{
+				AllFoundData.Add(SaveGame->PlayerSaveData);
+			}
 		}
 	}
-
-	return Saves;
+	return AllFoundData;
 }
 
 
@@ -299,7 +313,7 @@ bool UTRPersistentDataComponent::ServerSavePlayerData_Validate()
 }
 
 
-void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FName PlayerProfile)
+void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid PlayerGuid)
 {
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
 	if (TRPlayerController)
@@ -307,7 +321,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FName
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState)
 		{
-			TRPlayerState->ProfileName = PlayerProfile;
+			TRPlayerState->PlayerGuid = PlayerGuid;
 			FString PlayerSaveFilename = GetPlayerSaveFilename();
 			if (!PlayerSaveFilename.IsEmpty())
 			{
@@ -316,20 +330,44 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FName
 					UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(PlayerSaveFilename, 0));
 					if (SaveGame)
 					{
-						// Update data on server
-						TRPlayerController->UpdateFromPlayerSaveData(SaveGame->PlayerSaveData);
-						// Call client to update data
-						if (!TRPlayerController->IsLocalController()) {
-							ClientEchoLoadPlayerData(SaveGame->PlayerSaveData);
+						if (PlayerGuid.IsValid() && SaveGame->PlayerSaveData.PlayerGuid.IsValid() && SaveGame->PlayerSaveData.PlayerGuid != PlayerGuid) 
+						{
+							UE_LOG(LogTRGame, Warning, TEXT("Player guid in file: %s does not match player guid %s."), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits), *PlayerGuid.ToString(EGuidFormats::Digits));
 						}
-						UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - loaded player data from: %s."), *PlayerSaveFilename);
+						else
+						{
+							// Update data on server
+							TRPlayerController->UpdateFromPlayerSaveData(SaveGame->PlayerSaveData);
+							if (TRPlayerController->IsLocalController()) 
+							{
+								// Update game instance with our local info
+								UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+								if (GameInst)
+								{
+									GameInst->ClientLocalProfileName = TRPlayerState->ProfileName;
+									GameInst->ClientLocalPlayerGuid = TRPlayerState->PlayerGuid;
+								}
+							}
+							else
+							{
+								// Call client to update data
+								ClientEchoLoadPlayerData(SaveGame->PlayerSaveData);
+							}
+							UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - loaded player data from: %s."), *PlayerSaveFilename);
+						}						
 					}
 					else {
 						UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - error loading save file: %s."), *PlayerSaveFilename);
 					}
 				}
-				else {
-					if (!TRPlayerState->PlayerGuid.IsValid()) { TRPlayerState->PlayerGuid = FGuid::NewGuid(); }
+				else 
+				{
+					// No existing file, setup guids and init data.
+					if (!TRPlayerState->PlayerGuid.IsValid()) 
+					{ 
+						if (PlayerGuid.IsValid()) { TRPlayerState->PlayerGuid = PlayerGuid; }
+						else { TRPlayerState->PlayerGuid = FGuid::NewGuid(); }
+					}
 					if (TRPlayerController->IsLocalController())
 					{
 						// Update game instance with our local info
@@ -347,7 +385,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FName
 						TRPlayerState->GetPlayerSaveData(NewSaveData);
 						ClientEchoLoadPlayerData(NewSaveData);
 					}
-					UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - no save file found, setting new player guid: %s."), *TRPlayerState->PlayerGuid.ToString());
+					UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - no save file found, setting new player guid: %s."), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
 				}
 			}
 			else
@@ -365,7 +403,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FName
 }
 
 
-bool UTRPersistentDataComponent::ServerLoadPlayerData_Validate(const FName PlayerProfile)
+bool UTRPersistentDataComponent::ServerLoadPlayerData_Validate(const FGuid OptionalGuid)
 {
 	return true;
 }

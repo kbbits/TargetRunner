@@ -61,7 +61,7 @@ void UInventoryActorComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 }
 
 
-bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta, float& CurrentQuantity)
+bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, float& CurrentQuantity)
 {
 	FGoodsQuantity GoodsQuantity;
 	float NetQuantity;
@@ -81,7 +81,7 @@ bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta
 		CurrentQuantity = GoodsQuantity.Quantity;
 		return true; 
 	}
-	NetQuantity = GoodsQuantity.Quantity - GoodsDelta.Quantity;
+	NetQuantity = GoodsQuantity.Quantity + (bNegateGoodsQuantities ? GoodsDelta.Quantity * -1.0f : GoodsDelta.Quantity);
 	if (NetQuantity < 0.0f) 
 	{ 
 		CurrentQuantity = GoodsQuantity.Quantity;
@@ -90,13 +90,13 @@ bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta
 	else
 	{
 		CurrentQuantity = NetQuantity;
-		ServerAddSubtractGoods(GoodsDelta);
+		ServerAddSubtractGoods(GoodsDelta, bNegateGoodsQuantities);
 		return true;
 	}
 }
 
 
-void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGoodsQuantity& GoodsDelta)
+void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities)
 {
 	if (GoodsDelta.Quantity == 0.0f) { return; }
 
@@ -114,7 +114,7 @@ void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGood
 		GoodsQuantity = TmpGoodsQuantity;
 	}
 	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoods current: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
-	NetQuantity = GoodsQuantity.Quantity - GoodsDelta.Quantity;
+	NetQuantity = GoodsQuantity.Quantity + (bNegateGoodsQuantities ? GoodsDelta.Quantity * -1.0f : GoodsDelta.Quantity);
 	if (NetQuantity < 0.0f) { return; }
 	else
 	{
@@ -139,13 +139,13 @@ void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGood
 	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoods new: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
 }
 
-bool UInventoryActorComponent::ServerAddSubtractGoods_Validate(const FGoodsQuantity& GoodsDelta)
+bool UInventoryActorComponent::ServerAddSubtractGoods_Validate(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities)
 {
 	return true;
 }
 
 
-bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, TArray<FGoodsQuantity>& CurrentQuantities)
+bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, TArray<FGoodsQuantity>& CurrentQuantities)
 {
 	TArray<FGoodsQuantity> CurrentGoods;
 	TArray<FGoodsQuantity> NewGoods;
@@ -167,7 +167,8 @@ bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity
 			GoodsQuantity = TmpGoodsQuantity;
 		}
 		CurrentGoods.Add(GoodsQuantity);
-		NetQuantity = GoodsQuantity.Quantity - TmpGoodsDelta.Quantity;
+		UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - AddSubtractGoodsArray current: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
+		NetQuantity = GoodsQuantity.Quantity + (bNegateGoodsQuantities ? TmpGoodsDelta.Quantity * -1.0f : TmpGoodsDelta.Quantity);
 		if (NetQuantity < 0.0f) {
 			bCanMakeUpdate = false;
 			NewGoods.Add(GoodsQuantity);
@@ -175,12 +176,13 @@ bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity
 		else
 		{
 			NewGoods.Add(FGoodsQuantity(GoodsQuantity.Name, NetQuantity));
+			UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - AddSubtractGoodsArray new: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)NetQuantity);
 		}
 	}
 	if (bCanMakeUpdate)
 	{
 		CurrentQuantities = NewGoods;
-		ServerAddSubtractGoodsArray(GoodsDeltas);
+		ServerAddSubtractGoodsArray(GoodsDeltas, bNegateGoodsQuantities);
 		return true;
 	}
 	else
@@ -191,7 +193,7 @@ bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity
 }
 
 
-void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const TArray<FGoodsQuantity>& GoodsDeltas)
+void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities)
 {
 	TArray<FGoodsQuantity> NewGoods;
 	FGoodsQuantity GoodsQuantity;
@@ -212,7 +214,7 @@ void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const 
 			GoodsQuantity = TmpGoodsQuantity;
 		}
 		UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoodsArray curret New item: %s, %s: %d."), Index == INDEX_NONE ? TEXT("True") : TEXT("False"), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
-		NetQuantity = GoodsQuantity.Quantity - TmpGoodsDelta.Quantity;
+		NetQuantity = GoodsQuantity.Quantity + (bNegateGoodsQuantities ? TmpGoodsDelta.Quantity * -1.0f : TmpGoodsDelta.Quantity);
 		if (NetQuantity < 0.0f) {
 			return;
 		}
@@ -241,7 +243,7 @@ void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const 
 	}
 }
 
-bool UInventoryActorComponent::ServerAddSubtractGoodsArray_Validate(const TArray<FGoodsQuantity>& GoodsDeltas)
+bool UInventoryActorComponent::ServerAddSubtractGoodsArray_Validate(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities)
 {
 	return true;
 }
@@ -292,4 +294,45 @@ void UInventoryActorComponent::ClientUpdateInventoryQuantities_Implementation(co
 bool UInventoryActorComponent::ClientUpdateInventoryQuantities_Validate(const TArray<FGoodsQuantity>& NewQuantities)
 {
 	return true;
+}
+
+
+float UInventoryActorComponent::GetGoodsCount(const FName GoodsName)
+{
+	int32 Index = Inventory.IndexOfByKey(GoodsName);
+	if (Index == INDEX_NONE)
+	{
+		return 0.0;
+	}
+	else
+	{
+		return Inventory[Index].Quantity;
+	}
+}
+
+
+void UInventoryActorComponent::GetAllGoods(TArray<FGoodsQuantity>& AllGoods)
+{
+	AllGoods.Append(Inventory);
+}
+
+
+bool UInventoryActorComponent::HasGoods(const FGoodsQuantity Goods, float& CurrentQuantity)
+{
+	CurrentQuantity = GetGoodsCount(Goods.Name);
+	return CurrentQuantity >= Goods.Quantity;
+}
+
+
+bool UInventoryActorComponent::HasAllGoods(const TArray<FGoodsQuantity> Goods, TArray<FGoodsQuantity>& CurrentQuantities)
+{
+	bool bHasAll = true;
+	float TmpCurQuantity = 0.0f;
+	CurrentQuantities.Empty(Goods.Num());
+	for (FGoodsQuantity TmpGQ : Goods)
+	{
+		if (!HasGoods(TmpGQ, TmpCurQuantity)) { bHasAll = false; }
+		CurrentQuantities.Add(FGoodsQuantity(TmpGQ.Name, TmpCurQuantity));
+	}
+	return bHasAll;
 }

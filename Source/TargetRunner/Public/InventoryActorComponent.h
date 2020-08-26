@@ -11,7 +11,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInventoryChanged, const TArray<FGoodsQuantity>&, ChangedItems);
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TARGETRUNNER_API UInventoryActorComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -20,12 +20,13 @@ public:
 	// Sets default values for this component's properties
 	UInventoryActorComponent();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-		TArray<FGoodsQuantity> Inventory;
-
 	// Delegate event when inventory has changed.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnInventoryChanged OnInventoryChanged;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		TArray<FGoodsQuantity> Inventory;
 
 protected:
 	// Called when the game starts
@@ -38,27 +39,28 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// [Any]
-	// Adds (or subtracts) a quantity of goods from inventory. Returns true if adjustment could be made, false otherwise (ex: if amount to remove is > current inventory)
-	// Note: actual changes to inventory are made by replicated functions (ServerAddSubtractGoods, ClientUpdateInventoryQuantity).
+	// Call this one to Add (or subtract) a quantity of goods from inventory. Returns true if adjustment could be made, false otherwise (ex: if amount to remove is > current inventory)
+	//  bNegateGoodsQuantities - Set this to true to have each goods quantity multiplied by -1.0. (to simplify removing goods using postitive goods quantities)
+	// Note: actual changes to inventory are made by replicated functions that this calls. (ServerAddSubtractGoods, ClientUpdateInventoryQuantity).
 	UFUNCTION(BlueprintCallable)
-		bool AddSubtractGoods(const FGoodsQuantity& GoodsDelta, float& CurrentQuantity);
+		bool AddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, float& CurrentQuantity);
 
 	// [Server]
 	// Called from AddSubtractGoods()
-	// 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerAddSubtractGoods(const FGoodsQuantity& GoodsDelta);
+		void ServerAddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities);
 
 	// [Any]
-	// Adds (or subtracts) quantities of goods from inventory. Returns true if all adjustments could be made, false otherwise (ex: if amount to remove is > current inventory)
-	// Note: actual changes to inventory are made by replicated functions (ServerAddSubtractGoodsArray, ClientUpdateInventoryQuantity).
+	// Call this to Add (or subtract) quantities of goods from inventory. Returns true if all adjustments could be made, false otherwise (ex: if amount to remove is > current inventory)
+	//  bNegateGoodsQuantities - Set this to true to have each goods quantity multiplied by -1.0. (to simplify removing goods using postitive goods quantities)
+	// Note: actual changes to inventory are made by replicated functions that this calls. (ServerAddSubtractGoodsArray, ClientUpdateInventoryQuantity).
 	UFUNCTION(BlueprintCallable)
-		bool AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, TArray<FGoodsQuantity>& CurrentQuantities);
+		bool AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, TArray<FGoodsQuantity>& CurrentQuantities);
 
 	// [Server]
 	// Called from AddSubtractGoods()
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerAddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas);
+		void ServerAddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities);
 
 	// [Client]
 	// Called from ServerAddSubtractGoods()
@@ -71,4 +73,25 @@ public:
 	// Updates client side quantities in client inventory.
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientUpdateInventoryQuantities(const TArray<FGoodsQuantity>& NewQuantities);
+
+	// [Any]
+	// Get the current quantity of the given goods.
+	UFUNCTION(BlueprintPure)
+		float GetGoodsCount(const FName GoodsName);
+
+	// [Any]
+	// Get the current quantities of all goods in inventory.
+	UFUNCTION(BlueprintPure)
+		void GetAllGoods(TArray<FGoodsQuantity>& AllGoods);
+
+	// [Any]
+	// Check if the inventory contains the given goods
+	UFUNCTION(BlueprintPure)
+		bool HasGoods(const FGoodsQuantity Goods, float& CurrrentQuantity);
+
+	// [Any]
+	// Check that the inventory contains all of the given goods
+	UFUNCTION(BlueprintPure)
+		bool HasAllGoods(const TArray<FGoodsQuantity> Goods, TArray<FGoodsQuantity>& CurrrentQuantities);
+
 };

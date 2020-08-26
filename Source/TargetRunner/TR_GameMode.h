@@ -63,9 +63,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FName, TSubclassOf<AToolActorBase>> ToolClassMap;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TArray<TSubclassOf<UToolBase>> AllToolClasses;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UGoodsDropper* GoodsDropper;
 

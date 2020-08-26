@@ -15,7 +15,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttributeMinimum);
 // Event dispatcher for when we hit maximum value
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttributeMaximum);
 
-
+// Changes made on server are replicated to owning client.
+// Replication is handled via the replicated AttributeData property. Notification delegates are called in the RepNotify handler.
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TARGETRUNNER_API UActorAttributeComponent : public UActorComponent
 {
@@ -27,24 +28,8 @@ public:
 
 	// The attribute data.
 	// Modifying this directly skips notifications and clamping logic.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, SaveGame, Category = "ItemAttributes")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_AttributeDataChanged, SaveGame, Category = "ItemAttributes")
 		FAttributeData AttributeData;
-
-	// The name of the attribute. ex: Energy
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
-	//	FName Name;
-
-	//// The minimum value allowed for this attribute
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
-	//	float MinValue = 0;
-
-	//// The maximum value allowed for this attribute
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
-	//	float MaxValue = 0;
-
-	//// The current value of this attribute
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
-	//	float CurrentValue = 0;
 
 	// Rate of attribute change (per second).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
@@ -71,7 +56,12 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	// Call this to set attribute data.
+	// [Client]
+	// Replication notification
+	UFUNCTION()
+		void OnRep_AttributeDataChanged(FAttributeData OldAttributeData);
+
+	// Call this to set attribute data. If called on server, data will replicate to client normally.
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void SetAttributeData(const FAttributeData& NewData);
 

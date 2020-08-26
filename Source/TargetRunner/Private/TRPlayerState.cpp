@@ -11,14 +11,17 @@ ATRPlayerState::ATRPlayerState()
 {
 	EnergyAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("EnergyAttribute"));
 	AddOwnedComponent(EnergyAttribute);
+	EnergyAttribute->SetIsReplicated(true); // Enable replication by default
 	EnergyAttribute->AttributeData.Name = FName(TEXT("Energy"));
 	
 	AnimusAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("AnimusAttribute"));
 	AddOwnedComponent(AnimusAttribute);
+	AnimusAttribute->SetIsReplicated(true); // Enable replication by default
 	AnimusAttribute->AttributeData.Name = FName(TEXT("Animus"));
 	
 	HealthAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("HealthAttribute"));
 	AddOwnedComponent(HealthAttribute);
+	HealthAttribute->SetIsReplicated(true); // Enable replication by default
 	HealthAttribute->AttributeData.Name = FName(TEXT("Health"));
 }
 

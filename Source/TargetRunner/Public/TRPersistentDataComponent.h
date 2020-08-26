@@ -49,6 +49,10 @@ public:
 	//UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 	//	FOnNewPlayerToolData OnNewPlayerToolData;
 
+protected:
+
+	static const FString PlayerFilenamePrefix;
+
 // ##### Functions
 
 protected:
@@ -94,9 +98,13 @@ public:
 
 	FString GetPlayerSaveFilename(); 
 
-	// returns a list of all save games in /Saved/SaveGames folder, without the .sav extension (filename only)
+	// returns a list of all save game filenames in /Saved/SaveGames folder, including the .sav extension.
 	UFUNCTION(BlueprintPure)
-		static TArray<FName> GetAllSaveProfileNames();
+		static TArray<FString> GetAllSaveProfileFilenames();
+
+	// returns all save games in /Saved/SaveGames folder as FPlayerSaveData structs
+	UFUNCTION(BlueprintCallable)
+		static TArray<FPlayerSaveData> GetAllSaveProfileData();
 
 	// [Server]
 	// Save the player's data
@@ -106,7 +114,7 @@ public:
 	// [Server]
 	// Load the player's data
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerLoadPlayerData(const FName PlayerProfile);
+		void ServerLoadPlayerData(const FGuid PlayerGuid);
 
 	// [Client]
 	// Echo loaded player data back to client
