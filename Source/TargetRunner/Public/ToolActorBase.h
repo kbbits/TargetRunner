@@ -19,22 +19,22 @@ public:
 	// Sets default values for this actor's properties
 	AToolActorBase();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
+		UToolBase* Tool;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons")
+		ETRWeaponState WeaponState;
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		FName Name;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
-		UToolBase* Tool;
 
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 	//	FText DisplayName;
 
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 	//	TSubclassOf<ATRProjectileBase> ProjectileClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons")
-		ETRWeaponState WeaponState;
 
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 	//	float EnergyPerShot;

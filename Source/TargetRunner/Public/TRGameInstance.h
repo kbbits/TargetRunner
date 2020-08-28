@@ -39,7 +39,7 @@ public:
 
 	// [Server]
 	UPROPERTY(BlueprintReadWrite, Replicated)
-		FName HostProfileName;
+		FGuid HostProfileGuid;
 
 	// The LevelForge class to use.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -7,13 +7,13 @@
 #include "Delegates/Delegate.h"
 #include "RoomPlatformGridMgr.h"
 #include "RoomGridTemplate.h"
-#include "ToolBase.h"
+#include "ToolActorBase.h"
 #include "TRPersistentDataComponent.h"
 #include "TRPlayerControllerBase.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToolInventoryAdded, const FToolData&, ToolDataAdded);
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedToolsChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentToolChanged, const AToolActorBase*, CurrentTool);
 
 /**
  * 
@@ -45,8 +45,8 @@ public:
 		int32 MaxEquippedWeapons;
 
 	// Tool currently in use
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
-		UToolBase* CurrentTool;
+	UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_CurrentTool, BlueprintReadWrite)
+		AToolActorBase* CurrentTool;
 
 	// Delegate event notification when Tool has been added to ToolInventory.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
@@ -56,6 +56,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnEquippedToolsChanged OnEquippedToolsChanged;
 
+	// Delegate event notification when player's current active Tool has changed.
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnCurrentToolChanged OnCurrentToolChanged;
+
 protected:
 
 	// All tool types available for purchase in the market
@@ -63,6 +67,11 @@ protected:
 		TArray<TSubclassOf<UToolBase>> MarketToolClasses;
 	
 public:
+
+	// [Client]
+	// Replication notification
+	UFUNCTION()
+		void OnRep_CurrentTool();
 
 	// [Any]
 	// The Tools available for purchase in the market.
@@ -100,6 +109,17 @@ public:
 	// [Client]
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientUnequipTool(FGuid ToolGuid);
+
+	// [Server]
+	// Call this to set the player's current active tool. This handles rep. to client.
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerSetCurrentTool(FGuid ToolGuid);
+
+	// [Server]
+	// Does the actual spawning of the current tool actor.
+	// Override in BP.
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		void SpawnAsCurrentTool(UToolBase* NewCurrentTool);
 
 	// [Any]
 	// Finds the current grid manager in the level.

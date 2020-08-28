@@ -19,19 +19,19 @@ void UTRGameInstance::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& Ou
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(UTRGameInstance, HostProfileName);
+	DOREPLIFETIME(UTRGameInstance, HostProfileGuid);
 }
 
 
 FString UTRGameInstance::GetLevelTemplatesSaveFilename_Implementation()
 {
-	return FString::Printf(TEXT("%s_LevelTemplates"), *HostProfileName.ToString());
+	return FString::Printf(TEXT("%s_LvlTmplts"), *HostProfileGuid.ToString(EGuidFormats::Digits));
 }
 
 
 FString UTRGameInstance::GetPlayerRecordsSaveFilename_Implementation()
 {
-	return FString::Printf(TEXT("%s_PlayerLevelRecords"), *HostProfileName.ToString());
+	return FString::Printf(TEXT("%s_PlayerLvlRecs"), *HostProfileGuid.ToString(EGuidFormats::Digits));
 }
 
 

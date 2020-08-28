@@ -3,6 +3,7 @@
 
 #include "TRPlayerControllerBase.h"
 #include "TRPlayerState.h"
+#include "TargetRunner.h"
 #include "Kismet/GameplayStatics.h"
 #include "..\Public\TRPlayerControllerBase.h"
 
@@ -24,9 +25,15 @@ void ATRPlayerControllerBase::GetLifetimeReplicatedProps(TArray< FLifetimeProper
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(ATRPlayerControllerBase, CurrentTool);
 	DOREPLIFETIME(ATRPlayerControllerBase, MaxEquippedWeapons);
 }
 
+
+void ATRPlayerControllerBase::OnRep_CurrentTool()
+{
+	OnCurrentToolChanged.Broadcast(CurrentTool);
+}
 
 void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(TSubclassOf<UToolBase> ToolClass)
 {
@@ -193,6 +200,62 @@ void ATRPlayerControllerBase::ClientUnequipTool_Implementation(FGuid ToolGuid)
 bool ATRPlayerControllerBase::ClientUnequipTool_Validate(FGuid ToolGuid)
 {
 	return true;
+}
+
+
+void ATRPlayerControllerBase::ServerSetCurrentTool_Implementation(FGuid ToolGuid)
+{
+	UToolBase* FoundTool = nullptr;
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		if (TmpTool->ItemGuid == ToolGuid)
+		{
+			FoundTool = TmpTool;
+			break;
+		}
+	}
+	if (FoundTool)
+	{
+		SpawnAsCurrentTool(FoundTool);
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerController::ServerSetCurrentTool - Tool guid: %s not found in equipped tools."), *ToolGuid.ToString(EGuidFormats::Digits));
+	}
+}
+
+bool ATRPlayerControllerBase::ServerSetCurrentTool_Validate(FGuid ToolGuid)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::SpawnAsCurrentTool_Implementation(UToolBase* NewCurrentTool)
+{
+	FTransform SpawnTransform;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	if (NewCurrentTool && IsValid(NewCurrentTool))
+	{
+		if (CurrentTool)
+		{
+			CurrentTool->Destroy();
+		}
+		APawn* CurPawn = GetPawn();
+		CurrentTool = nullptr;
+		if (CurPawn) {
+			SpawnParams.Owner = this;
+			SpawnParams.Instigator = CurPawn;
+			SpawnTransform = CurPawn->GetTransform();
+			CurrentTool = GetWorld()->SpawnActorDeferred<AToolActorBase>(NewCurrentTool->ToolActorClass, SpawnTransform, SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
+			CurrentTool->Tool = NewCurrentTool;
+			CurrentTool->WeaponState = ETRWeaponState::Idle;
+			CurrentTool->SetOwner(this);
+			UGameplayStatics::FinishSpawningActor(CurrentTool, CurrentTool->GetTransform());
+		}
+		// Manually call rep_notify on server
+		if (GetLocalRole() == ROLE_Authority) { OnRep_CurrentTool(); }
+	}
 }
 
 
