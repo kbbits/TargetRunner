@@ -4,6 +4,7 @@
 #include "TRGameInstance.h"
 #include "..\Public\TRGameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "TRPlayerControllerBase.h"
 #include "LevelTemplatesSave.h"
 #include "PlayerLevelRecordsSave.h"
 
@@ -25,13 +26,29 @@ void UTRGameInstance::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& Ou
 
 FString UTRGameInstance::GetLevelTemplatesSaveFilename_Implementation()
 {
-	return FString::Printf(TEXT("%s_LvlTmplts"), *HostProfileGuid.ToString(EGuidFormats::Digits));
+	return FString::Printf(TEXT("%s_LT"), *HostProfileGuid.ToString(EGuidFormats::Digits));
 }
 
 
 FString UTRGameInstance::GetPlayerRecordsSaveFilename_Implementation()
 {
-	return FString::Printf(TEXT("%s_PlayerLvlRecs"), *HostProfileGuid.ToString(EGuidFormats::Digits));
+	return FString::Printf(TEXT("%s_PLR"), *HostProfileGuid.ToString(EGuidFormats::Digits));
+}
+
+
+void UTRGameInstance::ServerSaveAllPlayerData_Implementation()
+{
+	ATRPlayerControllerBase* PController = nullptr;
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		PController = Cast<ATRPlayerControllerBase>(*Iterator);
+		PController->PersistentDataComponent->execServerSavePlayerData(); //ServerSavePlayerData();
+	}
+}
+
+bool UTRGameInstance::ServerSaveAllPlayerData_Validate()
+{
+	return true;
 }
 
 
@@ -175,7 +192,7 @@ void UTRGameInstance::OnLevelTemplatesSaveComplete(const FString& SlotName, cons
 		SavePlayerRecordsData(); 
 	}
 	else { 
-		UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - Save level templates failed"));
+		UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance %s - Save level templates failed"), (GetWorld()->IsServer() ? TEXT("Server") : TEXT("Client")));
 		OnLevelTemplatesSaved.Broadcast(bSuccessful); 
 	}	
 }

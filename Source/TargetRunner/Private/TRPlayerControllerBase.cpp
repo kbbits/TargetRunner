@@ -244,13 +244,13 @@ void ATRPlayerControllerBase::SpawnAsCurrentTool_Implementation(UToolBase* NewCu
 		APawn* CurPawn = GetPawn();
 		CurrentTool = nullptr;
 		if (CurPawn) {
-			SpawnParams.Owner = this;
+			SpawnParams.Owner = CurPawn;
 			SpawnParams.Instigator = CurPawn;
 			SpawnTransform = CurPawn->GetTransform();
 			CurrentTool = GetWorld()->SpawnActorDeferred<AToolActorBase>(NewCurrentTool->ToolActorClass, SpawnTransform, SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
 			CurrentTool->Tool = NewCurrentTool;
 			CurrentTool->WeaponState = ETRWeaponState::Idle;
-			CurrentTool->SetOwner(this);
+			CurrentTool->SetOwner(CurPawn);
 			UGameplayStatics::FinishSpawningActor(CurrentTool, CurrentTool->GetTransform());
 		}
 		// Manually call rep_notify on server

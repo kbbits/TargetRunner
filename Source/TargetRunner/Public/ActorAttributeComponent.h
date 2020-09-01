@@ -32,8 +32,8 @@ public:
 		FAttributeData AttributeData;
 
 	// Rate of attribute change (per second).
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
-		float RechargeRate = 0;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
+	//	float RechargeRate = 0;
 
 	// If true, attribute recharge will be suspended.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")

@@ -14,6 +14,8 @@
 
 // Event dispatcher for when CurrentValue changes
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewLevelTemplatesPage, const TArray<FLevelTemplateContextStruct>&, NewLevelTemplatesPage);
+// Delegate for when player data has been loaded
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDataLoaded);
 // Tool Data dispatcher
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewPlayerToolData, const TArray<FToolData>&, NewPlayerToolData);
 
@@ -39,6 +41,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnNewLevelTemplatesPage OnNewLevelTemplatesPage;
 
+	// Delegate event when player data has been loaded.
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnPlayerDataLoaded OnPlayerDataLoaded;
+
 	//UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_PlayerToolDataLoaded)
 	//	TArray<FToolData> PlayerToolData;
 
@@ -51,7 +57,7 @@ public:
 
 protected:
 
-	static const FString PlayerFilenamePrefix;
+	static const FString PlayerFilenameSuffix;
 
 // ##### Functions
 

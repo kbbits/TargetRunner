@@ -81,14 +81,14 @@ void UActorAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// Don't do anything when we're not active
 	if (!IsActive()){ return; }
 	// Don't do anything if recharge is paused
-	if (bRechargePaused || RechargeRate == 0.0f) { return; }
+	if (bRechargePaused || AttributeData.DeltaRate == 0.0f) { return; }
 
 	float NewValue = AttributeData.CurrentValue;
 	// If we recharge and we're not at one of the min/max
-	if ((RechargeRate > 0.0f && AttributeData.CurrentValue < AttributeData.MaxValue) || (RechargeRate < 0.0f && AttributeData.CurrentValue > AttributeData.MinValue))
+	if ((AttributeData.DeltaRate > 0.0f && AttributeData.CurrentValue < AttributeData.MaxValue) || (AttributeData.DeltaRate < 0.0f && AttributeData.CurrentValue > AttributeData.MinValue))
 	{
 		// Update the new value based on recharge
-		NewValue = FMath::Clamp((RechargeRate * DeltaTime) + AttributeData.CurrentValue, AttributeData.MinValue, AttributeData.MaxValue);
+		NewValue = FMath::Clamp((AttributeData.DeltaRate * DeltaTime) + AttributeData.CurrentValue, AttributeData.MinValue, AttributeData.MaxValue);
 	}
 	// If it's a new value, set it.
 	if (AttributeData.CurrentValue != NewValue) 

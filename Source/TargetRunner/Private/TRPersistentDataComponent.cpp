@@ -14,7 +14,7 @@
 #include "GameFramework/SaveGame.h"
 #include "TRGameInstance.h"
 
-const FString UTRPersistentDataComponent::PlayerFilenamePrefix = FString(TEXT("trprof_"));
+const FString UTRPersistentDataComponent::PlayerFilenameSuffix = FString(TEXT("_player"));
 
 // Sets default values for this component's properties
 UTRPersistentDataComponent::UTRPersistentDataComponent()
@@ -211,7 +211,7 @@ FString UTRPersistentDataComponent::GetPlayerSaveFilename()
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState) {
 			if (TRPlayerState->PlayerGuid.IsValid()) {
-				return PlayerFilenamePrefix + TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits);
+				return TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits) + PlayerFilenameSuffix;
 			}
 			else {
 				UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveFilename - player guid is not valid."));
@@ -240,7 +240,7 @@ TArray<FString> UTRPersistentDataComponent::GetAllSaveProfileFilenames()
 				if (FPaths::GetExtension(FullFilePath) == TEXT("sav"))
 				{
 					FString CleanFilename = FPaths::GetBaseFilename(FullFilePath);
-					if (CleanFilename.StartsWith(*UTRPersistentDataComponent::PlayerFilenamePrefix))
+					if (CleanFilename.EndsWith(*UTRPersistentDataComponent::PlayerFilenameSuffix))
 					{
 						//CleanFilename = CleanFilename.Replace(TEXT(".sav"), TEXT(""));
 						//CleanFilename = CleanFilename.Replace(*PLAYER_FILENAME_PREFIX, TEXT(""));
@@ -387,6 +387,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 					}
 					UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - no save file found, setting new player guid: %s."), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
 				}
+				OnPlayerDataLoaded.Broadcast();
 			}
 			else
 			{
@@ -425,6 +426,7 @@ void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const F
 		GameInst->ClientLocalProfileName = PlayerSaveData.ProfileName;
 		GameInst->ClientLocalPlayerGuid = PlayerSaveData.PlayerGuid;
 	}
+	OnPlayerDataLoaded.Broadcast();
 }
 
 

@@ -25,4 +25,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
 		float CurrentValue = 0;
 
+	// The rate of change per second for this attribute
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
+		float DeltaRate = 0;
+
 };

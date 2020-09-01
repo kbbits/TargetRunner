@@ -112,7 +112,7 @@ public:
 
 	// [Server]
 	// Call this to set the player's current active tool. This handles rep. to client.
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 		void ServerSetCurrentTool(FGuid ToolGuid);
 
 	// [Server]

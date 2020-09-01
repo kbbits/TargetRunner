@@ -87,6 +87,10 @@ protected:
 
 public:
 
+	// [Server]
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+		void ServerSaveAllPlayerData();
+
 	// [Server Only]
 	UFUNCTION(BlueprintCallable)
 		ULevelTemplateContext* GenerateNewLevelTemplate(const float Tier);
