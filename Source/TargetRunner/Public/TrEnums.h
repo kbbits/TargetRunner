@@ -34,6 +34,13 @@ enum class ETRWeaponState : uint8
 };
 
 UENUM(BlueprintType)
+enum class ETRToolUpgrade : uint8
+{
+	DamageRate		UMETA(DisplayName = "Damage Rate"),
+	ExtractionRate	UMETA(DisplayName = "Extraction Rate")
+};
+
+UENUM(BlueprintType)
 enum class ETRWallState : uint8
 {
 	Unknown		UMETA(DisplayName = "Unknown"),

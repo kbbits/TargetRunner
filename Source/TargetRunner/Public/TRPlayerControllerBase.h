@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Delegates/Delegate.h"
+#include "TargetRunner.h"
 #include "RoomPlatformGridMgr.h"
 #include "RoomGridTemplate.h"
 #include "ToolActorBase.h"
@@ -43,6 +44,9 @@ public:
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Replicated)
 		int32 MaxEquippedWeapons;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Replicated)
+		int32 MaxEquippedEquipment;
 
 	// Tool currently in use
 	UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_CurrentTool, BlueprintReadWrite)
@@ -95,25 +99,34 @@ public:
 	// [Server]
 	// Call this to equip a tool from player's inventory. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerEquipTool(FGuid ToolGuid);
+		void ServerEquipTool(const FGuid ToolGuid);
 
 	// [Client]
 	UFUNCTION(Client, Reliable, WithValidation)
-		void ClientEquipTool(FGuid ToolGuid);
+		void ClientEquipTool(const FGuid ToolGuid);
 
 	// [Server]
 	// Call this to unequip a tool from player. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerUnequipTool(FGuid ToolGuid);
+		void ServerUnequipTool(const FGuid ToolGuid);
 
 	// [Client]
 	UFUNCTION(Client, Reliable, WithValidation)
-		void ClientUnequipTool(FGuid ToolGuid);
+		void ClientUnequipTool(const FGuid ToolGuid);
+
+	// [Server]
+	// Call this to apply an upgrade to a tool in player's tool inventory. This handles rep. to client.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerUpgradeTool(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta);
+
+	// [Client]
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientUpgradeTool(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta);
 
 	// [Server]
 	// Call this to set the player's current active tool. This handles rep. to client.
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-		void ServerSetCurrentTool(FGuid ToolGuid);
+		void ServerSetCurrentTool(const FGuid ToolGuid);
 
 	// [Server]
 	// Does the actual spawning of the current tool actor.

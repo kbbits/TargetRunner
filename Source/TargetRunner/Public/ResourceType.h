@@ -66,7 +66,7 @@ public:
 		
 	FORCEINLINE bool operator==(const FResourceType& Other) const
 	{
-		if (Code != Other.Code) return false;
+		//if (Code != Other.Code) return false;
 		if (Category != Other.Category) return false;
 		if (Type != Other.Type) return false;
 		if (SubType != Other.SubType) return false;

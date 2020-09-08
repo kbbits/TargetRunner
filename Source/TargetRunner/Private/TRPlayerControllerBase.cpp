@@ -94,7 +94,7 @@ void ATRPlayerControllerBase::SetMarketTools_Implementation(const TArray<TSubcla
 }
 
 
-void ATRPlayerControllerBase::ServerEquipTool_Implementation(FGuid ToolGuid)
+void ATRPlayerControllerBase::ServerEquipTool_Implementation(const FGuid ToolGuid)
 {
 	FToolData* ToolData = ToolInventory.Find(ToolGuid);
 	if (ToolData == nullptr)
@@ -119,13 +119,13 @@ void ATRPlayerControllerBase::ServerEquipTool_Implementation(FGuid ToolGuid)
 	}
 }
 
-bool ATRPlayerControllerBase::ServerEquipTool_Validate(FGuid ToolGuid)
+bool ATRPlayerControllerBase::ServerEquipTool_Validate(const FGuid ToolGuid)
 {
 	return true;
 }
 
 
-void ATRPlayerControllerBase::ClientEquipTool_Implementation(FGuid ToolGuid)
+void ATRPlayerControllerBase::ClientEquipTool_Implementation(const FGuid ToolGuid)
 {
 	FToolData* ToolData = ToolInventory.Find(ToolGuid);
 	if (ToolData == nullptr)
@@ -145,13 +145,13 @@ void ATRPlayerControllerBase::ClientEquipTool_Implementation(FGuid ToolGuid)
 	}
 }
 
-bool ATRPlayerControllerBase::ClientEquipTool_Validate(FGuid ToolGuid)
+bool ATRPlayerControllerBase::ClientEquipTool_Validate(const FGuid ToolGuid)
 {
 	return true;
 }
 
 
-void ATRPlayerControllerBase::ServerUnequipTool_Implementation(FGuid ToolGuid)
+void ATRPlayerControllerBase::ServerUnequipTool_Implementation(const FGuid ToolGuid)
 {
 	UToolBase* FoundTool = nullptr;
 	for (UToolBase* TmpTool : EquippedTools)
@@ -173,13 +173,13 @@ void ATRPlayerControllerBase::ServerUnequipTool_Implementation(FGuid ToolGuid)
 	}	
 }
 
-bool ATRPlayerControllerBase::ServerUnequipTool_Validate(FGuid ToolGuid)
+bool ATRPlayerControllerBase::ServerUnequipTool_Validate(const FGuid ToolGuid)
 {
 	return true;
 }
 
 
-void ATRPlayerControllerBase::ClientUnequipTool_Implementation(FGuid ToolGuid)
+void ATRPlayerControllerBase::ClientUnequipTool_Implementation(const FGuid ToolGuid)
 {
 	UToolBase* FoundTool = nullptr;
 	for (UToolBase* TmpTool : EquippedTools)
@@ -197,13 +197,128 @@ void ATRPlayerControllerBase::ClientUnequipTool_Implementation(FGuid ToolGuid)
 	}
 }
 
-bool ATRPlayerControllerBase::ClientUnequipTool_Validate(FGuid ToolGuid)
+bool ATRPlayerControllerBase::ClientUnequipTool_Validate(const FGuid ToolGuid)
 {
 	return true;
 }
 
 
-void ATRPlayerControllerBase::ServerSetCurrentTool_Implementation(FGuid ToolGuid)
+void ATRPlayerControllerBase::ServerUpgradeTool_Implementation(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta)
+{
+	FToolData* ToolData = ToolInventory.Find(ToolGuid);
+	UToolBase* FoundTool = nullptr;
+	FResourceRateFilter* FoundRate = nullptr;
+	bool bWasEquipped = false;
+	if (ToolData == nullptr)
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase - ServerUpgradeTool tool guid %s not found in inventory."), *ToolGuid.ToString());
+		return;
+	}
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		if (TmpTool->ItemGuid == ToolGuid)
+		{
+			FoundTool = TmpTool;
+			bWasEquipped = true;
+			break;
+		}
+	}
+	if (FoundTool == nullptr)
+	{
+		FoundTool = UToolBase::CreateToolFromToolData(*ToolData, this);
+	}
+	if (UpgradeType == ETRToolUpgrade::DamageRate)
+	{
+		FoundRate = FoundTool->BaseDamageRates.FindByPredicate([&](FResourceRateFilter DamageRate) {
+			return DamageRate.ResourceTypeFilter == RateDelta.ResourceTypeFilter;
+		});
+	} 
+	else if (UpgradeType == ETRToolUpgrade::ExtractionRate)
+	{
+		FoundRate = FoundTool->BaseResourceExtractionRates.FindByPredicate([&](FResourceRateFilter DamageRate) {
+			return DamageRate.ResourceTypeFilter == RateDelta.ResourceTypeFilter;
+		});
+	}
+	if (FoundRate)
+	{
+		FoundRate->Rate += RateDelta.Rate;
+		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
+	}
+	FToolData TmpToolData;
+	FoundTool->ToToolData(TmpToolData);
+	ToolInventory.Add(FoundTool->ItemGuid, TmpToolData);
+	if (bWasEquipped) { 
+		//OnEquippedToolsChanged.Broadcast(); 
+	}
+	if (!IsLocalController())
+	{
+		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerUpgradeTool calling client rpc."));
+		ClientUpgradeTool(ToolGuid, UpgradeType, RateDelta);
+	}
+}
+
+bool ATRPlayerControllerBase::ServerUpgradeTool_Validate(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::ClientUpgradeTool_Implementation(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta)
+{
+	FToolData* ToolData = ToolInventory.Find(ToolGuid);
+	UToolBase* FoundTool = nullptr;
+	FResourceRateFilter* FoundRate = nullptr;
+	bool bWasEquipped = false;
+	if (ToolData == nullptr)
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase - ClientUpgradeTool tool guid %s not found in inventory."), *ToolGuid.ToString());
+		return;
+	}
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		if (TmpTool->ItemGuid == ToolGuid)
+		{
+			FoundTool = TmpTool;
+			bWasEquipped = true;
+			break;
+		}
+	}
+	if (FoundTool == nullptr)
+	{
+		FoundTool = UToolBase::CreateToolFromToolData(*ToolData, this);
+	}
+	if (UpgradeType == ETRToolUpgrade::DamageRate)
+	{
+		FoundRate = FoundTool->BaseDamageRates.FindByPredicate([&](FResourceRateFilter DamageRate) {
+			return DamageRate.ResourceTypeFilter == RateDelta.ResourceTypeFilter;
+		});
+	}
+	else if (UpgradeType == ETRToolUpgrade::ExtractionRate)
+	{
+		FoundRate = FoundTool->BaseResourceExtractionRates.FindByPredicate([&](FResourceRateFilter DamageRate) {
+			return DamageRate.ResourceTypeFilter == RateDelta.ResourceTypeFilter;
+		});
+	}
+	if (FoundRate)
+	{
+		FoundRate->Rate += RateDelta.Rate;
+		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
+	}
+	FToolData TmpToolData;
+	FoundTool->ToToolData(TmpToolData);
+	ToolInventory.Add(FoundTool->ItemGuid, TmpToolData);
+	if (bWasEquipped) {
+		//OnEquippedToolsChanged.Broadcast();
+	}
+}
+
+bool ATRPlayerControllerBase::ClientUpgradeTool_Validate(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::ServerSetCurrentTool_Implementation(const FGuid ToolGuid)
 {
 	UToolBase* FoundTool = nullptr;
 	for (UToolBase* TmpTool : EquippedTools)
@@ -224,7 +339,7 @@ void ATRPlayerControllerBase::ServerSetCurrentTool_Implementation(FGuid ToolGuid
 	}
 }
 
-bool ATRPlayerControllerBase::ServerSetCurrentTool_Validate(FGuid ToolGuid)
+bool ATRPlayerControllerBase::ServerSetCurrentTool_Validate(const FGuid ToolGuid)
 {
 	return true;
 }

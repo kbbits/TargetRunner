@@ -14,6 +14,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeltaCurrent, float, NewCurrent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttributeMinimum);
 // Event dispatcher for when we hit maximum value
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttributeMaximum);
+// Event dispatcher for when min or max value has changed
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeltaMinMax);
 
 // Changes made on server are replicated to owning client.
 // Replication is handled via the replicated AttributeData property. Notification delegates are called in the RepNotify handler.
@@ -50,6 +52,10 @@ public:
 	// Hit maximum value event
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnHitAttributeMaximum OnHitMaximum;
+
+	// Changed min or max value
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnDeltaMinMax OnDeltaMinMax;
 
 protected:
 	// Called when the game starts

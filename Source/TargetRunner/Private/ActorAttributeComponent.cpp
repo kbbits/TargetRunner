@@ -33,6 +33,10 @@ void UActorAttributeComponent::BeginPlay()
 
 void UActorAttributeComponent::OnRep_AttributeDataChanged(FAttributeData OldAttributeData)
 {
+	if (OldAttributeData.MinValue != AttributeData.MinValue || OldAttributeData.MaxValue != AttributeData.MaxValue)
+	{
+		OnDeltaMinMax.Broadcast();
+	}
 	if (OldAttributeData.CurrentValue != AttributeData.CurrentValue) 
 	{ 
 		OnDeltaCurrent.Broadcast(AttributeData.CurrentValue); 
@@ -109,7 +113,9 @@ float UActorAttributeComponent::GetMin()
 
 void UActorAttributeComponent::SetMin(const float NewMin)
 {
+	float OldMin = AttributeData.MinValue;
 	AttributeData.MinValue = NewMin;
+	if (NewMin != OldMin) { OnDeltaMinMax.Broadcast(); }
 }
 
 float UActorAttributeComponent::GetMax()
@@ -119,7 +125,9 @@ float UActorAttributeComponent::GetMax()
 
 void UActorAttributeComponent::SetMax(const float NewMax)
 {
+	float OldMax = AttributeData.MaxValue;
 	AttributeData.MaxValue = NewMax;
+	if (NewMax != OldMax) { OnDeltaMinMax.Broadcast(); }
 }
 
 float UActorAttributeComponent::GetCurrent()
@@ -164,9 +172,9 @@ float UActorAttributeComponent::GetCurrentPercent()
 	}
 }
 
-// Add the given amount from the current value of this attribute. Value can be negative.
+// Add the given amount to the current value of this attribute. Value can be negative.
 //		bAllowOverspill -	if true this will allow a delta adjustment that would push the value outside of 
-//							the min/max range to succeed and just set the value to the clamped range.
+//							the min/max range to succeed and will set the value to the clamped range.
 //							If this is false a delta that would result in exceeding min/max range will return false and make no change to the current value.
 // Returns true if successful, false if delta was not applied to value.
 bool UActorAttributeComponent::DeltaValue(const float ToAdd = 1, const bool bAllowOverspill = false)

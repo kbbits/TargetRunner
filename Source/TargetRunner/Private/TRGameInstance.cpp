@@ -42,7 +42,7 @@ void UTRGameInstance::ServerSaveAllPlayerData_Implementation()
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
 		PController = Cast<ATRPlayerControllerBase>(*Iterator);
-		PController->PersistentDataComponent->execServerSavePlayerData(); //ServerSavePlayerData();
+		PController->PersistentDataComponent->ServerSavePlayerData();
 	}
 }
 

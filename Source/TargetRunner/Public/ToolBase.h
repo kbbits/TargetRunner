@@ -76,7 +76,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void ToToolData(FToolData& ToolData);
 
-	// update this tool with data from ToolData struct.
+	// Update this tool with data from ToolData struct.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void UpdateFromToolData(const FToolData& ToolData);
 
