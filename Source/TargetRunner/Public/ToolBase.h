@@ -26,19 +26,27 @@ public:
 		FGuid ItemGuid;
 
 	// Value of the item in the shop
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		float BuyValue;
+
+	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostFactor
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		float UpgradeDamageCostMultiplier;
+
+	// Cost to upgrade an extraction rate by 1 percent = (BuyValue / 100) * UpgradeExtractionCostFactor
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		float UpgradeExtractionCostMultiplier;
 
 	// Thumbnail for GUI use
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TAssetPtr<UTexture2D> Thumbnail;
 
 	// The actor class associated with this tool
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		TSubclassOf<class AToolActorBase> ToolActorClass;
 
 	// Displayed to user
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		FText DisplayName;
 
 	// Type of projectile this tool fires. Can be None.
@@ -66,9 +74,11 @@ public:
 
 protected:
 
-	static const FName DAMAGE_RATES_NAME; // = FName(TEXT("DamageRates"));
-	static const FName EXTRACTION_RATES_NAME; // = FName(TEXT("ExtractionRates"));
-	static const FName BUY_VALUE_NAME; // = FName(TEXT("BuyValue"));
+	static const FName DAMAGE_RATES_NAME;				// = FName(TEXT("DamageRates"));
+	static const FName EXTRACTION_RATES_NAME;			// = FName(TEXT("ExtractionRates"));
+	static const FName BUY_VALUE_NAME;					// = FName(TEXT("BuyValue"));
+	static const FName UPGRADE_DAMAGE_MULTIPLIER_NAME;		// = FName(TEXT("UpgradeDamageCostMultiplier"));
+	static const FName UPGRADE_EXTRACTION_MULTIPLIER_NAME;	// = FName(TEXT("UpgradeExtractionCostMultiplier"));
 
 public:
 

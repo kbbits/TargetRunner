@@ -8,6 +8,8 @@
 const FName UToolBase::DAMAGE_RATES_NAME = FName(TEXT("DamageRates"));
 const FName UToolBase::EXTRACTION_RATES_NAME = FName(TEXT("ExtractionRates"));
 const FName UToolBase::BUY_VALUE_NAME = FName(TEXT("BuyValue"));
+const FName UToolBase::UPGRADE_DAMAGE_MULTIPLIER_NAME = FName(TEXT("UpgradeDamageCostMultiplier"));
+const FName UToolBase::UPGRADE_EXTRACTION_MULTIPLIER_NAME = FName(TEXT("UpgradeExtractionCostMultiplier"));
 
 // Sets default values
 UToolBase::UToolBase()
@@ -15,6 +17,8 @@ UToolBase::UToolBase()
 {
 	EnergyPerShot.Name = FName(TEXT("EnergyPerShot"));
 	BaseDamage.Name = FName(TEXT("BaseDamage"));
+	UpgradeDamageCostMultiplier = 1.0f;
+	UpgradeExtractionCostMultiplier = 1.0f;
 }
 
 
@@ -24,6 +28,8 @@ void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 	ToolData.AttributeData.ItemDisplayName = DisplayName;
 	ToolData.AttributeData.ItemGuid = ItemGuid;
 	ToolData.AttributeData.FloatAttributes.Add(BUY_VALUE_NAME, BuyValue);
+	ToolData.AttributeData.FloatAttributes.Add(UPGRADE_DAMAGE_MULTIPLIER_NAME, UpgradeDamageCostMultiplier);
+	ToolData.AttributeData.FloatAttributes.Add(UPGRADE_EXTRACTION_MULTIPLIER_NAME, UpgradeExtractionCostMultiplier);
 	ToolData.AttributeData.Attributes.Add(EnergyPerShot.Name, EnergyPerShot);
 	ToolData.AttributeData.Attributes.Add(BaseDamage.Name, BaseDamage);
 	ToolData.AttributeData.ResourceRateAttributes.Add(DAMAGE_RATES_NAME, FResourceRateFilterSet(BaseDamageRates));
@@ -44,6 +50,12 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 		DisplayName = ToolData.AttributeData.ItemDisplayName;
 		if (ToolData.AttributeData.FloatAttributes.Contains(BUY_VALUE_NAME)) {
 			BuyValue = ToolData.AttributeData.FloatAttributes[BUY_VALUE_NAME];
+		}
+		if (ToolData.AttributeData.FloatAttributes.Contains(UPGRADE_DAMAGE_MULTIPLIER_NAME)) {
+			UpgradeDamageCostMultiplier = ToolData.AttributeData.FloatAttributes[UPGRADE_DAMAGE_MULTIPLIER_NAME];
+		}
+		if (ToolData.AttributeData.FloatAttributes.Contains(UPGRADE_EXTRACTION_MULTIPLIER_NAME)) {
+			UpgradeExtractionCostMultiplier = ToolData.AttributeData.FloatAttributes[UPGRADE_EXTRACTION_MULTIPLIER_NAME];
 		}
 		if (ToolData.AttributeData.Attributes.Contains(EnergyPerShot.Name)) { 
 			EnergyPerShot = ToolData.AttributeData.Attributes[EnergyPerShot.Name]; 

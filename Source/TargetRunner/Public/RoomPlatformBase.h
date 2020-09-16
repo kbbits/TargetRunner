@@ -68,10 +68,10 @@ public:
 		void SpawnWalls();
 
 	// [Server]
-	// Spawns the walls.
+	// Spawns the floor.
 	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		void SpawnFloor();
+		bool SpawnFloor();
 
 	// [Server]
 	// Spawns room contents. By default this just calls SpawnResources.

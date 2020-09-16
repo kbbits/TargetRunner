@@ -65,7 +65,7 @@ public:
 		FVector2D ExitGridCoords;
 
 	// The number of subdivisions along each X & Y axis that each cell is divided.
-	// Creating RoomCellSubdivision x RoomCellSubdivision total subcells in each cell.
+	// Creating RoomCellSubdivision x RoomCellSubdivision total subcells in each room.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 RoomCellSubdivision;
 	
@@ -115,7 +115,7 @@ public:
 	// Called by GenerateGrid. Native subclasses should override this one.
 	virtual void GenerateGridImpl();
 
-	// Calls DestroyGriImpl and on server destroys the player starts
+	// Calls DestroyGriImpl and on server destroys the player starts, all rooms, etc.
 	//UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 	UFUNCTION(BlueprintNativeEvent, CallInEditor)
 		void DestroyGrid();

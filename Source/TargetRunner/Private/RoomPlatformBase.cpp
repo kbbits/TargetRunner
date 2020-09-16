@@ -134,9 +134,10 @@ void ARoomPlatformBase::SpawnWalls_Implementation()
 }
 
 
-void ARoomPlatformBase::SpawnFloor_Implementation()
+bool ARoomPlatformBase::SpawnFloor_Implementation()
 {
 	// Override and implement in BP.
+	return true;
 }
 
 

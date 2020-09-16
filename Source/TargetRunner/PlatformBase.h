@@ -50,4 +50,11 @@ public:
 	UFUNCTION(BlueprintPure)
 		FVector2D GetGridCoordinates();
 
+	// [Server]
+	// Note this destroys self.
+	// Destroys all actors in the PlatformActorCache, then destroys self.
+	// If overridden in blueprints, you should call the parent function at end because this destroys self.
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, CallInEditor)
+		void DestroyPlatform();
+
 };

@@ -175,7 +175,7 @@ void APlatformGridMgr::DestroyGridImpl()
 			if (IsValid(Platform))
 			{
 				DebugLog(FString::Printf(TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY));
-				Platform->Destroy();
+				Platform->DestroyPlatform();
 			}
 		}
 		PlatformGridMap.Find(Row)->RowPlatforms.Empty();

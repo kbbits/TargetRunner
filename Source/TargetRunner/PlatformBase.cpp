@@ -61,3 +61,14 @@ FVector2D APlatformBase::GetGridCoordinates()
 	return GridVector;
 }
 
+
+void APlatformBase::DestroyPlatform_Implementation()
+{
+	// Destroy actors in the PlatformActorCache
+	for (TPair<FName, AActor*> ActorElem : PlatformActorCache)
+	{
+		if (ActorElem.Value && IsValid(ActorElem.Value)) { ActorElem.Value->Destroy(); }
+	}
+	PlatformActorCache.Empty(0);
+	Destroy();
+}

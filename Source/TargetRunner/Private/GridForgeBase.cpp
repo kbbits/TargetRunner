@@ -368,6 +368,8 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 			else { DebugLog(TEXT("No west neighbor found.")); }
 			Room->WestWall = GetWallStateFromNeighbor(NeighborWallState, bConnected);
 		}
+		// Generate floor template
+
 		// Mark the cell as on the path, so we don't create a room for it again.
 		Cell->bOnPath = true;
 		DebugLog(FString::Printf(TEXT("Cell X:%d Y:%d translated to %s "), Cell->X, Cell->Y, *RoomToString(*Room)));
@@ -395,7 +397,7 @@ UGridTemplateCell* UGridForgeBase::GetCell(const FVector2D& Coords, bool& bFound
 }
 
 
-// Adds a placeholder blocked cell for neighbors outside grid extents.
+// Adds a placeholder blocked cell into results for neighbors outside grid extents. (placeholder cells are not actually added to grid)
 void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells)
 {
 	// TODO: Rework this by iterating directions.
@@ -577,7 +579,7 @@ bool UGridForgeBase::CanPlaceBlockingCell(const FVector2D& Coords, TMap<ETRDirec
 		AdjacentSumVector += (BlockingNeighbors[ETRDirection::West]->GetCoords() - Coords);
 	}
 	AbsSumVector = AdjacentSumVector.GetAbs();
-	// If at least three of N, S, Eand W are blocked, we're an ally or island and ok to place blocker.
+	// If at least three of N, S, E and W are blocked, we're an ally or island and ok to place blocker.
 	if (AdjacentBlockersNum >= 3) { return true; }
 
 	// If all blockers are grid bounaries, ok to place blocker.
@@ -689,7 +691,7 @@ bool UGridForgeBase::GetBlockingCellGroupNumber(const FVector2D& Coords, TMap<ET
 			if (!bHasOutOfGridNeighbor) { bHasOutOfGridNeighbor = !IsInGrid(NeighborElem.Value->GetCoords()); }
 		}
 	}
-	// Can't two or more join different groups that are already anchored.
+	// Can't join two or more different groups that are already anchored.
 	// TODO: Add special cases where we can join two anchored groups. ex: if the two groups are orthogonnally opposite of each other and other orthogonal neighbor is a wall. (rectangle grids only)
 	if (AnchoredCount > 1) { return false;	}
 	if (UseGroupNumber > 0)
