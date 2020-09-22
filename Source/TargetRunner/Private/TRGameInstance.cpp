@@ -62,7 +62,7 @@ ULevelTemplateContext* UTRGameInstance::GenerateNewLevelTemplate(const float Tie
 	}
 	ULevelTemplateContext* NewLTC = NewObject<ULevelTemplateContext>(this);
 	//FLevelTemplate TmpLevelTemplate = FLevelTemplate();
-	int32 NewSeed = static_cast<int32>(LevelRandStream.FRandRange(static_cast<float>(INT_MIN + 10), static_cast<float>(INT_MAX - 10)));
+	int32 NewSeed = LevelRandStream.RandRange(1, INT_MAX - 1);
 	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - generating new level template for seed: %d. (stream seed: %d)"), NewSeed, LevelRandStream.GetCurrentSeed());
 	LevelForge->GenerateNewLevelTemplate(NewSeed, Tier, NewLTC->LevelTemplate, bSuccessful);
 	if (bSuccessful)

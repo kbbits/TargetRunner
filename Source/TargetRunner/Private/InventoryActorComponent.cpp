@@ -8,6 +8,7 @@
 // Sets default values for this component's properties
 UInventoryActorComponent::UInventoryActorComponent()
 {
+	SetIsReplicated(true);
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
@@ -20,7 +21,7 @@ UInventoryActorComponent::UInventoryActorComponent()
 //{
 //	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 //
-//	DOREPLIFETIME(UInventoryActorComponent, Inventory);
+//	DOREPLIFETIME(UInventoryActorComponent, );
 //}
 
 
@@ -61,7 +62,7 @@ void UInventoryActorComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 }
 
 
-bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, float& CurrentQuantity)
+bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, float& CurrentQuantity, bool bAddToSnapshot)
 {
 	FGoodsQuantity GoodsQuantity;
 	float NetQuantity;
@@ -90,17 +91,18 @@ bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta
 	else
 	{
 		CurrentQuantity = NetQuantity;
-		ServerAddSubtractGoods(GoodsDelta, bNegateGoodsQuantities);
+		ServerAddSubtractGoods(GoodsDelta, bNegateGoodsQuantities, bAddToSnapshot);
 		return true;
 	}
 }
 
 
-void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities)
+void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, bool bAddToSnapshot)
 {
 	if (GoodsDelta.Quantity == 0.0f) { return; }
 
 	FGoodsQuantity GoodsQuantity;
+	FGoodsQuantity SnapshotDelta;
 	float NetQuantity;
 	int32 Index = Inventory.IndexOfByKey(GoodsDelta.Name);
 	if (Index == INDEX_NONE)
@@ -127,25 +129,39 @@ void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGood
 		{
 			Inventory[Index].Quantity = GoodsQuantity.Quantity;
 		}
+		if (bAddToSnapshot)
+		{
+			SnapshotDelta.Name = GoodsDelta.Name;
+			SnapshotDelta.Quantity = bNegateGoodsQuantities ? GoodsDelta.Quantity * -1.0f : GoodsDelta.Quantity;
+			Index = SnapshotInventory.IndexOfByKey(SnapshotDelta.Name);
+			if (Index == INDEX_NONE)
+			{
+				SnapshotInventory.Add(SnapshotDelta);
+			}
+			else
+			{
+				SnapshotInventory[Index].Quantity = SnapshotInventory[Index].Quantity + SnapshotDelta.Quantity;
+			}
+		}
 		TArray<FGoodsQuantity> TmpGoodsArray;
 		TmpGoodsArray.Add(GoodsQuantity);
 		OnInventoryChanged.Broadcast(TmpGoodsArray);
 		if (ShouldUpdateClient())
 		{
 			// Update client
-			ClientUpdateInventoryQuantity(GoodsQuantity);
+			ClientUpdateInventoryQuantity(GoodsQuantity, SnapshotDelta);
 		}
 	}
 	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoods new: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
 }
 
-bool UInventoryActorComponent::ServerAddSubtractGoods_Validate(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities)
+bool UInventoryActorComponent::ServerAddSubtractGoods_Validate(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, bool bAddToSnapshot)
 {
 	return true;
 }
 
 
-bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, TArray<FGoodsQuantity>& CurrentQuantities)
+bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, TArray<FGoodsQuantity>& CurrentQuantities, bool bAddToSnapshot)
 {
 	TArray<FGoodsQuantity> CurrentGoods;
 	TArray<FGoodsQuantity> NewGoods;
@@ -182,7 +198,7 @@ bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity
 	if (bCanMakeUpdate)
 	{
 		CurrentQuantities = NewGoods;
-		ServerAddSubtractGoodsArray(GoodsDeltas, bNegateGoodsQuantities);
+		ServerAddSubtractGoodsArray(GoodsDeltas, bNegateGoodsQuantities, bAddToSnapshot);
 		return true;
 	}
 	else
@@ -193,9 +209,10 @@ bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity
 }
 
 
-void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities)
+void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, bool bAddToSnapshot)
 {
 	TArray<FGoodsQuantity> NewGoods;
+	TArray<FGoodsQuantity> SnapshotDeltas;
 	FGoodsQuantity GoodsQuantity;
 	float NetQuantity;
 	int32 Index = INDEX_NONE;
@@ -236,20 +253,37 @@ void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const 
 		}
 		UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoodsArray updated New item: %s, %s: %d."), Index == INDEX_NONE ? TEXT("True") : TEXT("False"), *NewGoodsItem.Name.ToString(), (int32)NewGoodsItem.Quantity);
 	}
+	if (bAddToSnapshot)
+	{
+		for (FGoodsQuantity GoodsDeltaItem : GoodsDeltas)
+		{
+			FGoodsQuantity SnapshotDelta = FGoodsQuantity(GoodsDeltaItem.Name, bNegateGoodsQuantities ? GoodsDeltaItem.Quantity * -1.0f : GoodsDeltaItem.Quantity);
+			SnapshotDeltas.Add(SnapshotDelta);
+			Index = SnapshotInventory.IndexOfByKey(SnapshotDelta.Name);
+			if (Index == INDEX_NONE)
+			{
+				SnapshotInventory.Add(SnapshotDelta);				
+			}
+			else
+			{
+				SnapshotInventory[Index].Quantity = SnapshotInventory[Index].Quantity + SnapshotDelta.Quantity;
+			}
+		}
+	}
 	OnInventoryChanged.Broadcast(NewGoods);
 	if (ShouldUpdateClient())
 	{
-		ClientUpdateInventoryQuantities(NewGoods);
+		ClientUpdateInventoryQuantities(NewGoods, SnapshotDeltas);
 	}
 }
 
-bool UInventoryActorComponent::ServerAddSubtractGoodsArray_Validate(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities)
+bool UInventoryActorComponent::ServerAddSubtractGoodsArray_Validate(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, bool bAddToSnapshot)
 {
 	return true;
 }
 
 
-void UInventoryActorComponent::ClientUpdateInventoryQuantity_Implementation(const FGoodsQuantity NewQuantity)
+void UInventoryActorComponent::ClientUpdateInventoryQuantity_Implementation(const FGoodsQuantity NewQuantity, const FGoodsQuantity SnapshotDelta)
 {
 	int32 Index = Inventory.IndexOfByKey(NewQuantity.Name);
 	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ClientUpdateInventoryQuantity New item: %s, %s: %d."), Index == INDEX_NONE ? TEXT("True") : TEXT("False"), *NewQuantity.Name.ToString(), (int32)NewQuantity.Quantity);
@@ -261,18 +295,30 @@ void UInventoryActorComponent::ClientUpdateInventoryQuantity_Implementation(cons
 	{
 		Inventory[Index].Quantity = NewQuantity.Quantity;
 	}
+	if (!SnapshotDelta.Name.IsNone() && SnapshotDelta.Quantity != 0.0f)
+	{
+		Index = SnapshotInventory.IndexOfByKey(SnapshotDelta.Name);
+		if (Index == INDEX_NONE)
+		{
+			SnapshotInventory.Add(SnapshotDelta);
+		}
+		else
+		{
+			SnapshotInventory[Index].Quantity = SnapshotInventory[Index].Quantity + SnapshotDelta.Quantity;
+		}
+	}
 	TArray<FGoodsQuantity> TmpGoodsArray;
 	TmpGoodsArray.Add(NewQuantity);
 	OnInventoryChanged.Broadcast(TmpGoodsArray);
 }
 
-bool UInventoryActorComponent::ClientUpdateInventoryQuantity_Validate(const FGoodsQuantity NewQuantity)
+bool UInventoryActorComponent::ClientUpdateInventoryQuantity_Validate(const FGoodsQuantity NewQuantity, const FGoodsQuantity SnapshotDelta)
 {
 	return true;
 }
 
 
-void UInventoryActorComponent::ClientUpdateInventoryQuantities_Implementation(const TArray<FGoodsQuantity>& NewQuantities)
+void UInventoryActorComponent::ClientUpdateInventoryQuantities_Implementation(const TArray<FGoodsQuantity>& NewQuantities, const TArray<FGoodsQuantity>& SnapshotDeltas)
 {
 	int32 Index = INDEX_NONE;
 	for (FGoodsQuantity NewGoodsItem : NewQuantities)
@@ -288,10 +334,25 @@ void UInventoryActorComponent::ClientUpdateInventoryQuantities_Implementation(co
 			Inventory[Index].Quantity = NewGoodsItem.Quantity;
 		}
 	}
+	for (FGoodsQuantity SnapshotDelta : SnapshotDeltas)
+	{
+		if (!SnapshotDelta.Name.IsNone() && SnapshotDelta.Quantity != 0.0f)
+		{
+			Index = SnapshotInventory.IndexOfByKey(SnapshotDelta.Name);
+			if (Index == INDEX_NONE)
+			{
+				SnapshotInventory.Add(SnapshotDelta);
+			}
+			else
+			{
+				SnapshotInventory[Index].Quantity = SnapshotInventory[Index].Quantity + SnapshotDelta.Quantity;
+			}
+		}
+	}
 	OnInventoryChanged.Broadcast(NewQuantities);
 }
 
-bool UInventoryActorComponent::ClientUpdateInventoryQuantities_Validate(const TArray<FGoodsQuantity>& NewQuantities)
+bool UInventoryActorComponent::ClientUpdateInventoryQuantities_Validate(const TArray<FGoodsQuantity>& NewQuantities, const TArray<FGoodsQuantity>& SnapshotDeltas)
 {
 	return true;
 }
@@ -335,4 +396,35 @@ bool UInventoryActorComponent::HasAllGoods(const TArray<FGoodsQuantity> Goods, T
 		CurrentQuantities.Add(FGoodsQuantity(TmpGQ.Name, TmpCurQuantity));
 	}
 	return bHasAll;
+}
+
+
+void UInventoryActorComponent::ServerClearSnapshotInventory_Implementation()
+{
+	SnapshotInventory.Empty();
+	if (ShouldUpdateClient())
+	{
+		// Update client
+		ClientClearSnapshotInventory();
+	}
+}
+
+bool UInventoryActorComponent::ServerClearSnapshotInventory_Validate()
+{
+	return true;
+}
+
+void UInventoryActorComponent::ClientClearSnapshotInventory_Implementation()
+{
+	SnapshotInventory.Empty();
+}
+
+bool UInventoryActorComponent::ClientClearSnapshotInventory_Validate()
+{
+	return true;
+}
+
+void UInventoryActorComponent::GetSnapshotGoods(TArray<FGoodsQuantity>& AllSnapshotGoods)
+{
+	AllSnapshotGoods.Append(SnapshotInventory);
 }

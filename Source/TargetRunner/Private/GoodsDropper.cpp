@@ -172,7 +172,14 @@ FGoodsQuantity UGoodsDropper::EvaluateGoodsQuantityRange(UPARAM(ref)FRandomStrea
 
 	if (QuantityRange.QuantityMax > 0)
 	{
-		Goods.Quantity = RandStream.FRandRange(QuantityRange.QuantityMin, QuantityRange.QuantityMax);
+		if (QuantityRange.QuantityMin == QuantityRange.QuantityMax) 
+		{
+			Goods.Quantity = QuantityRange.QuantityMin;
+		}
+		else
+		{
+			Goods.Quantity = RandStream.FRandRange(0.0f, QuantityRange.QuantityMax - QuantityRange.QuantityMin) + QuantityRange.QuantityMin;
+		}
 	}
 	return Goods;
 }

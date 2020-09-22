@@ -133,7 +133,7 @@ public:
 
 	/*------------ Random Streams -------------------------*/
 
-	// Re-seeds and random streams, based on the incoming new parent seed.
+	// Re-seeds random streams, based on the incoming new parent seed.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void ReseedAllStreams(const int32 NewSeed);
 

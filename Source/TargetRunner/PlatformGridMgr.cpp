@@ -114,22 +114,20 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 {
 	// Destroy old grid, if any
 	DestroyGrid();
+	
+	DebugLog(FString::Printf(TEXT("%s PlatformGridMgr::GenerateGrid - Generating grid."), *GetNameSafe(this)));
 
-	UE_LOG(LogTRGame, Log, TEXT("%s GenerateGrid - Generating grid."), *GetNameSafe(this));
-
-	// TODO Seed this correctly - currently uses values added in editor.
-	//GridRandStream.GenerateNewSeed();
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
 	if (GameMode)
 	{
 		FRandomStream& GridRandStream = GameMode->GetGridStream();
 		GridRandStream.Reset();
-		UE_LOG(LogTRGame, Log, TEXT("GridRandStream seed: %d"), GridRandStream.GetInitialSeed());	
+		DebugLog(FString::Printf(TEXT("PlatformGridManager::GenerateGrid - GridRandStream seed: %d"), GridRandStream.GetInitialSeed()));
 	}
 	else
 	{
 		DefaultGridRandStream.Reset();
-		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode."), *GetNameSafe(this));
+		UE_LOG(LogTRGame, Error, TEXT("%s PlatformGridManager::GenerateGrid - Could not get GameMode."), *GetNameSafe(this));
 		//return;
 	}
 
@@ -138,7 +136,7 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 
 void APlatformGridMgr::GenerateGridImpl()
 {
-	// TODO Implement for base class
+	// TODO Implement something for base class.
 }
 
 void APlatformGridMgr::DestroyGrid_Implementation()

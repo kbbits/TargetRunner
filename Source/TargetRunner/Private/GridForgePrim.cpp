@@ -7,7 +7,7 @@
 
 void UGridForgePrim::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate, bool& bSuccessful)
 {
-	DebugLog(FString::Printf(TEXT("%s - GenerateGridTemplate"), *this->GetName()));
+	DebugLog(FString::Printf(TEXT("%s - GenerateGridTemplate. Initial seed: %d , Current seed: %d"), *this->GetName(), RandStream.GetInitialSeed(), RandStream.GetCurrentSeed()));
 
 	EmptyGridTemplateCells();
 	SetRoomGridTemplate(RoomGridTemplate);
@@ -25,6 +25,9 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 {
 	bSuccessful = false;
 	FRoomGridTemplate& RoomGridTemplate = *WorkingRoomGridTemplate;
+
+	DebugLog(FString::Printf(TEXT("GridForgePrim::GenerateGridTemplateCells - Initial stream seed: %d"), RandStream.GetInitialSeed()));
+	DebugLog(FString::Printf(TEXT("GridForgePrim::GenerateGridTemplateCells - Current stream seed: %d"), RandStream.GetCurrentSeed()));
 
 	if (RoomGridTemplate.StartCells.Num() == 0)
 	{
@@ -87,7 +90,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 			ActiveCoords.Remove(CurCoords);
 			NextCoords = CurCoords;
 			NextCell = CurCell;
-			DebugLog(FString::Printf(TEXT("GridForgePrim - Removing X:%d Y:%d from active."), (int32)CurCoords.X, (int32)CurCoords.Y));
+			DebugLog(FString::Printf(TEXT("GridForgePrim - No unflagged neighbors. Removing X:%d Y:%d from active."), (int32)CurCoords.X, (int32)CurCoords.Y));
 		}
 		else
 		{
@@ -104,7 +107,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 				ConnectedCellCount++;
 			}
 			CurCell->ConnectedCells.Add(NextCoords);
-			DebugLog(FString::Printf(TEXT("GridForgePrim - Connected current cell X:%d Y:%d to neighbor X:%d Y:%d. Total connections: %d"), CurCell->X, CurCell->Y, NextCell->X, NextCell->Y, CurCell->ConnectedCells.Num()));
+			DebugLog(FString::Printf(TEXT("GridForgePrim - Connected current cell X:%d Y:%d to neighbor X:%d Y:%d. Connected cells: %d"), CurCell->X, CurCell->Y, NextCell->X, NextCell->Y, CurCell->ConnectedCells.Num()));
 		}
 				
 		// Check if we found the end cell.

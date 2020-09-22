@@ -106,7 +106,7 @@ void UGridForgeBase::GenerateBlackoutCells(FRandomStream& RandStream)
 		bool bStopBlackoutSearch = false;
 		if (WidthX > 3 && WidthY > 3)
 		{
-			BlackoutCount = static_cast<int32>(FMath::RoundHalfToZero(FMath::Sqrt(WidthX * WidthY)) + RandStream.RandRange(-1, 0));
+			BlackoutCount = static_cast<int32>(FMath::RoundHalfToZero(FMath::Sqrt(WidthX * WidthY)) - RandStream.RandRange(0, 1));
 			if (WidthX > 5 && WidthY > 5)
 			{
 				BlackoutCount += RandStream.RandRange(0, (int32)FMath::RoundHalfToZero((WidthX * WidthY) / 10.0f));

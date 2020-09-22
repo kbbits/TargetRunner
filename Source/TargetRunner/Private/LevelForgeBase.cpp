@@ -42,15 +42,17 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	}
 	else
 	{
-		NewLevelTemplate.StartHourOfDay = 9.0f + LevelStream.FRandRange(-2.0f, 2.0f);
+		NewLevelTemplate.StartHourOfDay = 9.0f + (LevelStream.FRandRange(0.0f, 4.0f) - 2.0f);
 	}
 	// Unlock cost
 	TArray<FGoodsQuantityRange> CostFactors;
+	float Qty = 0.0f;
 	NewLevelTemplate.UnlockCost = FMath::RoundFromZero(FMath::Pow(DifficultyTier, UnlockCostScalingExp) * (BaseUnlockCost / 10.0f)) * 10.f;
 	UnlockGoodsCostFactorForTier((int32)DifficultyTier, CostFactors);
 	for (FGoodsQuantityRange TmpRange : CostFactors)
 	{
-		NewLevelTemplate.UnlockGoods.Add(FGoodsQuantity(TmpRange.GoodsName, FMath::RoundFromZero((NewLevelTemplate.UnlockCost * LevelStream.FRandRange(TmpRange.QuantityMin, TmpRange.QuantityMax)) / 10.0f) * 10.0f));
+		Qty = LevelStream.FRandRange(0.0f, TmpRange.QuantityMax - TmpRange.QuantityMin) + TmpRange.QuantityMin;
+		NewLevelTemplate.UnlockGoods.Add(FGoodsQuantity(TmpRange.GoodsName, FMath::RoundFromZero((NewLevelTemplate.UnlockCost * Qty) / 10.0f) * 10.0f));
 	}
 	
 	// TODO: Theme, ThemeTags, OtherResourcesAvailable
@@ -165,7 +167,7 @@ bool ULevelForgeBase::GenerateResourcesAvailable(const float DifficultyTier, TAr
 			if (TmpResourceType.IsValid())
 			{
 				DebugLog(FString::Printf(TEXT("    generating: %s"), *TmpResourceType.Code.ToString()));
-				TmpQuantity = LevelStream.FRandRange(BaseResourceQuantityRange.GetLowerBoundValue(), BaseResourceQuantityRange.GetUpperBoundValue()) * DifficultyDeltaMultiplier;
+				TmpQuantity = (LevelStream.FRandRange(0.0f, BaseResourceQuantityRange.GetUpperBoundValue() - BaseResourceQuantityRange.GetLowerBoundValue()) + BaseResourceQuantityRange.GetLowerBoundValue()) * DifficultyDeltaMultiplier;
 				if (TmpTier > DifficultyTier)
 				{
 					TmpQuantity = TmpQuantity * HigherTierResourceQuantityMultiplier;

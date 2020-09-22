@@ -44,14 +44,14 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	bool bSuccessful = false;
 	// Destroy old grid, if any
 	DestroyGrid();
-	DebugLog(FString::Printf(TEXT("%s GenerateGrid - Generating grid. Extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), *this->GetName(), GridExtentMinX, GridExtentMinY, GridExtentMaxX, GridExtentMaxY));
+	DebugLog(FString::Printf(TEXT("%s RoomPlatformGridMgr::GenerateGrid - Generating grid. Extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), *this->GetName(), GridExtentMinX, GridExtentMinY, GridExtentMaxX, GridExtentMaxY));
 	FRandomStream* GridStreamFound = nullptr;
 	FRandomStream* ResourceStreamFound = nullptr;
 	// Grab the game mode.
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
 	if (GameMode == nullptr)
 	{
-		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not get GameMode. Using default rand stream."), *this->GetName());
+		UE_LOG(LogTRGame, Error, TEXT("%s RoomPlatformGridMgr::GenerateGrid - Could not get GameMode. Using default rand stream."), *this->GetName());
 		// Use our default streams
 		GridStreamFound = &DefaultGridRandStream;
 		GridStreamFound->Reset();
@@ -66,11 +66,12 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	}
 	FRandomStream& GridRandStream = *GridStreamFound;
 	FRandomStream& ResourceDropperStream = *ResourceStreamFound;
+	DebugLog(FString::Printf(TEXT("RoomPlatformGridMgr::GenerateGridImpl - GridRandStream seed: %d"), GridRandStream.GetInitialSeed()));
 	// Create the grid forge
 	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
 	if (GridForge == nullptr)
 	{
-		UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not construct GridForge."), *this->GetName());
+		UE_LOG(LogTRGame, Error, TEXT("%s RoomPlatformGridMgr::GenerateGrid - Could not construct GridForge."), *this->GetName());
 		return;
 	}
 	GridForge->EmptyGridTemplateCells();
@@ -108,13 +109,13 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 
 	if (bSuccessful)
 	{
-		DebugLog(FString::Printf(TEXT("%s GenerateGrid - Generating grid successful."), *GetNameSafe(this)));
+		DebugLog(FString::Printf(TEXT("%s RoomPlatformGridMgr::GenerateGrid - Generating grid successful."), *GetNameSafe(this)));
 		StartGridCoords = RoomGridTemplate.StartCells[0];
 		ExitGridCoords = RoomGridTemplate.EndCells[0];
 		// Allocate resources to room templates
 		UResourceDropperBase* ResourceDropper = NewObject<UResourceDropperBase>(this, ResourceDropperClass);
 		if (ResourceDropper == nullptr) {
-			UE_LOG(LogTRGame, Error, TEXT("%s GenerateGrid - Could not construct ResourceDropper."), *GetNameSafe(this));
+			UE_LOG(LogTRGame, Error, TEXT("%s RoomPlatformGridMgr::GenerateGrid - Could not construct ResourceDropper."), *GetNameSafe(this));
 			return;
 		}
 		ResourceDropper->DistributeResources(ResourceDropperStream, ResourcesToDistribute, RoomGridTemplate);

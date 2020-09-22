@@ -69,11 +69,11 @@ void ATR_GameMode::SetNewLevelTemplate(const FLevelTemplate& NewTemplate)
 {
 	if (NewTemplate.LevelSeed == 0) { UE_LOG(LogTRGame, Warning, TEXT("GameMode - SetNewLevelTemplate - Template has 0 seed.")); }
 	LevelTemplate = NewTemplate;
-	ReseedAllStreams(LevelTemplate.LevelSeed);
-	bLevelTemplateReady = true;
-
 	// Debug log
 	UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate %s ID: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
+	UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate seed: %d"), LevelTemplate.LevelSeed);
+	ReseedAllStreams(LevelTemplate.LevelSeed);
+	bLevelTemplateReady = true;
 }
 
 
@@ -88,11 +88,11 @@ bool ATR_GameMode::InitGridManager_Implementation()
 	// Initializes our reference
 	GetGridManager();
 	if (GridManager == nullptr) { 
-		UE_LOG(LogTRGame, Warning, TEXT("InitGridManager could not find any grid manager actors")); 
+		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::InitGridManager could not find any grid manager actors")); 
 		return false;
 	}
 	if (!GetLevelTemplate().IsValid()) { 
-		UE_LOG(LogTRGame, Warning, TEXT("InitGridManager invalid level tempate. LevelSeed: %d"), LevelTemplate.LevelSeed);
+		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::InitGridManager invalid level tempate. LevelSeed: %d"), LevelTemplate.LevelSeed);
 		return false; 
 	}
 
@@ -115,7 +115,7 @@ bool ATR_GameMode::InitGridManager_Implementation()
 		RoomGridManager->ResourcesToDistribute = LevelTemplate.ResourcesAvailable;
 	}
 
-	UE_LOG(LogTRGame, Log, TEXT("InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)
+	UE_LOG(LogTRGame, Log, TEXT("TRGameMode::InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)
 	return true;
 }
 
@@ -177,11 +177,17 @@ bool ATR_GameMode::SpawnLevel_Implementation()
 void ATR_GameMode::ReseedAllStreams_Implementation(const int32 NewSeed)
 {
 	GeneratorRandStream.Initialize(NewSeed);
-	// Save a place here in case we need to use the stream for new code later, it won't change the other stream seeds.
-	GeneratorRandStream.RandRange(0, 1);
-	GeneratorRandStream.RandRange(0, 1);
-	GridRandStream.Initialize(GeneratorRandStream.RandRange(INT_MIN, INT_MAX));
-	ResourceDropperRandStream.Initialize(GeneratorRandStream.RandRange(INT_MIN, INT_MAX));
+	// Save five places here in case we need to use the stream for new code later, it won't change the other stream seeds.
+	for (int32 i = 0; i < 5; i++)
+	{
+		GeneratorRandStream.RandRange(1, INT_MAX - 1);
+		//UE_LOG(LogTRGame, Log, TEXT("    random int: %d"), GeneratorRandStream.RandRange(1, INT_MAX - 1));
+	}
+	UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - Generator seed: %d"), GeneratorRandStream.GetInitialSeed());	
+	GridRandStream.Initialize(GeneratorRandStream.RandRange(1, INT_MAX - 1));
+	UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - Grid seed: %d"), GridRandStream.GetInitialSeed());
+	ResourceDropperRandStream.Initialize(GeneratorRandStream.RandRange(1, INT_MAX - 1));
+	UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - ResourceDropper seed: %d"), ResourceDropperRandStream.GetInitialSeed());
 }
 
 
@@ -204,13 +210,13 @@ FRandomStream& ATR_GameMode::GetResourceDropperStream()
 
 float ATR_GameMode::FRandRangeGrid(const float Min, const float Max)
 {
-	return GridRandStream.FRandRange(Min, Max);
+	return GridRandStream.FRandRange(0.0f, Max - Min) + Min;
 }
 
 
 int32 ATR_GameMode::RandRangeGrid(const int32 Min, const int32 Max)
 {
-	return GridRandStream.RandRange(Min, Max);
+	return GridRandStream.RandRange(0, Max - Min) + Min;
 }
 
 
