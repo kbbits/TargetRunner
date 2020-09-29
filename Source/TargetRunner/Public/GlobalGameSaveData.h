@@ -17,10 +17,10 @@ public:
 		float LastSelectedSaveSlot;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		int32 LastLevelGenSeed;
+		FGuid LastSelectedProfileGuid;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TSubclassOf<AGameMode> LastGameMode;
+		int32 LastLevelGenSeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float GameDifficulty;

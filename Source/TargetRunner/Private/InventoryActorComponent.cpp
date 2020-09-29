@@ -62,7 +62,7 @@ void UInventoryActorComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 }
 
 
-bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, float& CurrentQuantity, bool bAddToSnapshot)
+bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, float& CurrentQuantity, const bool bAddToSnapshot)
 {
 	FGoodsQuantity GoodsQuantity;
 	float NetQuantity;
@@ -97,7 +97,7 @@ bool UInventoryActorComponent::AddSubtractGoods(const FGoodsQuantity& GoodsDelta
 }
 
 
-void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, bool bAddToSnapshot)
+void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, const bool bAddToSnapshot)
 {
 	if (GoodsDelta.Quantity == 0.0f) { return; }
 
@@ -155,13 +155,13 @@ void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGood
 	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoods new: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
 }
 
-bool UInventoryActorComponent::ServerAddSubtractGoods_Validate(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, bool bAddToSnapshot)
+bool UInventoryActorComponent::ServerAddSubtractGoods_Validate(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, const bool bAddToSnapshot)
 {
 	return true;
 }
 
 
-bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, TArray<FGoodsQuantity>& CurrentQuantities, bool bAddToSnapshot)
+bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, TArray<FGoodsQuantity>& CurrentQuantities, const bool bAddToSnapshot)
 {
 	TArray<FGoodsQuantity> CurrentGoods;
 	TArray<FGoodsQuantity> NewGoods;
@@ -209,7 +209,7 @@ bool UInventoryActorComponent::AddSubtractGoodsArray(const TArray<FGoodsQuantity
 }
 
 
-void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, bool bAddToSnapshot)
+void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, const bool bAddToSnapshot)
 {
 	TArray<FGoodsQuantity> NewGoods;
 	TArray<FGoodsQuantity> SnapshotDeltas;
@@ -277,7 +277,51 @@ void UInventoryActorComponent::ServerAddSubtractGoodsArray_Implementation(const 
 	}
 }
 
-bool UInventoryActorComponent::ServerAddSubtractGoodsArray_Validate(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, bool bAddToSnapshot)
+bool UInventoryActorComponent::ServerAddSubtractGoodsArray_Validate(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, const bool bAddToSnapshot)
+{
+	return true;
+}
+
+
+void UInventoryActorComponent::ServerSetInventory_Implementation(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods)
+{
+	Inventory.Empty(NewGoods.Num());
+	if (NewGoods.Num() > 0) 
+	{
+		Inventory.Append(NewGoods);
+	}
+	SnapshotInventory.Empty(NewSnapshotGoods.Num());
+	if (NewSnapshotGoods.Num() > 0) 
+	{
+		SnapshotInventory.Append(NewSnapshotGoods);
+	}
+	if (ShouldUpdateClient())
+	{
+		ClientSetInventory(NewGoods, NewSnapshotGoods);
+	}
+}
+
+bool UInventoryActorComponent::ServerSetInventory_Validate(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods)
+{
+	return true;
+}
+
+
+void UInventoryActorComponent::ClientSetInventory_Implementation(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods)
+{
+	Inventory.Empty(NewGoods.Num());
+	if (NewGoods.Num() > 0) 
+	{
+		Inventory.Append(NewGoods);
+	}
+	SnapshotInventory.Empty(NewSnapshotGoods.Num());
+	if (NewSnapshotGoods.Num() > 0) 
+	{
+		SnapshotInventory.Append(NewSnapshotGoods);
+	}
+}
+
+bool UInventoryActorComponent::ClientSetInventory_Validate(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods)
 {
 	return true;
 }
@@ -378,6 +422,32 @@ void UInventoryActorComponent::GetAllGoods(TArray<FGoodsQuantity>& AllGoods)
 }
 
 
+void UInventoryActorComponent::GetSaveableGoods(TArray<FGoodsQuantity>& AllSaveableGoods)
+{	
+	if (UnsaveableGoodsFilters.Num() == 0)
+	{
+		AllSaveableGoods.Append(Inventory);
+	}
+	else
+	{
+		bool bSaveable;
+		for (FGoodsQuantity Goods : Inventory)
+		{
+			bSaveable = true;
+			for (FString FilterStr : UnsaveableGoodsFilters)
+			{
+				if (Goods.Name.ToString().Contains(FilterStr))
+				{
+					bSaveable = false;
+					break;
+				}
+			}
+			if (bSaveable) { AllSaveableGoods.Add(Goods); }
+		}
+	}
+}
+
+
 bool UInventoryActorComponent::HasGoods(const FGoodsQuantity Goods, float& CurrentQuantity)
 {
 	CurrentQuantity = GetGoodsCount(Goods.Name);
@@ -398,6 +468,40 @@ bool UInventoryActorComponent::HasAllGoods(const TArray<FGoodsQuantity> Goods, T
 	return bHasAll;
 }
 
+
+bool UInventoryActorComponent::IsEmpty()
+{
+	return Inventory.Num() == 0;
+}
+
+/*
+void UInventoryActorComponent::ServerSetSnapshotInventory_Implementation(const TArray<FGoodsQuantity>& NewSnapshotGoods)
+{
+	SnapshotInventory.Empty(NewSnapshotGoods.Num());
+	SnapshotInventory.Append(NewSnapshotGoods);
+	if (ShouldUpdateClient())
+	{
+		// Update client
+		ClientSetSnapshotInventory(NewSnapshotGoods);
+	}
+}
+
+bool UInventoryActorComponent::ServerSetSnapshotInventory_Validate(const TArray<FGoodsQuantity>& NewSnapshotGoods)
+{
+	return true;
+}
+
+void UInventoryActorComponent::ClientSetSnapshotInventory_Implementation(const TArray<FGoodsQuantity>& NewSnapshotGoods)
+{
+	SnapshotInventory.Empty(NewSnapshotGoods.Num());
+	SnapshotInventory.Append(NewSnapshotGoods);
+}
+
+bool UInventoryActorComponent::ClientSetSnapshotInventory_Validate(const TArray<FGoodsQuantity>& NewSnapshotGoods)
+{
+	return true;
+}
+*/
 
 void UInventoryActorComponent::ServerClearSnapshotInventory_Implementation()
 {

@@ -32,6 +32,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FName, AActor*> PlatformActorCache;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FRandomStream PlatformRandStream;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

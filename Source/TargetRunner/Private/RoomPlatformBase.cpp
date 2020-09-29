@@ -78,8 +78,9 @@ bool ARoomPlatformBase::CalculateWalls()
 		FVector2D Offsets;
 		FVector2D WallDirection;
 		FVector Margin;
-		FRotator CurrentRotation = FRotator(0.0, 0.0, 0.0); // GetActorRotation(); //+ FRotator(0.0, -90.0, 0.0);
+		FRotator CurrentRotation = FRotator(0.0, 0.0, 0.0);
 		FVector DefaultScale(1.0, 1.0, 1.0);
+		FTransform RoomTransform = RoomSceneComponent->GetComponentTransform();
 
 		// Empty any previous transforms, size the array to hold what we will need.
 		WallSectionTransforms.Empty(MyGridManager->RoomCellSubdivision * 4);
@@ -113,7 +114,7 @@ bool ARoomPlatformBase::CalculateWalls()
 			for (int32 i = 0; i < MyGridManager->RoomCellSubdivision; i++)
 			{
 				// Add the transform.
-				WallSectionTransforms.Add(FTransform(CurrentRotation, SectionLocation, DefaultScale));
+				WallSectionTransforms.Add(FTransform(CurrentRotation, SectionLocation, DefaultScale) * RoomTransform);
 				// Move section location to next
 				SectionLocation += FVector(SubCellSize * WallDirection.X, SubCellSize * WallDirection.Y, 0.0);
 			}

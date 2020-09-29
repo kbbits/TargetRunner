@@ -147,10 +147,10 @@ public:
 	// [Server]
 	// Gets player save data from controller and player state.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		void GetPlayerSaveData(FPlayerSaveData& SaveData);
+		bool GetPlayerSaveData(FPlayerSaveData& SaveData);
 
 	// [Any]
-	// updates the controller and player state from serialized data.
+	// Updates the controller and player state from serialized data.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		void UpdateFromPlayerSaveData(const FPlayerSaveData& SaveData);
+		bool UpdateFromPlayerSaveData(const FPlayerSaveData& SaveData);
 };

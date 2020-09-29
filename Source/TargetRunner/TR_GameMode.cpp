@@ -17,7 +17,8 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 	GeneratorRandStream.Reset();
 	GridRandStream.Reset();
 	GoodsDropper = OI.CreateDefaultSubobject<UGoodsDropper>(this, TEXT("GoodsDropper"));
-	if (IsValid(GoodsDropperTable)) { GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable); }
+	if (GoodsDropper != nullptr && IsValid(GoodsDropperTable)) { GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable); }
+	else { UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor Could not create GoodsDropper.")); }
 }
 
 
@@ -188,6 +189,12 @@ void ATR_GameMode::ReseedAllStreams_Implementation(const int32 NewSeed)
 	UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - Grid seed: %d"), GridRandStream.GetInitialSeed());
 	ResourceDropperRandStream.Initialize(GeneratorRandStream.RandRange(1, INT_MAX - 1));
 	UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - ResourceDropper seed: %d"), ResourceDropperRandStream.GetInitialSeed());
+	if (GoodsDropper != nullptr)
+	{
+		int32 GoodsDropperSeed = GeneratorRandStream.RandRange(1, INT_MAX - 1);
+		GoodsDropper->SeedRandomStream(GoodsDropperSeed);
+		UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - GoodsDropper seed: %d"), GoodsDropperSeed);
+	}
 }
 
 

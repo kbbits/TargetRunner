@@ -403,7 +403,7 @@ void ATRPlayerControllerBase::ClientUpdateRoomGridTemplate_Implementation(const 
 }
 
 
-void ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
+bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 {
 	ToolInventory.GenerateValueArray(SaveData.ToolInventory);
 	SaveData.LastEquippedItems.Empty(EquippedTools.Num());
@@ -416,15 +416,17 @@ void ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 	if (TRPlayerState)
 	{
 		TRPlayerState->GetPlayerSaveData(SaveData);
+		return true;
 	}
 	else
 	{
-		UE_LOG(LogTRGame, Warning, TEXT("GetPlayerSaveData - No player state found."))
+		UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveData -  Player state not found."));
+		return false;
 	}
 }
 
 
-void ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
+bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
 	UToolBase* TmpTool = nullptr;
 	ToolInventory.Empty();
@@ -449,9 +451,11 @@ void ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	if (TRPlayerState)
 	{
 		TRPlayerState->UpdateFromPlayerSaveData(SaveData);
+		return true;
 	}
 	else
 	{
-		UE_LOG(LogTRGame, Warning, TEXT("UpdateFromPlayerSaveData - No player state found."))
+		UE_LOG(LogTRGame, Error, TEXT("UpdateFromPlayerSaveData - Player state not found."));
+		return false;
 	}	
 }

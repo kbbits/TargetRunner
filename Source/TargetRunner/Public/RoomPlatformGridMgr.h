@@ -7,7 +7,10 @@
 #include "RoomPlatformBase.h"
 #include "RoomGridTemplate.h"
 #include "ResourceDropperBase.h"
+#include "ProgressItem.h"
 #include "RoomPlatformGridMgr.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGenerateProgress, const FProgressItem, Progress);
 
 UCLASS()
 class TARGETRUNNER_API ARoomPlatformGridMgr : public APlatformGridMgr
@@ -63,6 +66,9 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// GridForge will bind to this to update us on its progress.
+	void OnGridForgeProgress(const FProgressItem ProgressItem);
 
 public:	
 	// Called every frame

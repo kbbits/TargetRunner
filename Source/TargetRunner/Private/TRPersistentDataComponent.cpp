@@ -293,10 +293,27 @@ void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState)
 		{
-			UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
+			UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(GetPlayerSaveFilename(), 0));
+			if (SaveGame == nullptr || !SaveGame->PlayerSaveData.PlayerGuid.IsValid())
+			{
+				SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
+			}
 			TRPlayerController->GetPlayerSaveData(SaveGame->PlayerSaveData);
+			
+			UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Saving player data. Guid: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
+			FString InvBuff;
+			if (SaveGame->PlayerSaveData.GoodsInventory.Num() == 0)
+			{
+				UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
+			}
+			for (TPair<FName, float> InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+			{
+				InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Key.ToString(), InvElem.Value));
+			}
+			UE_LOG(LogTRGame, Log, TEXT("    Goods Inventory   \r\n  %s"), *InvBuff);
+
 			UGameplayStatics::SaveGameToSlot(SaveGame, GetPlayerSaveFilename(), 0);
-			UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Player data saved to: %s."), *GetPlayerSaveFilename());
+			UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Player data saved to: %s"), *GetPlayerSaveFilename());
 		}
 		else {
 			UE_LOG(LogTRGame, Error, TEXT("ServerSavePlayerData - Could not get player state."));
@@ -336,6 +353,17 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 						}
 						else
 						{
+							UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent - Loading player data. Guid: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
+							FString InvBuff;
+							if (SaveGame->PlayerSaveData.GoodsInventory.Num() == 0)
+							{
+								UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
+							}
+							for (TPair<FName, float> InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+							{
+								InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Key.ToString(), InvElem.Value));
+							}
+							UE_LOG(LogTRGame, Log, TEXT("    Goods Inventory   \r\n  %s"), *InvBuff);
 							// Update data on server
 							TRPlayerController->UpdateFromPlayerSaveData(SaveGame->PlayerSaveData);
 							if (TRPlayerController->IsLocalController()) 
@@ -353,21 +381,22 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 								// Call client to update data
 								ClientEchoLoadPlayerData(SaveGame->PlayerSaveData);
 							}
-							UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - loaded player data from: %s."), *PlayerSaveFilename);
+							UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - loaded player data from: %s"), *PlayerSaveFilename);
 						}						
 					}
 					else {
-						UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - error loading save file: %s."), *PlayerSaveFilename);
+						UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - error loading save file: %s"), *PlayerSaveFilename);
 					}
 				}
 				else 
 				{
 					// No existing file, setup guids and init data.
+					FPlayerSaveData NewSaveData;
 					if (!TRPlayerState->PlayerGuid.IsValid()) 
 					{ 
 						if (PlayerGuid.IsValid()) { TRPlayerState->PlayerGuid = PlayerGuid; }
 						else { TRPlayerState->PlayerGuid = FGuid::NewGuid(); }
-					}
+					}					
 					if (TRPlayerController->IsLocalController())
 					{
 						// Update game instance with our local info
@@ -381,8 +410,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 					else
 					{
 						// Call client to update data
-						FPlayerSaveData NewSaveData;
-						TRPlayerState->GetPlayerSaveData(NewSaveData);
+						TRPlayerController->GetPlayerSaveData(NewSaveData);
 						ClientEchoLoadPlayerData(NewSaveData);
 					}
 					UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - no save file found, setting new player guid: %s."), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));

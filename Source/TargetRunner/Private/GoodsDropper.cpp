@@ -1,6 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GoodsDropper.h"
+#include "GoodsFunctionLibrary.h"
+
+/*
+*/
+UGoodsDropper::UGoodsDropper()
+	: Super()
+{
+	RandStream.GenerateNewSeed();
+}
 
 /*
 */
@@ -39,13 +48,20 @@ void UGoodsDropper::ClearDropTableLibrary()
 
 /*
 */
-TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTable(UPARAM(ref)FRandomStream& RandStream, const FGoodsDropTable& GoodsTable, const float Level)
+void UGoodsDropper::SeedRandomStream(const int32 NewSeed)
+{
+	RandStream.Initialize(NewSeed);
+}
+
+/*
+*/
+TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTable(const FGoodsDropTable& GoodsTable, const float QuantityScale)
 {
 	TArray<FGoodsQuantity> AllGoods;
 
 	if (GoodsTable.bAsWeightedList)
 	{
-		AllGoods.Append(EvaluateGoodsDropChanceWeighted(RandStream, GoodsTable.GoodsOddsList, Level));
+		AllGoods.Append(EvaluateGoodsDropChanceWeighted(GoodsTable.GoodsOddsList, QuantityScale));
 	}
 	else
 	{
@@ -54,7 +70,7 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTable(UPARAM(ref)FRandomS
 		{
 			if (DropChance.Chance > 0.0f) // Don't bother evaluating if Chance is not > 0
 			{
-				AllGoods.Append(EvaluateGoodsDropChancePercent(RandStream, DropChance, Level));
+				AllGoods.Append(EvaluateGoodsDropChancePercent(DropChance, QuantityScale));
 			}
 		}
 	}
@@ -62,13 +78,13 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTable(UPARAM(ref)FRandomS
 	return AllGoods;
 }
 
-TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTableByName(UPARAM(ref)FRandomStream & RandStream, const FName & DropTableName, const float Level)
+TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTableByName(const FName & DropTableName, const float QuantityScale)
 {
 	TArray<FGoodsQuantity> AllGoods;
 	const FGoodsDropTable* FoundDropTable = FindDropTableInLibrary(DropTableName);
 	if (FoundDropTable != nullptr)
 	{
-		AllGoods = EvaluateGoodsDropTable(RandStream, *FoundDropTable, Level);
+		AllGoods = EvaluateGoodsDropTable(*FoundDropTable, QuantityScale);
 	}
 	else
 	{
@@ -97,7 +113,7 @@ const FGoodsDropTable* UGoodsDropper::FindDropTableInLibrary(const FName DropTab
 
 /*
 */
-TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChanceWeighted(UPARAM(ref)FRandomStream RandStream, const TArray<FGoodsDropChance>& DropChances, const float Level)
+TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChanceWeighted(const TArray<FGoodsDropChance>& DropChances, const float QuantityScale)
 {
 	TArray<FGoodsQuantity> AllGoods;
 	float TotalWeight = 0.0f;
@@ -109,13 +125,13 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChanceWeighted(UPARAM(ref
 		TotalWeight += DropChance.Chance;
 	}
 
-	Pick = RandStream.FRandRange(0, TotalWeight);
+	Pick = RandStream.FRandRange(0.0f, TotalWeight);
 	for (const FGoodsDropChance& DropChance : DropChances)
 	{
 		AccumWeight += DropChance.Chance;
 		if (Pick <= AccumWeight)
 		{
-			AllGoods.Append(GoodsForDropChance(RandStream, DropChance, Level));
+			AllGoods.Append(GoodsForDropChance(DropChance, QuantityScale));
 			break;
 		}
 	}
@@ -125,61 +141,36 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChanceWeighted(UPARAM(ref
 
 /*
 */
-TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChancePercent(UPARAM(ref)FRandomStream& RandStream, const FGoodsDropChance& DropChance, const float Level)
+TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChancePercent(const FGoodsDropChance& DropChance, const float QuantityScale)
 {
 	TArray<FGoodsQuantity> AllGoods;
 	
 	// Determine if this drop chance evaluates to a successful drop
 	if (RandStream.FRandRange(0.0f, 1.0f) <= DropChance.Chance)
 	{
-		AllGoods = GoodsForDropChance(RandStream, DropChance, Level);
+		AllGoods = GoodsForDropChance(DropChance, QuantityScale);
 	}
 	return AllGoods;
 }
 
 /*
 */
-TArray<FGoodsQuantity> UGoodsDropper::GoodsForDropChance(UPARAM(ref)FRandomStream & RandStream, const FGoodsDropChance & DropChance, const float Level)
+TArray<FGoodsQuantity> UGoodsDropper::GoodsForDropChance(const FGoodsDropChance & DropChance, const float QuantityScale)
 {
 	TArray<FGoodsQuantity> AllGoods;
 	FGoodsQuantity TmpGoods;
 
 	// Evaluate all GoodsQuantities and add them to our collection
-	for (const FGoodsQuantityRange& GoodsQuantity : DropChance.GoodsQuantities)
-	{
-		TmpGoods = EvaluateGoodsQuantityRange(RandStream, GoodsQuantity);
-		if (TmpGoods.Quantity > 0)
-		{
-			AllGoods.Add(TmpGoods);
-		}
-	}
-
+	AllGoods.Append(UGoodsFunctionLibrary::GoodsQuantitiesFromRanges(RandStream, DropChance.GoodsQuantities, QuantityScale));
+	
 	// Evaluate any other GoodsDropTables and add them to our collection (if any)
 	for (const FName& DropTableName : DropChance.OtherGoodsDrops)
 	{
 		// Find drop table in library
 		const FGoodsDropTable* DropTable = FindDropTableInLibrary(DropTableName);
-		AllGoods.Append(EvaluateGoodsDropTable(RandStream, *DropTable, Level));
+		if (DropTable) {
+			AllGoods.Append(EvaluateGoodsDropTable(*DropTable, QuantityScale));
+		}
 	}
 	return AllGoods;
-}
-
-/*
-*/
-FGoodsQuantity UGoodsDropper::EvaluateGoodsQuantityRange(UPARAM(ref)FRandomStream& RandStream, const FGoodsQuantityRange& QuantityRange)
-{
-	FGoodsQuantity Goods(QuantityRange.GoodsName, 0.0f);
-
-	if (QuantityRange.QuantityMax > 0)
-	{
-		if (QuantityRange.QuantityMin == QuantityRange.QuantityMax) 
-		{
-			Goods.Quantity = QuantityRange.QuantityMin;
-		}
-		else
-		{
-			Goods.Quantity = RandStream.FRandRange(0.0f, QuantityRange.QuantityMax - QuantityRange.QuantityMin) + QuantityRange.QuantityMin;
-		}
-	}
-	return Goods;
 }

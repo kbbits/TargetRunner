@@ -63,6 +63,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FName, TSubclassOf<AToolActorBase>> ToolClassMap;
 
+	// The GoodsDropper instance for this game mode.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UGoodsDropper* GoodsDropper;
 

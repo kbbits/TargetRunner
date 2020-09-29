@@ -17,7 +17,8 @@ UGridForgeBase::UGridForgeBase()
 void UGridForgeBase::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& TemplateGrid, bool& Successful)
 {
 	SetRoomGridTemplate(TemplateGrid);
-	
+
+	OnGenerateGridProgressDelegate.ExecuteIfBound(FProgressItem(TEXT("Generate Grid Template"), TEXT("Generating grid template"), 0.0f, 1.0f));
 	// Don't call PickStartAndEndCells() because we are choosing them manually in this base class.
 	TemplateGrid.StartCells.Empty();
 	TemplateGrid.StartCells.Add(FVector2D(0, 0));
@@ -53,7 +54,7 @@ void UGridForgeBase::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream,
 	Room.SouthWall = ETRWallState::Empty;
 	Room.WestWall = ETRWallState::Blocked;
 	GetRoomRow(TemplateGrid, 1)->RowRooms.Add(0, Room);
-
+	OnGenerateGridProgressDelegate.ExecuteIfBound(FProgressItem(TEXT("Generate Grid Template"), TEXT("Generating grid template finished"), 1.0f, 1.0f));
 	Successful = true;
 }
 
@@ -104,6 +105,7 @@ void UGridForgeBase::GenerateBlackoutCells(FRandomStream& RandStream)
 		float WidthY = static_cast<float>(WorkingRoomGridTemplate->GridExtentMaxY - WorkingRoomGridTemplate->GridExtentMinY) + 1.0f;
 		int32 BlackoutCount = 0;
 		bool bStopBlackoutSearch = false;
+		FProgressItem Progress = FProgressItem(TEXT("Generate Blackout Cells"), TEXT("Generating blackout cells"), 0, 0);
 		if (WidthX > 3 && WidthY > 3)
 		{
 			BlackoutCount = static_cast<int32>(FMath::RoundHalfToZero(FMath::Sqrt(WidthX * WidthY)) - RandStream.RandRange(0, 1));
@@ -114,10 +116,12 @@ void UGridForgeBase::GenerateBlackoutCells(FRandomStream& RandStream)
 		}
 		BlackoutCount = (int32)((float)BlackoutCount * BlackoutDensityFactor);
 		DebugLog(FString::Printf(TEXT("Generating blackout cells: %d"), BlackoutCount));
+		Progress.OfTotalProgress = BlackoutCount;
 		if (BlackoutCount > 0)
 		{
 			FVector2D BlackoutCoords;
 			int32 PickFails = 0;
+			OnGenerateGridProgressDelegate.ExecuteIfBound(Progress);
 			while (BlackoutCount > 0 && !bStopBlackoutSearch && (PickFails <= BlackoutCount * 3))
 			{
 				DebugLog(FString::Printf(TEXT("      Trying pick. Remaining %d. Fails: %d"), BlackoutCount, PickFails));
@@ -149,6 +153,7 @@ void UGridForgeBase::GenerateBlackoutCells(FRandomStream& RandStream)
 						BlockingGroups[GroupNumber]->RowCells.Add(GridCoordsToCellNumber(BlackoutCoords), NewCell);
 						--BlackoutCount;
 						PickFails = 0;
+						OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Update(TEXT("Blackout cell generated")));
 					}
 					else
 					{
@@ -161,7 +166,8 @@ void UGridForgeBase::GenerateBlackoutCells(FRandomStream& RandStream)
 					PickFails++;
 				}
 			}
-		}
+			OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Complete(TEXT("Blackout cells generated")));
+		}		
 #if WITH_EDITOR
 		if (bEnableClassDebugLog) {
 			DebugLog(FString::Printf(TEXT("Blackout cells generated: %d"), BlackoutCells.Num()));

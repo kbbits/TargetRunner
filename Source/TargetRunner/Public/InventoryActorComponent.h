@@ -7,6 +7,9 @@
 #include "GoodsQuantity.h"
 #include "InventoryActorComponent.generated.h"
 
+// Replication of inventory content is managed by all changes going through server. Each of those changes is 
+// replicated to owning client via RPCs called from the ServerXxxx functions.
+
 // Event dispatcher for when CurrentValue changes
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInventoryChanged, const TArray<FGoodsQuantity>&, ChangedItems);
 
@@ -31,6 +34,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 		TArray<FGoodsQuantity> SnapshotInventory;
 
+	// Any goods name that matches one of these strings will be filtered out of saveable goods in GeSaveableGoods()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<FString> UnsaveableGoodsFilters;
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -46,34 +53,47 @@ public:
 	//  bNegateGoodsQuantities - Set this to true to have each goods quantity multiplied by -1.0. (to simplify removing goods using postitive goods quantities)
 	// Note: actual changes to inventory are made by replicated functions that this calls. (ServerAddSubtractGoods, ClientUpdateInventoryQuantity).
 	UFUNCTION(BlueprintCallable)
-		bool AddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, float& CurrentQuantity, bool bAddToSnapshot = false);
+		bool AddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, float& CurrentQuantity, const bool bAddToSnapshot = false);
 
 	// [Server]
 	// Called from AddSubtractGoods()
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerAddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, bool bAddtoSnapshot = false);
+		void ServerAddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, const bool bAddtoSnapshot = false);
 
 	// [Any]
 	// Call this to Add (or subtract) quantities of goods from inventory. Returns true if all adjustments could be made, false otherwise (ex: if amount to remove is > current inventory)
 	//  bNegateGoodsQuantities - Set this to true to have each goods quantity multiplied by -1.0. (to simplify removing goods using postitive goods quantities)
 	// Note: actual changes to inventory are made by replicated functions that this calls. (ServerAddSubtractGoodsArray, ClientUpdateInventoryQuantity).
 	UFUNCTION(BlueprintCallable)
-		bool AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, TArray<FGoodsQuantity>& CurrentQuantities, bool bAddToSnapshot = false);
+		bool AddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, TArray<FGoodsQuantity>& CurrentQuantities, const bool bAddToSnapshot = false);
 
 	// [Server]
 	// Called from AddSubtractGoods()
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerAddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, bool bAddToSnapshot = false);
+		void ServerAddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities,  const bool bAddToSnapshot = false);
+
+	// [Server]
+	// Sets the contents of inventory. Usually don't need to call this manually - useful to reset state after a load. 
+	// This will call client if needed to handle replication.
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+		void ServerSetInventory(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods);
+
+	// [Client]
+	// Called from ServerSetInventory()
+	// Updates client side quantities - sets quantity to new quantity also sets snapshot inventory to new snapshot quantities.
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientSetInventory(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods);
+
 
 	// [Client]
 	// Called from ServerAddSubtractGoods()
-	// Updates client side quantity in client inventory.
+	// Updates client side quantity - sets quantity to new quantity. Snapshot delta is added to existing snapshot quantities.
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientUpdateInventoryQuantity(const FGoodsQuantity NewQuantity, const FGoodsQuantity SnapshotDelta);
 
 	// [Client]
 	// Called from ServerAddSubtractGoodsArray()
-	// Updates client side quantities in client inventory.
+	// Updates client side quantities - sets quantity to new quantity. Snapshot deltas are added to existing snapshot quantities.
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientUpdateInventoryQuantities(const TArray<FGoodsQuantity>& NewQuantities, const TArray<FGoodsQuantity>& SnapshotDeltas);
 
@@ -88,6 +108,11 @@ public:
 		void GetAllGoods(TArray<FGoodsQuantity>& AllGoods);
 
 	// [Any]
+	// Get all goods that pass the save block filters. See UnsaveableGoodsFilters.
+	UFUNCTION(BlueprintPure)
+		void GetSaveableGoods(TArray<FGoodsQuantity>& AllSaveableGoods);
+
+	// [Any]
 	// Check if the inventory contains the given goods
 	UFUNCTION(BlueprintPure)
 		bool HasGoods(const FGoodsQuantity Goods, float& CurrrentQuantity);
@@ -97,6 +122,21 @@ public:
 	UFUNCTION(BlueprintPure)
 		bool HasAllGoods(const TArray<FGoodsQuantity> Goods, TArray<FGoodsQuantity>& CurrrentQuantities);
 
+	// [Any]
+	// Returns true if inventory is empty.
+	UFUNCTION(BlueprintPure)
+		bool IsEmpty();
+	
+	// [Server]
+	// Sets the contents of snapshot inventory. Usually don't need to call this manually - useful to reset state after a load. 
+	// This will call client if needed to handle replication.
+	//UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+	//	void ServerSetSnapshotInventory(const TArray<FGoodsQuantity>& NewSnapshotGoods);
+
+	// [Client]
+	// Should not need to call directly. Called by ServerSetSnapshotInventory.
+	//UFUNCTION(Client, Reliable, WithValidation)
+	//	void ClientSetSnapshotInventory(const TArray<FGoodsQuantity>& NewSnapshotGoods);
 
 	// [Server]
 	// Empties the snapshot inventory. Usually don't need to call this manually. It is called when a new snapshot is started.

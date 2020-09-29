@@ -3,6 +3,8 @@
 
 #include "TRBPFunctionLibrary.h"
 
+// Used with older version of game for working with "DynScene" stuff.
+
 //TArray<FDynSceneLayerItemNames> UTRBPFunctionLibrary::EvaluateDynSceneTemplateToItemNames(FDynSceneTemplate Template, float PicksMultiplier = 1.0, float EnemyPicksMultiplier = 1.0)
 //{
 //}

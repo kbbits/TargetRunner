@@ -2,22 +2,30 @@
 
 
 #include "GridForgePrim.h"
+#include "RoomFunctionLibrary.h"
 #include "TrEnums.h"
 #include "..\Public\GridForgePrim.h"
 
 void UGridForgePrim::GenerateGridTemplate(UPARAM(ref) FRandomStream& RandStream, FRoomGridTemplate& RoomGridTemplate, bool& bSuccessful)
 {
 	DebugLog(FString::Printf(TEXT("%s - GenerateGridTemplate. Initial seed: %d , Current seed: %d"), *this->GetName(), RandStream.GetInitialSeed(), RandStream.GetCurrentSeed()));
+	FProgressItem Progress = FProgressItem(TEXT("Generate Grid Template"), TEXT("Setting up grid template"), 0.0f, 5.0f);
 
+	OnGenerateGridProgressDelegate.ExecuteIfBound(Progress);
 	EmptyGridTemplateCells();
 	SetRoomGridTemplate(RoomGridTemplate);
+	OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Update(TEXT("Generating blackout cells")));
 	GenerateBlackoutCells(RandStream);
+	OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Update(TEXT("Picking start and end cells")));
 	PickStartAndEndCells(RandStream);
+	OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Update(TEXT("Generating grid template")));
 	GenerateGridTemplateCells(RandStream, bSuccessful);
 	//if (bSuccessful)
 	//{
+		OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Update(TEXT("Translating to world")));
 		TranslateCellGridToRoomGrid(RandStream);
 	//}
+	OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Complete(TEXT("Generate grid finished")));
 }
 
 // Fill the GridTemplate using our version of the Prim algorithm.
@@ -25,6 +33,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 {
 	bSuccessful = false;
 	FRoomGridTemplate& RoomGridTemplate = *WorkingRoomGridTemplate;
+	FProgressItem Progress = FProgressItem(TEXT("Generate Grid Template Cells"), TEXT("Generate grid template cells"), 0.0f, 0.0f);
 
 	DebugLog(FString::Printf(TEXT("GridForgePrim::GenerateGridTemplateCells - Initial stream seed: %d"), RandStream.GetInitialSeed()));
 	DebugLog(FString::Printf(TEXT("GridForgePrim::GenerateGridTemplateCells - Current stream seed: %d"), RandStream.GetCurrentSeed()));
@@ -57,6 +66,8 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 		UE_LOG(LogTRGame, Error, TEXT("GridForgePrim - Could not create an unblocked start cell for grid."));
 		return;
 	}
+	Progress.OfTotalProgress = URoomFunctionLibrary::GetRoomTemplateCount(RoomGridTemplate, false); //(((RoomGridTemplate.GridExtentMaxX - RoomGridTemplate.GridExtentMinX) + 1) * ((RoomGridTemplate.GridExtentMaxY - RoomGridTemplate.GridExtentMinY) + 1)) - BlackoutCells.Num();
+	OnGenerateGridProgressDelegate.ExecuteIfBound(Progress);
 	StartCell->bFlagged = true;
 	StartCell->DistanceToStart = 0;
 	StartCell->DistanceToShortestPath = 0;
@@ -107,6 +118,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 				ConnectedCellCount++;
 			}
 			CurCell->ConnectedCells.Add(NextCoords);
+			OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Update());
 			DebugLog(FString::Printf(TEXT("GridForgePrim - Connected current cell X:%d Y:%d to neighbor X:%d Y:%d. Connected cells: %d"), CurCell->X, CurCell->Y, NextCell->X, NextCell->Y, CurCell->ConnectedCells.Num()));
 		}
 				
@@ -126,6 +138,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 		
 		CurCell = nullptr;
 	}
+	OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Complete(TEXT("Generated grid template cells")));
 	DebugLog(FString::Printf(TEXT("GridForgePrim - Conneccted %d grid cells."), ConnectedCellCount));
 
 	// Now start at end and calculate shortest path info.
@@ -141,6 +154,8 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 	bool bFoundShorter = false;
 	bool bBacktrack = false;
 	CurCell = nullptr;
+	Progress = FProgressItem(TEXT("Calculate Grid Template Cell Paths"), TEXT("Calculate grid template cell paths"), 0, ConnectedCellCount);
+	OnGenerateGridProgressDelegate.ExecuteIfBound(Progress);
 	ActiveCoords.Empty(FMath::DivideAndRoundUp(ConnectedCellCount, 2));
 	CurParent = GetCell(EndCoords, bFound);
 	if (CurParent == nullptr) {
@@ -190,6 +205,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 			}
 		}
 		LastChild = CurParent;
+		OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Update());
 		// Walk up to next parent
 		if (CurParent->ConnectedFrom.Num() > 0)
 		{
@@ -210,6 +226,7 @@ void UGridForgePrim::GenerateGridTemplateCells(UPARAM(ref) FRandomStream& RandSt
 			CurParent = nullptr;
 		}
 	}
+	OnGenerateGridProgressDelegate.ExecuteIfBound(Progress.Complete(TEXT("Calculated grid cell template paths")));
 }
 
 FVector2D UGridForgePrim::PickCoord_Implementation(UPARAM(ref) FRandomStream& RandStream, const TArray<FVector2D>& CoordArray)

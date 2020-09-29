@@ -31,6 +31,12 @@ void ARoomPlatformGridMgr::BeginPlay()
 }
 
 
+void ARoomPlatformGridMgr::OnGridForgeProgress(const FProgressItem ProgressItem)
+{
+	DebugLog(FString::Printf(TEXT("RoomPlatformGridMgr::OnGridForgeProgress: Code: %s,  %s, %.0f, %.0f"), *ProgressItem.Code.ToString(), *ProgressItem.Message, ProgressItem.CurrentProgress, ProgressItem.OfTotalProgress));
+}
+
+
 // Called every frame
 void ARoomPlatformGridMgr::Tick(float DeltaTime)
 {
@@ -49,7 +55,13 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	FRandomStream* ResourceStreamFound = nullptr;
 	// Grab the game mode.
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
-	if (GameMode == nullptr)
+	if (IsValid(GameMode))
+	{
+		// Get our random streams from game mode
+		GridStreamFound = &GameMode->GetGridStream();
+		ResourceStreamFound = &GameMode->GetResourceDropperStream();
+	}
+	else 
 	{
 		UE_LOG(LogTRGame, Error, TEXT("%s RoomPlatformGridMgr::GenerateGrid - Could not get GameMode. Using default rand stream."), *this->GetName());
 		// Use our default streams
@@ -58,18 +70,17 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 		ResourceStreamFound = &DefaultResourceDropperStream;
 		ResourceStreamFound->Reset();
 	}
-	else 
-	{
-		// Get our random streams from game mode
-		GridStreamFound = &GameMode->GetGridStream();
-		ResourceStreamFound = &GameMode->GetResourceDropperStream();
-	}
+	
 	FRandomStream& GridRandStream = *GridStreamFound;
 	FRandomStream& ResourceDropperStream = *ResourceStreamFound;
 	DebugLog(FString::Printf(TEXT("RoomPlatformGridMgr::GenerateGridImpl - GridRandStream seed: %d"), GridRandStream.GetInitialSeed()));
 	// Create the grid forge
 	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
-	if (GridForge == nullptr)
+	if (IsValid(GridForge))
+	{ 
+		GridForge->OnGenerateGridProgressDelegate.BindUObject(this, &ARoomPlatformGridMgr::OnGridForgeProgress);
+	}
+	else
 	{
 		UE_LOG(LogTRGame, Error, TEXT("%s RoomPlatformGridMgr::GenerateGrid - Could not construct GridForge."), *this->GetName());
 		return;
@@ -137,6 +148,7 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 		// Update the clients' room grid template
 		//ClientUpdateRoomGridTemplate(RoomGridTemplate);
 	}
+	GridForge->OnGenerateGridProgressDelegate.Unbind();
 }
 
 
@@ -254,9 +266,21 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	NewRoom = GetWorld()->SpawnActor<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(GridCoords), SpawnParams);
 	if (NewRoom != nullptr)
 	{
+		ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
 		NewRoom->MyGridManager = this;
 		NewRoom->RoomTemplate = *RoomTemplate;
-		NewRoom->bRoomTemplateSet = true;
+		NewRoom->bRoomTemplateSet = true;		
+		if (IsValid(GameMode))
+		{
+			// Get our random stream from game mode
+			NewRoom->PlatformRandStream.Initialize(GameMode->GetGridStream().RandRange(1, INT_MAX -1));
+		}
+		else
+		{
+			// Use our default streams
+			NewRoom->PlatformRandStream.Initialize(DefaultGridRandStream.RandRange(1, INT_MAX - 1));
+		}
+		DebugLog(FString::Printf(TEXT("  New room platform seed: %d"), NewRoom->PlatformRandStream.GetCurrentSeed()));
 		// TODO: Seed platform rand stream
 		NewRoom->GridX = GridCoords.X;
 		NewRoom->GridY = GridCoords.Y;

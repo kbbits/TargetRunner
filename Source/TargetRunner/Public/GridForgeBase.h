@@ -2,11 +2,15 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "Delegates/Delegate.h"
 #include "TargetRunner.h"
 #include "RoomGridTemplate.h"
 #include "GridTemplateCell.h"
 #include "GridTemplateCellRow.h"
+#include "ProgressItem.h"
 #include "GridForgeBase.generated.h"
+
+    DECLARE_DELEGATE_OneParam(FOnGenerateGridProgress, const FProgressItem);
 
 /**
  *
@@ -44,6 +48,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         int32 BlackoutSearchDistance; 
 
+    // Delegate event notification for grid generation progress.
+        FOnGenerateGridProgress OnGenerateGridProgressDelegate;
+
 protected:
 
     FRoomGridTemplate* WorkingRoomGridTemplate;
@@ -62,7 +69,7 @@ protected:
 
 #if WITH_EDITOR
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-        bool bEnableClassDebugLog = false;
+        bool bEnableClassDebugLog;
 #endif
 
     const int32 WALL_GROUP_ID = -1;
