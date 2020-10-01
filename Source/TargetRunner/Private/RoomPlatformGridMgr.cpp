@@ -34,6 +34,7 @@ void ARoomPlatformGridMgr::BeginPlay()
 void ARoomPlatformGridMgr::OnGridForgeProgress(const FProgressItem ProgressItem)
 {
 	DebugLog(FString::Printf(TEXT("RoomPlatformGridMgr::OnGridForgeProgress: Code: %s,  %s, %.0f, %.0f"), *ProgressItem.Code.ToString(), *ProgressItem.Message, ProgressItem.CurrentProgress, ProgressItem.OfTotalProgress));
+	OnGenerateProgress.Broadcast(ProgressItem);
 }
 
 
@@ -213,6 +214,18 @@ void ARoomPlatformGridMgr::SpawnRooms_Implementation()
 			}
 		}
 	}
+	// Now spawn all room contents
+	TArray<FVector2D> AllRoomCoords;
+	bool bFound;
+	URoomFunctionLibrary::GetAllRoomTemplateCoords(RoomGridTemplate, AllRoomCoords, true);
+	for (FVector2D RoomCoord : AllRoomCoords)
+	{
+		ARoomPlatformBase* RoomPlatform = Cast<ARoomPlatformBase>(GetPlatformInGrid(RoomCoord, bFound));
+		if (RoomPlatform != nullptr)
+		{
+			RoomPlatform->SpawnContents(); // calls SpawnResources
+		}
+	}
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		// Have the clients update their grid maps
@@ -280,7 +293,6 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 			// Use our default streams
 			NewRoom->PlatformRandStream.Initialize(DefaultGridRandStream.RandRange(1, INT_MAX - 1));
 		}
-		DebugLog(FString::Printf(TEXT("  New room platform seed: %d"), NewRoom->PlatformRandStream.GetCurrentSeed()));
 		// TODO: Seed platform rand stream
 		NewRoom->GridX = GridCoords.X;
 		NewRoom->GridY = GridCoords.Y;

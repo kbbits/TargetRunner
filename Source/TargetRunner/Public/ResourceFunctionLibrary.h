@@ -46,7 +46,7 @@ public:
 		static void MultiplyResourceQuantity(const TArray<FResourceQuantity>& Quantities, const float Multiplier, const bool bTruncate, TArray<FResourceQuantity>& MultipliedQuantities);
 
 	// Helper to get the Goods.Name for the specified ResourceType
-	// If we change to support ResourceTypeData mapping to Goods.Name by something other than Type, we'll need to change this.
+	// This currently maps the Resource.Code to Goods.Name.
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static FName GoodsNameForResource(const FResourceType& ResourceType);
 

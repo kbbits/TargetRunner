@@ -38,9 +38,10 @@ bool UResourceFunctionLibrary::FindResourceRateFilter(const TArray<FResourceRate
 
 	for (FResourceRateFilter RateFilter : ResourceFilters)
 	{
-		TmpDegree = ResourceFilterMatch(RateFilter.ResourceTypeFilter, RateFilter);
+		TmpDegree = ResourceFilterMatch(TargetType, RateFilter);
 		if (TmpDegree == ETRResourceMatch::Exact)
 		{
+			UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found exact match %s -- %s"), *TargetType.Code.ToString(), *RateFilter.ResourceTypeFilter.Code.ToString());
 			// Found exact match, so stop looking.
 			FoundRate = RateFilter;
 			FoundMatchDegree = ETRResourceMatch::Exact;
@@ -59,6 +60,7 @@ bool UResourceFunctionLibrary::FindResourceRateFilter(const TArray<FResourceRate
 	}
 	if (BestMatchDegree != ETRResourceMatch::None && bestDegree >= minDegree)
 	{
+		UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found match %s -- %s"), *TargetType.Code.ToString(), *BestMatch.ResourceTypeFilter.Code.ToString());
 		FoundRate = BestMatch;
 		FoundMatchDegree = BestMatchDegree;
 		return true;
@@ -133,7 +135,9 @@ void UResourceFunctionLibrary::MultiplyResourceQuantity(const TArray<FResourceQu
 
 FName UResourceFunctionLibrary::GoodsNameForResource(const FResourceType& ResourceType)
 {
-	return ResourceType.Type;
+	return ResourceType.Code;
+	//if (!ResourceType.SubType.IsNone()) { return ResourceType.SubType; }
+	//return ResourceType.Type.IsNone() ? ResourceType.Category : ResourceType.Type;
 }
 
 void UResourceFunctionLibrary::ResourceTypeForCode(const FName& ResourceCode, FResourceType& ResourceType)

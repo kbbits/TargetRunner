@@ -62,6 +62,10 @@ public:
 	// Should only be used on server.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FRandomStream DefaultResourceDropperStream;
+
+	// Delegate event notification for grid/room generation progress.
+	// Listeners bind to this to recieve room generation progress.
+	FOnGenerateProgress OnGenerateProgress;
 	
 protected:
 	// Called when the game starts or when spawned

@@ -73,7 +73,7 @@ enum class ETRResourceMatch : uint8
 	Category = 1	UMETA(DisplayName = "Category"),
 	Type = 2		UMETA(DisplayName = "Type"),
 	SubType	= 4		UMETA(DisplayName = "SubType"),
-	Exact = 128		UMETA(DisplayName = "Exact Match")
+	Exact = 127		UMETA(DisplayName = "Exact Match")
 };
 
 //UENUM(BlueprintType)

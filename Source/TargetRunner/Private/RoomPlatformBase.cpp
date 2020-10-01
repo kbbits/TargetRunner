@@ -62,7 +62,7 @@ void ARoomPlatformBase::GenerateRoom_Implementation()
 	{
 		SpawnFloor();
 		SpawnWalls();		
-		SpawnContents(); // Calls SpawnResources
+		//SpawnContents(); // Calls SpawnResources
 	}
 }
 
