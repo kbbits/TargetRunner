@@ -860,7 +860,7 @@ UGridTemplateCell* UGridForgeBase::GetOrCreateCellXY(const int32 X, const int32 
 			NewCell->CellState = ETRGridCellState::Open;
 		}
 		CurRow->RowCells.Add(Y, NewCell);
-		FString StateName = UEnum::GetValueAsString<ETRGridCellState>(NewCell->CellState);
+		FString StateName = GetEnumValueAsString<ETRGridCellState>(NewCell->CellState);
 		DebugLog(FString::Printf(TEXT("GridForgeBase - Created new cell X:%d Y:%d State:%s"), NewCell->X, NewCell->Y, *StateName));
 	}
 	return CurRow->RowCells[Y];
@@ -1237,10 +1237,10 @@ const int32 UGridForgeBase::GridCoordsToCellNumber(const FVector2D& Coords)
 
 FString UGridForgeBase::RoomToString(const FRoomTemplate& Room)
 {
-	FString NorthState = UEnum::GetValueAsString<ETRWallState>(Room.NorthWall);
-	FString EastState = UEnum::GetValueAsString<ETRWallState>(Room.EastWall);
-	FString SouthState = UEnum::GetValueAsString<ETRWallState>(Room.SouthWall);
-	FString WestState = UEnum::GetValueAsString<ETRWallState>(Room.WestWall);
+	FString NorthState = GetEnumValueAsString<ETRWallState>(Room.NorthWall);
+	FString EastState = GetEnumValueAsString<ETRWallState>(Room.EastWall);
+	FString SouthState = GetEnumValueAsString<ETRWallState>(Room.SouthWall);
+	FString WestState = GetEnumValueAsString<ETRWallState>(Room.WestWall);
 	return FString::Printf(TEXT("Room N:%s E:%s S:%s W:%s Group:%d, IsBlackout:%s"), *NorthState, *EastState, *SouthState, *WestState, Room.Group, Room.bIsBlackout ? TEXT("true") : TEXT("false"));
 }
 

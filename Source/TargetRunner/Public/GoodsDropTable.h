@@ -29,7 +29,7 @@ public:
 		bool bAsWeightedList;
 
 	// List of goods drop chances. Each entry has a chance of being dropped when this table is evaluated. See: AsWeightedList.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (TitleProperty = "GoodsQuantities"))
 		TArray<FGoodsDropChance> GoodsOddsList;
 
 };

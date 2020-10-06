@@ -79,6 +79,12 @@ float AToolActorBase::GetDamagePerShot_Implementation()
 	return 0.0f;
 }
 
+float AToolActorBase::GetActivationDelay_Implementation()
+{
+	if (Tool != nullptr) { return Tool->ActivationDelay.CurrentValue; }
+	return 0.0f;
+}
+
 TAssetPtr<USoundBase> AToolActorBase::GetFireSound_Implementation()
 {
 	return FireSound;

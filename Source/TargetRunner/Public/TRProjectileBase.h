@@ -24,8 +24,16 @@ public:
 
 	// The effective damage rates of this projectile against given resource types. Expressed as a percent of base damage (0.0 - 1.0).
 	// Values > 1.0 are allowed. Calculated damage against a resource type not matching any filters will = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true", TitleProperty="ResourceTypeFilter"))
 		TArray<FResourceRateFilter> BaseDamageRates;
+
+	// The number of times projectile will bounce when hitting world surfaces. Default = 0
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
+		int32 Bounces;
+
+	// The the speed of the projectile,
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
+		float ProjectileSpeed;
 
 protected:
 	// Called when the game starts or when spawned
@@ -38,7 +46,7 @@ public:
 	// IDoesDamageByType interface functions
 
 	// Get this projectile's damage rates
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons", meta = (TitleProperty = "ResourceTypeFilter"))
 		TArray<FResourceRateFilter> GetDamageRates();
 	virtual TArray<FResourceRateFilter> GetDamageRates_Implementation();
 

@@ -4,6 +4,7 @@
 #include "UObject/NoExportTypes.h"
 #include "ToolData.h"
 #include "AttributeData.h"
+#include "NamedPrimitiveTypes.h"
 //#include "ToolActorBase.h"
 #include "TRProjectileBase.h"
 #include "GoodsQuantity.h"
@@ -24,18 +25,6 @@ public:
 	// Unique instance ID
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FGuid ItemGuid;
-
-	// Value of the item in the shop
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-		float BuyValue;
-
-	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostFactor
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-		float UpgradeDamageCostMultiplier;
-
-	// Cost to upgrade an extraction rate by 1 percent = (BuyValue / 100) * UpgradeExtractionCostFactor
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-		float UpgradeExtractionCostMultiplier;
 
 	// Thumbnail for GUI use
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
@@ -62,25 +51,66 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		FAttributeData BaseDamage;
 
+	// Minimum time in seconds between activations (i.e. between shots). Shots per second = (1 / FireDelay) + 1
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+		FAttributeData ActivationDelay;
+
+	// The speed of the projectile
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+		FAttributeData ProjectileSpeed;
+
 	// The effective damage rates of this tool against given resource types. Expressed as a percent of base damage (0.0 - 1.0).
 	// Values > 1.0 are allowed. Calculated damage against a resource type not matching any filters will = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (TitleProperty = "ResourceTypeFilter"))
 		TArray<FResourceRateFilter> BaseDamageRates;
 
 	// The effective extraction rates of this tool against given resource types. Expressed as a percent (0.0 - 1.0).
 	// Values > 1.0 are allowed. Calculated extracted amounts against a resource type not matching any filters will = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (TitleProperty = "ResourceTypeFilter"))
 		TArray<FResourceRateFilter> BaseResourceExtractionRates;
 
 protected:
 
 	static const FName DAMAGE_RATES_NAME;				// = FName(TEXT("DamageRates"));
 	static const FName EXTRACTION_RATES_NAME;			// = FName(TEXT("ExtractionRates"));
-	static const FName BUY_VALUE_NAME;					// = FName(TEXT("BuyValue"));
-	static const FName UPGRADE_DAMAGE_MULTIPLIER_NAME;		// = FName(TEXT("UpgradeDamageCostMultiplier"));
-	static const FName UPGRADE_EXTRACTION_MULTIPLIER_NAME;	// = FName(TEXT("UpgradeExtractionCostMultiplier"));
+	
+	// Value of the item in the shop
+	UPROPERTY(EditDefaultsOnly)
+		FTRNamedFloat BuyValue;
+
+	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostFactor
+	UPROPERTY(EditDefaultsOnly)
+		FTRNamedFloat UpgradeDamageCostMultiplier;
+
+	// Cost to upgrade an extraction rate by 1 percent = (BuyValue / 100) * UpgradeExtractionCostFactor
+	UPROPERTY(EditDefaultsOnly)
+		FTRNamedFloat UpgradeExtractionCostMultiplier;
+
+	// The number of times projectile will bounce when hitting world surfaces. Default = 0
+	UPROPERTY(EditDefaultsOnly, Category = "Player Weapons")
+		FTRNamedInt MaximumBounces;
 
 public:
+
+	// Value of the item in the market
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE float GetBuyValue() { return BuyValue.Quantity; }
+
+	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostFactor
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE float GetUpgradeDamageCostMultiplier() { return UpgradeDamageCostMultiplier.Quantity; }
+
+	// Cost to upgrade an extraction rate by 1 percent = (BuyValue / 100) * UpgradeExtractionCostFactor
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE float GetUpgradeExtractionCostMultiplier() { return UpgradeExtractionCostMultiplier.Quantity; }
+
+	// The number of times projectile will bounce when hitting world surfaces. Default = 0
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE int32 GetMaximumBounces() { return MaximumBounces.Quantity; }
+
+	// The speed of the projectile
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE float GetProjectileSpeed() { return ProjectileSpeed.CurrentValue; }
 
 	// Transform this tool to a ToolData struct.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

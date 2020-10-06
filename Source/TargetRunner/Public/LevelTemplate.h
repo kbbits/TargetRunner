@@ -64,7 +64,7 @@ public:
 		float UnlockCost;
 
 	// Required to unlock the level.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (TitleProperty = "Name"))
 		TArray<FGoodsQuantity> UnlockGoods;
 
 	// Time available in the level run.
@@ -84,11 +84,11 @@ public:
 		TArray<FName> ThemeTags;
 
 	// The total resources available on this level.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (TitleProperty = "ResourceType"))
 		TArray<FResourceQuantity> ResourcesAvailable;
 
 	// The total quantities of other goods available on this level.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (TitleProperty = "Name"))
 		TArray<FGoodsQuantity> OtherGoodsAvailable;
 
 public:

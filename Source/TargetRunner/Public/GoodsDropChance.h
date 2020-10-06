@@ -18,7 +18,7 @@ public:
 		float Chance;
 	
 	// When this instance is evaluaed during drop, all goods in this list will be evaluated and included in the drop.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (TitleProperty = "GoodsName"))
 		TArray<FGoodsQuantityRange> GoodsQuantities;
 
 	// Array of names of GoodsDropTables to also be evaluated and included during drop.

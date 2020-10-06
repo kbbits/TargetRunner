@@ -50,7 +50,7 @@ public:
 		int32 DistanceToShortestPath = -1;
 
 	// Total quantity of Resources contained in this room. Room generation logic may split these into different numbers of nodes, etc.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "ResourceType"))
 		TArray<FResourceQuantity> Resources;
 		
 };

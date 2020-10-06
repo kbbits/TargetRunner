@@ -28,10 +28,10 @@ public:
 		FOnInventoryChanged OnInventoryChanged;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (TitleProperty = "Name"))
 		TArray<FGoodsQuantity> Inventory;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, meta = (TitleProperty = "Name"))
 		TArray<FGoodsQuantity> SnapshotInventory;
 
 	// Any goods name that matches one of these strings will be filtered out of saveable goods in GeSaveableGoods()

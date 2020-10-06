@@ -10,7 +10,8 @@ struct FResourceRateFilterSet
 
 public:
 
-	FResourceRateFilterSet() {
+	FResourceRateFilterSet() 
+	{
 	}
 
 	FResourceRateFilterSet(const TArray<FResourceRateFilter>& RateFilters)
@@ -20,8 +21,7 @@ public:
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (TitleProperty = "ResourceTypeFilter"))
 		TArray<FResourceRateFilter> Rates;
-
 
 };

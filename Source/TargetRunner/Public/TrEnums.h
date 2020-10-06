@@ -1,5 +1,16 @@
 #pragma once
 
+template<typename TEnum>
+static FORCEINLINE FString GetEnumValueAsString(/*const FString& Name,*/ TEnum Value) {
+	//const UEnum* enumPtr = FindObject<UEnum>(ANY_PACKAGE, *Name, true);
+	//if (!enumPtr) return FString("Invalid");
+	//return enumPtr->GetNameByValue((int64)Value).ToString();
+	static_assert(TIsEnum<TEnum>::Value, "Should only call this with enum types");
+	UEnum* EnumClass = StaticEnum<TEnum>();
+	check(EnumClass != nullptr);
+	return EnumClass->GetNameByValue((int64)Value).ToString();;
+}
+
 UENUM(BlueprintType)
 enum class ETRDirection : uint8
 {

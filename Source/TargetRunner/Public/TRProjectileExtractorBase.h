@@ -23,7 +23,7 @@ public:
 
 	// The effective extraction rates of this projectile against given resource types. Expressed as a percent (0.0 - 1.0).
 	// Values > 1.0 are allowed. Calculated extracted amounts against a resource type not matching any filters will = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", TitleProperty = "ResourceTypeFilter"))
 		TArray<FResourceRateFilter> ResourceExtractionRates;
 
 protected:
@@ -37,7 +37,7 @@ public:
 	// IExtractsResources interface functions
 
 	// Get this projectile's resource extraction rates
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Extracts Resources")
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Extracts Resources", meta = (TitleProperty = "ResourceTypeFilter"))
 		TArray<FResourceRateFilter> GetExtractionRates();
 	virtual TArray<FResourceRateFilter> GetExtractionRates_Implementation();
 	

@@ -120,6 +120,10 @@ public:
 	virtual float GetDamagePerShot_Implementation();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
+		float GetActivationDelay();
+	virtual float GetActivationDelay_Implementation();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
 		TAssetPtr<USoundBase> GetFireSound();
 	virtual TAssetPtr<USoundBase> GetFireSound_Implementation();
 

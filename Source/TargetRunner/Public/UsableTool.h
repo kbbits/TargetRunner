@@ -64,6 +64,9 @@ public:
 		float GetDamagePerShot();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
+		float GetActivationDelay();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
 		TAssetPtr<USoundBase> GetFireSound();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")

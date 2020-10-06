@@ -44,15 +44,15 @@ public:
 	// Total resources that will be extracted as the node is damaged. 
 	// Amount extracted during each damage event is proportional to damage dealt as percent of node base health.
 	// ex: if a damage event does damage equal to 20% of the node's base health then 20% of the node's ResourcesByDamage will be extracted.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", TitleProperty = "ResourceType"))
 		TArray<FResourceQuantity> ResourcesByDamage;
 
 	// Tracks remaining ResourceByDamage quantities.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_ResourcesByDamageCurrent)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_ResourcesByDamageCurrent, meta = (TitleProperty = "ResourceType"))
 		TArray<FResourceQuantity> ResourcesByDamageCurrent;
 
 	// Resources that will be extracted when the node's health reaches 0.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", TitleProperty = "ResourceType"))
 		TArray<FResourceQuantity> ResourcesOnDestroy;
 
 protected:
