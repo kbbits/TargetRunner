@@ -17,15 +17,6 @@ public:
 	// Sets default values for this actor's properties
 	ARoomPlatformBase();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		USceneComponent* RoomRoot;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		USceneComponent* RoomSceneComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UStaticMeshComponent* FloorMeshComponent;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 		TArray<ETRWallState> WallTemplate;
 

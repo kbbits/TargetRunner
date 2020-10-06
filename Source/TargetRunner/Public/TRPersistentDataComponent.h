@@ -8,6 +8,7 @@
 #include "UnrealNetwork.h"
 #include "LevelTemplate.h"
 #include "LevelTemplateContextStruct.h"
+#include "GoodsPurchaseItem.h"
 #include "PlayerSaveData.h"
 #include "TRPersistentDataComponent.generated.h"
 
@@ -16,6 +17,8 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewLevelTemplatesPage, const TArray<FLevelTemplateContextStruct>&, NewLevelTemplatesPage);
 // Delegate for when player data has been loaded
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDataLoaded);
+// Delegate when goods market data has been retrieved
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGoodsMarketDataRetrieved, const TArray<FGoodsPurchaseItem>&, MarketGoods);
 // Tool Data dispatcher
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewPlayerToolData, const TArray<FToolData>&, NewPlayerToolData);
 
@@ -44,6 +47,10 @@ public:
 	// Delegate event when player data has been loaded.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnPlayerDataLoaded OnPlayerDataLoaded;
+
+	// Delegate when goods market data has been retreived.
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnGoodsMarketDataRetrieved OnGoodsMarketDataRetrieved;
 
 	//UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_PlayerToolDataLoaded)
 	//	TArray<FToolData> PlayerToolData;
@@ -126,4 +133,16 @@ public:
 	// Echo loaded player data back to client
 	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
 		void ClientEchoLoadPlayerData(const FPlayerSaveData PlayerSaveData);
+
+	// Market Data
+
+	// [Server]
+	// Retrieve the goods market data for the given player.  Results in call to client's ClientGoodsMarketDataRetrieved.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerRetrieveGoodsMarketData();
+
+	// [Client]
+	// Server calls this on client to pass the goods market data for the player.
+	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
+		void ClientEchoGoodsMarketData(const TArray<FGoodsPurchaseItem>& GoodsMarketData);
 };

@@ -34,8 +34,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* ResourceTypeDataTable;
 
-
-
 public:
 
 	// Helper to get the Goods.Name for the specified ResourceType
@@ -47,6 +45,4 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Resource Functions")
 		bool GetResourceTypeData(const FResourceType& ForResourceType, FResourceTypeData& ResourceData);
 	
-
-
 };

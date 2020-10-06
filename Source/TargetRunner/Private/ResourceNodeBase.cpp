@@ -94,7 +94,7 @@ bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float D
 	ExtractedQuantities.Reserve(ResourcesByDamage.Num());
 	for (FResourceQuantity CurResource : ResourcesByDamage)
 	{
-		if (UResourceFunctionLibrary::FindResourceRateFilter(ExtractionRates, CurResource.ResourceType, FoundRate, FoundSimilarity))
+		if (UResourceFunctionLibrary::FindBestResourceRateFilter(ExtractionRates, CurResource.ResourceType, FoundRate, FoundSimilarity))
 		{
 			UE_LOG(LogTRGame, Log, TEXT("ExtractedResourcesForDamage - target resource type: %s Found resource rate: %s  %.2f"), *CurResource.ResourceType.Code.ToString(), *FoundRate.ResourceTypeFilter.Code.ToString(), FoundRate.Rate)
 			ExtractedQuantity = FMath::CeilToFloat((CurResource.Quantity * DamagePercent) * FoundRate.Rate);
@@ -145,7 +145,7 @@ bool AResourceNodeBase::ExtractedResourcesOnDestroy_Implementation(const TArray<
 	ExtractedQuantities.Reserve(ResourcesByDamage.Num());
 	for (FResourceQuantity CurResource : ResourcesOnDestroy)
 	{
-		if (UResourceFunctionLibrary::FindResourceRateFilter(ExtractionRates, CurResource.ResourceType, FoundRate, FoundSimilarity))
+		if (UResourceFunctionLibrary::FindBestResourceRateFilter(ExtractionRates, CurResource.ResourceType, FoundRate, FoundSimilarity))
 		{
 			ExtractedQuantity = FMath::RoundHalfToZero(CurResource.Quantity * FoundRate.Rate);
 			if (ExtractedQuantity < 0.0f) { ExtractedQuantity = 0.0f; }

@@ -12,14 +12,7 @@ ARoomPlatformBase::ARoomPlatformBase()
 	bReplicates = true;
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
-	bRoomTemplateSet = false;
-	RoomRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	SetRootComponent(RoomRoot);
-	RoomSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RoomScene"));
-	RoomSceneComponent->SetupAttachment(GetRootComponent());
-	FloorMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorMeshComponent"));
-	FloorMeshComponent->AttachToComponent(RoomSceneComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	bRoomTemplateSet = false;	
 }
 
 void ARoomPlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
@@ -80,7 +73,7 @@ bool ARoomPlatformBase::CalculateWalls()
 		FVector Margin;
 		FRotator CurrentRotation = FRotator(0.0, 0.0, 0.0);
 		FVector DefaultScale(1.0, 1.0, 1.0);
-		FTransform RoomTransform = RoomSceneComponent->GetComponentTransform();
+		FTransform RoomTransform = PlatformScene->GetComponentTransform();
 
 		// Empty any previous transforms, size the array to hold what we will need.
 		WallSectionTransforms.Empty(MyGridManager->RoomCellSubdivision * 4);

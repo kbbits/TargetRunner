@@ -6,7 +6,7 @@
 
 ETRResourceMatch UResourceFunctionLibrary::ResourceFilterMatch(const FResourceType& ResourceType, const FResourceRateFilter& ResourceFilter)
 {
-	if (!ResourceFilter.ResourceTypeFilter.Category.IsNone() && ResourceType.Category == ResourceFilter.ResourceTypeFilter.Category)
+	/*if (!ResourceFilter.ResourceTypeFilter.Category.IsNone() && ResourceType.Category == ResourceFilter.ResourceTypeFilter.Category)
 	{
 		if (!ResourceFilter.ResourceTypeFilter.Type.IsNone() && ResourceType.Type == ResourceFilter.ResourceTypeFilter.Type)
 		{
@@ -24,8 +24,37 @@ ETRResourceMatch UResourceFunctionLibrary::ResourceFilterMatch(const FResourceTy
 			return ETRResourceMatch::Category;
 		}		
 	}
+	*/
+	if (!ResourceFilter.ResourceTypeFilter.Category.IsNone())
+	{
+		if (ResourceType.Category == ResourceFilter.ResourceTypeFilter.Category)
+		{
+			if (!ResourceFilter.ResourceTypeFilter.Type.IsNone())
+			{
+				if (ResourceType.Type == ResourceFilter.ResourceTypeFilter.Type)
+				{
+					if (!ResourceFilter.ResourceTypeFilter.SubType.IsNone())
+					{
+						if (ResourceType.SubType == ResourceFilter.ResourceTypeFilter.SubType)
+						{
+							return ETRResourceMatch::Exact;
+						}
+					}
+					else
+					{
+						return ETRResourceMatch::Type;
+					}
+				}
+			}
+			else
+			{
+				return ETRResourceMatch::Category;
+			}
+		}
+	}
 	return ETRResourceMatch::None;
 }
+
 
 bool UResourceFunctionLibrary::FindResourceRateFilter(const TArray<FResourceRateFilter>& ResourceFilters, const FResourceType& TargetType, FResourceRateFilter& FoundRate, ETRResourceMatch& FoundMatchDegree, const ETRResourceMatch& MinimumMatchDegree)
 {
@@ -67,6 +96,37 @@ bool UResourceFunctionLibrary::FindResourceRateFilter(const TArray<FResourceRate
 	}
 	return false;
 }
+
+
+bool UResourceFunctionLibrary::FindBestResourceRateFilter(const TArray<FResourceRateFilter>& ResourceFilters, const FResourceType& TargetType, FResourceRateFilter& FoundRate, ETRResourceMatch& FoundMatchDegree, const ETRResourceMatch& MinimumMatchDegree)
+{
+	ETRResourceMatch BestMatchDegree = ETRResourceMatch::None;
+	ETRResourceMatch TmpDegree = ETRResourceMatch::None;
+	FResourceRateFilter BestRate = FResourceRateFilter();
+	uint8 MinDegree = static_cast<uint8>(MinimumMatchDegree);
+	
+	for (FResourceRateFilter RateFilter : ResourceFilters)
+	{
+		TmpDegree = ResourceFilterMatch(TargetType, RateFilter);
+		if (TmpDegree == ETRResourceMatch::Category && !RateFilter.ResourceTypeFilter.Type.IsNone()) { continue; }
+		if (TmpDegree == ETRResourceMatch::Type && !RateFilter.ResourceTypeFilter.SubType.IsNone()) { continue; }
+		if (static_cast<uint8>(TmpDegree) >= MinDegree && RateFilter.Rate > BestRate.Rate)
+		{
+			UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found match %s -- %s"), *TargetType.Code.ToString(), *RateFilter.ResourceTypeFilter.Code.ToString());
+			BestRate = RateFilter;
+			BestMatchDegree = TmpDegree;
+		}
+	}
+	if (BestMatchDegree != ETRResourceMatch::None)
+	{
+		UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - best matching rate %s %.2f"), *BestRate.ResourceTypeFilter.Code.ToString(), BestRate.Rate);
+		FoundRate = BestRate;
+		FoundMatchDegree = BestMatchDegree;
+		return true;
+	}
+	return false;
+}
+
 
 TArray<FResourceQuantity> UResourceFunctionLibrary::AddResourceQuantities(const TArray<FResourceQuantity>& QuantitiesOne, const TArray<FResourceQuantity>& QuantitiesTwo)
 {
@@ -162,21 +222,6 @@ void UResourceFunctionLibrary::ResourceTypeForCode(const FName& ResourceCode, FR
 void UResourceFunctionLibrary::ResourceTypeForData(const FResourceTypeData& ResourceData, FResourceType& ResourceType)
 {
 	ResourceTypeForCode(ResourceData.Code, ResourceType);
-	//if (!ResourceData.Code.IsNone())
-	//{
-	//	TArray<FString> CodeStrings;
-	//	ResourceData.Code.ToString().ParseIntoArray(CodeStrings, TEXT("."), true);
-	//	ResourceType = FResourceType(
-	//		ResourceData.Code,												/* Code */
-	//		CodeStrings.IsValidIndex(0) ? FName(*CodeStrings[0]) : FName(), /* Category */
-	//		CodeStrings.IsValidIndex(1) ? FName(*CodeStrings[1]) : FName(), /* Type */
-	//		CodeStrings.IsValidIndex(2) ? FName(*CodeStrings[2]) : FName()  /* SubType */
-	//	);
-	//}
-	//else
-	//{
-	//	ResourceType = FResourceType();
-	//}
 }
 
 int32 UResourceFunctionLibrary::ResourceDataInTier(const UDataTable* ResourceDataTable, const float MinTier, const float MaxTier, TArray<FResourceTypeData>& ResourceData)

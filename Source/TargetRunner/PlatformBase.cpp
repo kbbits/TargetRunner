@@ -11,7 +11,15 @@ APlatformBase::APlatformBase()
 {
 	bReplicates = true;
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+
+	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	SetRootComponent(RootScene);
+	PlatformScene = CreateDefaultSubobject<USceneComponent>(TEXT("PlatformScene"));
+	PlatformScene->SetupAttachment(GetRootComponent());
+	PlatformControlZone = CreateDefaultSubobject<UBoxComponent>(TEXT("PlatformControlZone"));
+	PlatformControlZone->AttachToComponent(PlatformScene, FAttachmentTransformRules::KeepRelativeTransform);
+
+	PrimaryActorTick.bCanEverTick = true;	
 }
 
 // Called when the game starts or when spawned

@@ -4,6 +4,7 @@
 
 #include "Core.h"
 #include "GameFramework/Actor.h"
+#include "Components/BoxComponent.h"
 #include "PlatformBase.generated.h"
 
 class APlatformGridMgr;
@@ -16,6 +17,15 @@ class TARGETRUNNER_API APlatformBase : public AActor
 public:	
 	// Sets default values for this actor's properties
 	APlatformBase();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USceneComponent* RootScene;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USceneComponent* PlatformScene;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UBoxComponent* PlatformControlZone;
 
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, SaveGame, Meta = (ExposeOnSpawn = "true"))
 		int32 GridX;

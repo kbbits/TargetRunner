@@ -3,6 +3,16 @@
 
 #include "GoodsFunctionLibrary.h"
 
+TArray<FGoodsQuantity> UGoodsFunctionLibrary::MultiplyGoodsQuantities(const TArray<FGoodsQuantity> GoodsQuantities, const float Multiplier)
+{
+	TArray<FGoodsQuantity> NewQuantities;
+	for (FGoodsQuantity CurQuantity : GoodsQuantities) 
+	{
+		NewQuantities.Add(FGoodsQuantity(CurQuantity.Name, CurQuantity.Quantity * Multiplier));
+	}
+	return NewQuantities;
+}
+
 FGoodsQuantity UGoodsFunctionLibrary::GoodsQuantityFromRange(FRandomStream& RandStream, const FGoodsQuantityRange& QuantityRange, const float QuantityScale /* 0.0 - 1.0 */)
 {
 	FGoodsQuantity Goods(QuantityRange.GoodsName, 0.0f);

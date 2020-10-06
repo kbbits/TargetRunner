@@ -3,6 +3,7 @@
 
 #include "TRPersistentDataComponent.h"
 #include "..\Public\TRPersistentDataComponent.h"
+#include "TRGameModeLobby.h"
 #include "TRPlayerControllerBase.h"
 #include "TRPlayerState.h"
 #include "PlayerSave.h"
@@ -459,6 +460,44 @@ void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const F
 
 
 bool UTRPersistentDataComponent::ClientEchoLoadPlayerData_Validate(const FPlayerSaveData PlayerSaveData)
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ServerRetrieveGoodsMarketData_Implementation()
+{
+	TArray<FGoodsPurchaseItem> MarketGoods;
+	ATRGameModeLobby* GameMode = Cast<ATRGameModeLobby>(UGameplayStatics::GetGameMode(GetOwner()));
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (GameMode)
+	{
+		if (GameMode->GetMarketDataForPlayer(TRPlayerController, MarketGoods) > 0)
+		{
+			if (TRPlayerController->IsLocalController())
+			{
+				OnGoodsMarketDataRetrieved.Broadcast(MarketGoods);
+			}
+			else
+			{
+				ClientEchoGoodsMarketData(MarketGoods);
+			}
+		}
+	}
+}
+
+bool UTRPersistentDataComponent::ServerRetrieveGoodsMarketData_Validate()
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ClientEchoGoodsMarketData_Implementation(const TArray<FGoodsPurchaseItem>& GoodsMarketData)
+{
+	OnGoodsMarketDataRetrieved.Broadcast(GoodsMarketData);
+}
+
+bool UTRPersistentDataComponent::ClientEchoGoodsMarketData_Validate(const TArray<FGoodsPurchaseItem>& GoodsMarketData)
 {
 	return true;
 }

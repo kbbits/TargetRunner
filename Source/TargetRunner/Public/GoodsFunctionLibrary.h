@@ -20,6 +20,10 @@ class TARGETRUNNER_API UGoodsFunctionLibrary : public UBlueprintFunctionLibrary
 		
 public:
 
+	// Multiply the quantity of each good by the given multiplier.
+	UFUNCTION(BlueprintPure, Category = "Goods")
+		static TArray<FGoodsQuantity> MultiplyGoodsQuantities(const TArray<FGoodsQuantity> GoodsQuantities, const float Multiplier);
+
 	// Transform a goods quantity range to a goods quantity. 
 	// If optional QuantityScale is provided, the quantity will be mapped from min to max according to the scale (0-1) instead of determining randomly.
 	UFUNCTION(BlueprintCallable, Category = "Goods")

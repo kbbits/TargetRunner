@@ -28,13 +28,17 @@ public:
 
 	// Finds the most specific resource rate filter in the array of FResourceRateFilters matching the given resource type.
 	// Returns true if a match was found, false otherwise.
-	// NOTE: Any fields in the ResourceFilters ResourceType that are "None" (NAME_NONE) are wildcards.
+	// NOTE: Any fields in the ResourceFilters ResourceType that are "None" (NAME_NONE) are wildcards and cause all more granular filters to behave as None.
 	// Ex: If ResourceFilters contains these: [{Category: "Metal", Type: "Copper", SubType: "None", Rate: 2.0}, {Category: "Metal", Type: "None", SubType: "None", Rate: 1.0}, {Category: "Metal", Type: "Iron", SubType: "None", Rate: 4.0}]
 	//    Then calling this with a ResourceType {Category: "Metal", Type: "Copper", SubType: "None"} will return the first rate with Rate=2.0, FoundMatchDegree = ETRResourceMatch::Type
 	//    Calling this with a ResourceType {Category: "Metal", Type: "Aluminum", SubType: "None"} will return the second rate with Rate=1.0, FoundMatchDegree = ETRResourceMatch::Category
 	//    Calling this with a ResourceType {Category: "Energy", Type: "Photon", SubType: "None"} will return a "None" rate with Rate=0.0, FoundMatchDegree = ETRResourceMatch::None
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static bool FindResourceRateFilter(const TArray<FResourceRateFilter>& ResourceFilters, const FResourceType& TargetType, FResourceRateFilter& FoundRate, ETRResourceMatch& FoundMatchDegree, const ETRResourceMatch& MinimumMatchDegree = ETRResourceMatch::Category);
+	
+	// Similar to FindResourceRateFilter, but this will return the highest rate among all matching resource types, not the most closely matching one.
+	UFUNCTION(BlueprintPure, Category = "Resource Functions")
+		static bool FindBestResourceRateFilter(const TArray<FResourceRateFilter>& ResourceFilters, const FResourceType& TargetType, FResourceRateFilter& FoundRate, ETRResourceMatch& FoundMatchDegree, const ETRResourceMatch& MinimumMatchDegree = ETRResourceMatch::Category);
 
 	// Adds two arrays of FResourceQuantites into a single summed array with one entry for each resource type
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
