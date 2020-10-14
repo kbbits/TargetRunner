@@ -236,7 +236,8 @@ int32 UResourceFunctionLibrary::ResourceDataInTier(const UDataTable* ResourceDat
 			UE_LOG(LogTRGame, Error, TEXT("%s - ResourcesDataInTier - ResourceDataTable does not contain ResourceTypeData rows."));
 			break;
 		}
-		if (MinTier <= PickedRow->Tier && PickedRow->Tier <= MaxTier)
+		// Exclude "category only" resources.
+		if (PickedRow->Code.ToString().Contains(TEXT(".")) && MinTier <= PickedRow->Tier && PickedRow->Tier <= MaxTier)
 		{
 			ResourceData.Add(PickedRow);
 			FoundCnt++;

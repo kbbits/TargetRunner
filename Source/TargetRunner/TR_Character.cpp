@@ -15,7 +15,7 @@ ATR_Character::ATR_Character(const FObjectInitializer& OI) : Super(OI)
 	ResourceCollectionVolume = OI.CreateDefaultSubobject<UCapsuleComponent>(this, FName("Resource Collector"));
 	ResourceCollectionVolume->SetupAttachment(GetCollectorParentComponent());
 	ResourceCollectionVolume->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-	ResourceCollectionVolume->InitCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.2, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	ResourceCollectionVolume->InitCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.5f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 1.2f);
 	ResourceCollectionVolume->SetCollisionProfileName(TEXT("PickupOverlap"));
 	ResourceCollectionVolume->OnComponentBeginOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapBegin);
 	ResourceCollectionVolume->OnComponentEndOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapEnd);
@@ -24,23 +24,28 @@ ATR_Character::ATR_Character(const FObjectInitializer& OI) : Super(OI)
 void ATR_Character::PostInitProperties()
 {
 	Super::PostInitProperties();
-	if (ResourceCollectionVolume)
-	{
-		ResourceCollectionVolume->AttachToComponent(GetCollectorParentComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-		ResourceCollectionVolume->SetCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.2, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-	}
+	SetupCollectionVolume();
 }
 
 #if WITH_EDITOR
 void ATR_Character::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {	
-	if (ResourceCollectionVolume)
-	{
-		ResourceCollectionVolume->SetCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.2, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-	}
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
 #endif
+
+void ATR_Character::SetupCollectionVolume_Implementation()
+{
+	if (ResourceCollectionVolume)
+	{
+		if (ResourceCollectionVolume->GetAttachParent() != GetCollectorParentComponent())
+		{
+			ResourceCollectionVolume->AttachToComponent(GetCollectorParentComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
+		ResourceCollectionVolume->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+		ResourceCollectionVolume->SetCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.5f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 1.2f);
+	}
+}
 
 // Called when the game starts or when spawned
 void ATR_Character::BeginPlay()
@@ -70,7 +75,7 @@ USceneComponent* ATR_Character::GetCollectorParentComponent_Implementation()
 
 void ATR_Character::OnCollectorOverlapBegin_Implementation(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	//UE_LOG(LogTRGame, Log, TEXT("Collector overlapped (native)"));
+	//UE_LOG(LogTRGame, Log, TEXT("Collector overlapped (native): %s"), *OtherActor->GetName());
 	TArray<FGoodsQuantity> CollectedGoods;
 	if (OtherActor && OtherActor != this)
 	{

@@ -14,7 +14,7 @@
 /**
  * 
  */
-UCLASS(BlueprintType, Blueprintable, Config = Game)
+UCLASS(BlueprintType, Blueprintable)
 class TARGETRUNNER_API UGoodsDropper : public UObject
 {
 	GENERATED_BODY()

@@ -6,10 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "UnrealNetwork.h"
 #include "CollectableResource.h"
+#include "InspectableItem.h"
 #include "TRPickupBase.generated.h"
 
 UCLASS()
-class TARGETRUNNER_API ATRPickupBase : public AActor, public ICollectableResource
+class TARGETRUNNER_API ATRPickupBase : public AActor, public ICollectableResource, public IInspectableItem
 {
 	GENERATED_BODY()
 	
@@ -27,7 +28,7 @@ public:
 
 protected:
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	//	USceneComponent* RootScene;
+	//	USceneComponent* RootScene
 
 protected:
 	// Called when the game starts or when spawned
@@ -43,15 +44,22 @@ public:
 
 	// ICollectableResource interface functions
 
-	// Get the resource goods to collect.
+	// Get the resource goods to collect. Default implementation: if !bCollected it returns all PickupGoods otherwise returns empty array.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")
 		void GetResourceGoods(TArray<FGoodsQuantity>& CollectedGoods);
 	virtual void GetResourceGoods_Implementation(TArray<FGoodsQuantity>& CollectedGoods);
 
 	// Call this to notify this entity that it has been collected.
-	// Generally this entity will then destroy itself.
+	// Default implementation sets bCollected = true then destroys self.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")
 		void NotifyCollected();
 	virtual void NotifyCollected_Implementation();
 
+	// IInspectableItem interface functions
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
+		FText GetItemDisplayName();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
+		FInspectInfo GetInspectInfo();
 };

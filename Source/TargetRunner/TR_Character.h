@@ -21,6 +21,11 @@ public:
 		UCapsuleComponent* ResourceCollectionVolume;
 	
 protected:
+
+	// Adjusts ResourceCollectionVolume component size.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void SetupCollectionVolume();
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -41,6 +46,7 @@ public:
 	virtual USceneComponent* GetCollectorParentComponent_Implementation();
 
 	// Collector overlap begin
+	// Default implementation handles collecting ICollectablResource(s).
 	UFUNCTION(BlueprintNativeEvent)
 		void OnCollectorOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	virtual void OnCollectorOverlapBegin_Implementation(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

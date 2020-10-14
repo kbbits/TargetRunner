@@ -55,3 +55,24 @@ void ATRPickupBase::NotifyCollected_Implementation()
 	bCollected = true;
 	Destroy();
 }
+
+
+FText ATRPickupBase::GetItemDisplayName_Implementation()
+{
+	if (PickupGoods.Num() > 0)
+	{
+		return FText::FromString(PickupGoods[0].Name.ToString());
+	}
+	return FText();
+}
+
+FInspectInfo ATRPickupBase::GetInspectInfo_Implementation()
+{
+	FInspectInfo Info;
+	Info.DisplayName = GetItemDisplayName();
+	for (FGoodsQuantity Goods : PickupGoods)
+	{
+		Info.DetailInfo.Add(FInspectInfoItem(FText::FromString(Goods.Name.ToString()), FText::FromString(FString::Printf(TEXT("%.0f"), Goods.Quantity))));
+	}
+	return Info;
+}

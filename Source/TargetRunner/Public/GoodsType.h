@@ -23,9 +23,13 @@ public:
 		TAssetPtr<UTexture2D> Thumbnail;
 
 	// Optional actor class to spawn when placing into the world.
-	// If null, this GoodsType cannot be placed in the world. (ex: add directly to player inventory instead)
+	// If valid, this will be the actor used to place the goods in the world. If not valid, it will be placed as a GoodsPickup using this DefaultMesh. See: GoodsPickup_BP.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TSoftClassPtr<AActor> ActorClass;
+
+	// The default mesh to use when placing these goods into the world. See: GoodsPickup_BP
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TAssetPtr<UStaticMesh> DefaultMesh;
 
 	// Various tags related to this GoodsType.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)

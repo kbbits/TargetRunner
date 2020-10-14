@@ -49,6 +49,11 @@
 			"Name": "RamaSaveSystem",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/6c81d0b2b68f445cb24616fa39a462c2"
+		},
+		{
+			"Name": "ThumbnailerLite",
+			"Enabled": false,
+			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/d2c5ab29e4b54f5ea707fe691d0c9d35"
 		}
 	],
 	"TargetPlatforms": [
