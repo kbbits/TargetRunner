@@ -49,10 +49,13 @@ ETRWeaponState AToolActorBase::GetCurrentState_Implementation()
 	return WeaponState;
 }
 
+// Base class does nothing but set state if this tool allows activating.
 void AToolActorBase::BeginFire_Implementation()
 {
-	// Base class does nothing but set state.
-	WeaponState = ETRWeaponState::Firing;
+	if (Tool && Tool->bAllowsActivation)
+	{
+		WeaponState = ETRWeaponState::Firing;
+	}
 }
 
 void AToolActorBase::EndFire_Implementation()

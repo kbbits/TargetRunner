@@ -6,6 +6,7 @@
 #include "Delegates/Delegate.h"
 #include "Components/ActorComponent.h"
 #include "AttributeData.h"
+#include "ModifiableAttributes.h"
 #include "ActorAttributeComponent.generated.h"
 
 // Event dispatcher for when CurrentValue changes
@@ -28,15 +29,16 @@ public:
 	// Sets default values for this component's properties
 	UActorAttributeComponent();
 
-	// The attribute data.
+	// The base attribute data. Use accessors to get current values.
 	// Modifying this directly skips notifications and clamping logic.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_AttributeDataChanged, SaveGame, Category = "ItemAttributes")
 		FAttributeData AttributeData;
 
-	// Rate of attribute change (per second).
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
-	//	float RechargeRate = 0;
-
+	// The current state of the attribute, including any mods applied. Current Value is pulled from here.
+	// Use accessors to ensure correct getting/setting of values.
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, ReplicatedUsing = OnRep_ModifiedAttributeDataChanged, Transient, Category = "ItemAttributes")
+		FAttributeData ModifiedAttributeData;
+			
 	// If true, attribute recharge will be suspended.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
 		bool bRechargePaused = false;
@@ -58,8 +60,16 @@ public:
 		FOnDeltaMinMax OnDeltaMinMax;
 
 protected:
+
+	// These are only tracked on the server and should be re-applied after construction.
+	UPROPERTY(EditInstanceOnly, Replicated, Transient, Category = "ItemAttributes")
+		TArray<FAttributeModifier> Modifiers;
+
+protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	void CalculateModifiedAttributeValues();
 
 public:	
 	// [Client]
@@ -67,15 +77,28 @@ public:
 	UFUNCTION()
 		void OnRep_AttributeDataChanged(FAttributeData OldAttributeData);
 
-	// Call this to set attribute data. If called on server, data will replicate to client normally.
+	// [Client]
+	// Replication notification
+	UFUNCTION()
+		void OnRep_ModifiedAttributeDataChanged(FAttributeData OldModifiedAttributeData);
+
+	// [Server]
+	UFUNCTION(BlueprintNativeEvent)
+		void AddModifiers(const TArray<FAttributeModifier>& NewModifiers);
+
+	// [Server]
+	UFUNCTION(BlueprintNativeEvent)
+		void RemoveModifiers(const TArray<FAttributeModifier>& NewModifiers);
+
+	// Call this to set base attribute data. If called on server, data will replicate to client normally.
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void SetAttributeData(const FAttributeData& NewData);
 
-	// Call this to set attribute data that matches our current AttributeData.Name. Returns true if matching attribute data was found and set.
+	// Call this to set base attribute data that matches our current AttributeData.Name. Returns true if matching attribute data was found and set.
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		bool UpdateFromAttributeDataMap(const TMap<FName, FAttributeData>& DataMap);
 
-	// Fills the given attribute map with an entry for our attribute data, uses AttributeData.Name as key.
+	// Fills the given attribute map with an entry for our base attribute data, uses AttributeData.Name as key.
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void FillAttributeDataMap(UPARAM(ref)TMap<FName, FAttributeData>& DataMap);
 
@@ -87,20 +110,31 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetMin();
+	
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
-		void SetMin(const float NewMin);
+		void SetMinBase(const float NewMin);
 
 	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetMax();
+
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
-		void SetMax(const float NewMax);
+		void SetMaxBase(const float NewMax);
 
 	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetCurrent();
-	// Sets current value clamped to min/max 
+
+	// Sets current value clamped to min/max of modified attribute data 
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void SetCurrent(const float NewValue);
 
+	// Sets current value of the base attribute clamped to min/max of base attribute data.
+	// Should never need to call this, except for data loading or init.
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
+		void SetCurrentBase(const float NewValue);
+
+	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
+		float GetDeltaRate();
+	
 	// Get remainin capacity of this attribute. (max value - current value)
 	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetRemainingCapacity();

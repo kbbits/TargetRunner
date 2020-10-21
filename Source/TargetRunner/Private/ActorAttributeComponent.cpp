@@ -3,11 +3,13 @@
 
 #include "ActorAttributeComponent.h"
 #include "..\Public\ActorAttributeComponent.h"
+#include "TargetRunner.h"
 #include "UnrealNetwork.h"
 
 // Sets default values for this component's properties
 UActorAttributeComponent::UActorAttributeComponent()
 {
+	ModifiedAttributeData = AttributeData;
 	SetIsReplicated(true);
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -20,6 +22,8 @@ void UActorAttributeComponent::GetLifetimeReplicatedProps(TArray< FLifetimePrope
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UActorAttributeComponent, AttributeData);
+	DOREPLIFETIME(UActorAttributeComponent, ModifiedAttributeData);
+	DOREPLIFETIME(UActorAttributeComponent, Modifiers);
 }
 
 
@@ -27,12 +31,61 @@ void UActorAttributeComponent::GetLifetimeReplicatedProps(TArray< FLifetimePrope
 void UActorAttributeComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	CalculateModifiedAttributeValues();
+}
 
+void UActorAttributeComponent::CalculateModifiedAttributeValues()
+{
+	if (GetOwnerRole() == ROLE_Authority)
+	{
+		FAttributeData MultiplierAttrData;
+		FAttributeData ScalarAttrData;
+
+		for (FAttributeModifier Mod : Modifiers)
+		{
+			switch (Mod.Modifier.Type)
+			{
+			case EModifierType::Multiplier:
+				switch (Mod.EffectsValue)
+				{
+				case EAttributeModifierType::ValueMin:
+					MultiplierAttrData.MinValue += Mod.Modifier.Value;
+					break;
+				case EAttributeModifierType::ValueMax:
+					MultiplierAttrData.MaxValue += Mod.Modifier.Value;
+					break;
+				case EAttributeModifierType::Rate:
+					MultiplierAttrData.DeltaRate += Mod.Modifier.Value;
+					break;
+				}
+				break;
+			case EModifierType::Scalar:
+				switch (Mod.EffectsValue)
+				{
+				case EAttributeModifierType::ValueMin:
+					ScalarAttrData.MinValue += Mod.Modifier.Value;
+					break;
+				case EAttributeModifierType::ValueMax:
+					ScalarAttrData.MaxValue += Mod.Modifier.Value;
+					break;
+				case EAttributeModifierType::Rate:
+					ScalarAttrData.DeltaRate += Mod.Modifier.Value;
+					break;
+				}
+				break;
+			}
+		}
+		ModifiedAttributeData.MinValue = ScalarAttrData.MinValue + (AttributeData.MinValue * (1.0 + MultiplierAttrData.MinValue));
+		ModifiedAttributeData.MaxValue = ScalarAttrData.MaxValue + (AttributeData.MaxValue * (1.0 + MultiplierAttrData.MaxValue));
+		ModifiedAttributeData.DeltaRate = ScalarAttrData.DeltaRate + (AttributeData.DeltaRate * (1.0 + MultiplierAttrData.DeltaRate));
+		SetCurrent(ModifiedAttributeData.CurrentValue);
+	}
 }
 
 
 void UActorAttributeComponent::OnRep_AttributeDataChanged(FAttributeData OldAttributeData)
 {
+	/*
 	if (OldAttributeData.MinValue != AttributeData.MinValue || OldAttributeData.MaxValue != AttributeData.MaxValue)
 	{
 		OnDeltaMinMax.Broadcast();
@@ -49,11 +102,84 @@ void UActorAttributeComponent::OnRep_AttributeDataChanged(FAttributeData OldAttr
 			OnHitMinimum.Broadcast();
 		}
 	}
+	*/
 }
+
+
+void UActorAttributeComponent::OnRep_ModifiedAttributeDataChanged(FAttributeData OldModifiedAttributeData)
+{
+	if (OldModifiedAttributeData.MinValue != ModifiedAttributeData.MinValue || OldModifiedAttributeData.MaxValue != ModifiedAttributeData.MaxValue)
+	{
+		OnDeltaMinMax.Broadcast();
+	}
+	if (OldModifiedAttributeData.CurrentValue != ModifiedAttributeData.CurrentValue)
+	{
+		OnDeltaCurrent.Broadcast(GetCurrent());
+		if (GetCurrent() == GetMax())
+		{
+			OnHitMaximum.Broadcast();
+		}
+		else if (GetCurrent() == GetMin())
+		{
+			OnHitMinimum.Broadcast();
+		}
+	}
+}
+
+void UActorAttributeComponent::AddModifiers_Implementation(const TArray<FAttributeModifier>& NewModifiers)
+{
+	bool bChanged = false;
+	for (FAttributeModifier Mod : NewModifiers)
+	{
+		if (Mod.AttributeCode == GetAttributeName())
+		{
+			Modifiers.Add(Mod);
+			bChanged = true;
+
+			UE_LOG(LogTRGame, Log, TEXT("AttributeModifier added: %s, %s %.1f"), *Mod.AttributeCode.ToString(), *GetEnumValueAsString<EAttributeModifierType>(Mod.EffectsValue), Mod.Modifier.Value);
+		}
+	}
+	if (bChanged)
+	{
+		CalculateModifiedAttributeValues();
+	}
+}
+
+//bool UActorAttributeComponent::AddModifiers_Validate(const TArray<FAttributeModifier>& NewModifiers)
+//{
+//	return true;
+//}
+
+
+void UActorAttributeComponent::RemoveModifiers_Implementation(const TArray<FAttributeModifier>& NewModifiers)
+{
+	bool bChanged = false;
+	for (FAttributeModifier Mod : NewModifiers)
+	{
+		if (Mod.AttributeCode == GetAttributeName())
+		{
+			if (Modifiers.RemoveSingle(Mod) > 0)
+			{
+				bChanged = true;
+				UE_LOG(LogTRGame, Log, TEXT("AttributeModifier Removed: %s, %s %.1f"), *Mod.AttributeCode.ToString(), *GetEnumValueAsString<EAttributeModifierType>(Mod.EffectsValue), Mod.Modifier.Value);
+			}
+		}
+	}
+	if (bChanged)
+	{
+		CalculateModifiedAttributeValues();
+	}
+}
+
+//bool UActorAttributeComponent::RemoveModifiers_Validate(const TArray<FAttributeModifier>& NewModifiers)
+//{
+//	return true;
+//}
 
 void UActorAttributeComponent::SetAttributeData(const FAttributeData& NewData)
 {
 	AttributeData = NewData;
+	CalculateModifiedAttributeValues();
 }
 
 
@@ -85,17 +211,17 @@ void UActorAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// Don't do anything when we're not active
 	if (!IsActive()){ return; }
 	// Don't do anything if recharge is paused
-	if (bRechargePaused || AttributeData.DeltaRate == 0.0f) { return; }
+	if (bRechargePaused || GetDeltaRate() == 0.0f) { return; }
 
-	float NewValue = AttributeData.CurrentValue;
+	float NewValue = ModifiedAttributeData.CurrentValue;
 	// If we recharge and we're not at one of the min/max
-	if ((AttributeData.DeltaRate > 0.0f && AttributeData.CurrentValue < AttributeData.MaxValue) || (AttributeData.DeltaRate < 0.0f && AttributeData.CurrentValue > AttributeData.MinValue))
+	if ((GetDeltaRate() > 0.0f && GetCurrent() < GetMax()) || (GetDeltaRate() < 0.0f && GetCurrent() > GetMin()))
 	{
 		// Update the new value based on recharge
-		NewValue = FMath::Clamp((AttributeData.DeltaRate * DeltaTime) + AttributeData.CurrentValue, AttributeData.MinValue, AttributeData.MaxValue);
+		NewValue = FMath::Clamp((GetDeltaRate() * DeltaTime) + GetCurrent(), GetMin(), GetMax());
 	}
 	// If it's a new value, set it.
-	if (AttributeData.CurrentValue != NewValue) 
+	if (GetCurrent() != NewValue)
 	{ 
 		SetCurrent(NewValue);
 	}
@@ -108,39 +234,67 @@ FName UActorAttributeComponent::GetAttributeName()
 
 float UActorAttributeComponent::GetMin()
 {
-	return AttributeData.MinValue;
+	return ModifiedAttributeData.MinValue;
 }
 
-void UActorAttributeComponent::SetMin(const float NewMin)
+void UActorAttributeComponent::SetMinBase(const float NewMin)
 {
 	float OldMin = AttributeData.MinValue;
 	AttributeData.MinValue = NewMin;
-	if (NewMin != OldMin) { OnDeltaMinMax.Broadcast(); }
+	if (NewMin != OldMin) 
+	{ 
+		CalculateModifiedAttributeValues();
+		OnDeltaMinMax.Broadcast(); 
+	}
 }
 
 float UActorAttributeComponent::GetMax()
 {
-	return AttributeData.MaxValue;
+	return ModifiedAttributeData.MaxValue;
 }
 
-void UActorAttributeComponent::SetMax(const float NewMax)
+void UActorAttributeComponent::SetMaxBase(const float NewMax)
 {
 	float OldMax = AttributeData.MaxValue;
 	AttributeData.MaxValue = NewMax;
-	if (NewMax != OldMax) { OnDeltaMinMax.Broadcast(); }
+	if (NewMax != OldMax) 
+	{ 
+		CalculateModifiedAttributeValues();
+		OnDeltaMinMax.Broadcast(); 
+	}
 }
 
 float UActorAttributeComponent::GetCurrent()
 {
-	return AttributeData.CurrentValue;
+	return ModifiedAttributeData.CurrentValue;
 }
 
 void UActorAttributeComponent::SetCurrent(const float NewValue)
+{
+	float NewValueClamped = FMath::Clamp(NewValue, ModifiedAttributeData.MinValue, ModifiedAttributeData.MaxValue);
+	if (ModifiedAttributeData.CurrentValue != NewValueClamped)
+	{
+		ModifiedAttributeData.CurrentValue = NewValueClamped;
+		OnDeltaCurrent.Broadcast(ModifiedAttributeData.CurrentValue);
+		if (ModifiedAttributeData.CurrentValue == ModifiedAttributeData.MaxValue)
+		{
+			OnHitMaximum.Broadcast();
+		}
+		else if (ModifiedAttributeData.CurrentValue == ModifiedAttributeData.MinValue)
+		{
+			OnHitMinimum.Broadcast();
+		}
+	}	
+}
+
+void UActorAttributeComponent::SetCurrentBase(const float NewValue)
 {
 	float NewValueClamped = FMath::Clamp(NewValue, AttributeData.MinValue, AttributeData.MaxValue);
 	if (AttributeData.CurrentValue != NewValueClamped)
 	{
 		AttributeData.CurrentValue = NewValueClamped;
+		CalculateModifiedAttributeValues();
+		/*
 		OnDeltaCurrent.Broadcast(AttributeData.CurrentValue);
 		if (AttributeData.CurrentValue == AttributeData.MaxValue)
 		{
@@ -150,25 +304,31 @@ void UActorAttributeComponent::SetCurrent(const float NewValue)
 		{
 			OnHitMinimum.Broadcast();
 		}
-	}	
+		*/
+	}
+}
+
+float UActorAttributeComponent::GetDeltaRate()
+{
+	return ModifiedAttributeData.DeltaRate;
 }
 
 // Get remainin capacity of this attribute. (max value - current value)
 float UActorAttributeComponent::GetRemainingCapacity()
 {
-	return AttributeData.MaxValue - AttributeData.CurrentValue;
+	return GetMax() - GetCurrent();
 }
 
 // Get the current percent of maximum value 0.0 - 1.0
 float UActorAttributeComponent::GetCurrentPercent()
 {
-	if (AttributeData.MaxValue == 0.0f)
+	if (GetMax() == 0.0f)
 	{
 		return 0.0f;
 	}	
 	else 
 	{
-		return AttributeData.CurrentValue / AttributeData.MaxValue;
+		return GetCurrent() / GetMax();
 	}
 }
 
@@ -179,9 +339,9 @@ float UActorAttributeComponent::GetCurrentPercent()
 // Returns true if successful, false if delta was not applied to value.
 bool UActorAttributeComponent::DeltaValue(const float ToAdd = 1, const bool bAllowOverspill = false)
 {
-	float NewValue = AttributeData.CurrentValue + ToAdd;
+	float NewValue = GetCurrent() + ToAdd;
 	// If we are outside allowed range and we don't allow overspill, just return false
-	if ((NewValue > AttributeData.MaxValue || NewValue < AttributeData.MinValue) && !bAllowOverspill)
+	if (!bAllowOverspill && (NewValue > GetMax() || NewValue < GetMin()))
 	{
 		return false;
 	}
@@ -193,7 +353,7 @@ bool UActorAttributeComponent::DeltaValue(const float ToAdd = 1, const bool bAll
 // Sets the current value to max value and returns this value.
 float UActorAttributeComponent::ResetToMax()
 {
-	SetCurrent(AttributeData.MaxValue);
-	return AttributeData.CurrentValue;
+	SetCurrent(GetMax());
+	return GetCurrent();
 }
 

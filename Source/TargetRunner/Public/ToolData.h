@@ -2,6 +2,7 @@
 
 //#include "ToolBase.h"
 #include "AttributeDataSet.h"
+#include "ModifiableAttributes.h"
 #include "ToolData.generated.h"
 
 USTRUCT(BlueprintType)
@@ -17,4 +18,18 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FAttributeDataSet AttributeData;
+
+	// Modifiers
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TMap<FName, FNamedModifierSet> Modifiers;
+
+public:
+
+	FToolData()
+	{
+		AttributeData.ResourceRateAttributes.Add(FName(TEXT("DamageRates")), FResourceRateFilterSet());
+		AttributeData.ResourceRateAttributes.Add(FName(TEXT("ExtractionRates")), FResourceRateFilterSet());
+		Modifiers.Add(FName(TEXT("EquipModifiers")), FNamedModifierSet(FName(TEXT("EquipModifiers"))));
+		Modifiers.Add(FName(TEXT("ActivateModifiers")), FNamedModifierSet(FName(TEXT("ActivateModifiers"))));
+	}
 };

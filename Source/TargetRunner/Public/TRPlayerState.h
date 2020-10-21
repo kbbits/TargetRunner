@@ -29,6 +29,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		UActorAttributeComponent* HealthAttribute;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		UActorAttributeComponent* RunSpeedAttribute;
+
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Replicated, SaveGame)
 		FGuid PlayerGuid;
 
@@ -50,6 +53,14 @@ public:
 public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// This should typically be called through the TRPlayerController.ApplyAttributeModifiers(). That function handles replication.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void ApplyAttributeModifiers(const TArray<FAttributeModifier>& NewModifiers);
+
+	// This should typically be called through the TRPlayerController.RemoveAttributeModifiers(). That function handles replication.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void RemoveAttributeModifiers(const TArray<FAttributeModifier>& ModifiersToRemove);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void GetPlayerSaveData(FPlayerSaveData& SaveData);

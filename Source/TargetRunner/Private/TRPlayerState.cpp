@@ -23,6 +23,11 @@ ATRPlayerState::ATRPlayerState()
 	AddOwnedComponent(HealthAttribute);
 	HealthAttribute->SetIsReplicated(true); // Enable replication by default
 	HealthAttribute->AttributeData.Name = FName(TEXT("Health"));
+
+	RunSpeedAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("RunSpeedAttribute"));
+	AddOwnedComponent(RunSpeedAttribute);
+	RunSpeedAttribute->SetIsReplicated(true);
+	RunSpeedAttribute->AttributeData.Name = FName(TEXT("RunSpeed"));
 }
 
 
@@ -47,6 +52,29 @@ void ATRPlayerState::BeginPlay()
 	}
 	else {
 		UE_LOG(LogTRGame, Error, TEXT("TRPlayerState - BeginPlay - Could not get game instance."));
+	}
+}
+
+void ATRPlayerState::ApplyAttributeModifiers_Implementation(const TArray<FAttributeModifier>& NewModifiers)
+{
+	TArray<UActorAttributeComponent*> AttributeComps;
+	GetComponents<UActorAttributeComponent>(AttributeComps);
+	for (UActorAttributeComponent* Attr : AttributeComps)
+	{
+		// AddModifiers will filter for modifiers relevant to the attribute
+		Attr->AddModifiers(NewModifiers);
+	}
+}
+
+
+void ATRPlayerState::RemoveAttributeModifiers_Implementation(const TArray<FAttributeModifier>& ModifiersToRemove)
+{
+	TArray<UActorAttributeComponent*> AttributeComps;
+	GetComponents<UActorAttributeComponent>(AttributeComps);
+	for (UActorAttributeComponent* Attr : AttributeComps)
+	{
+		// RemoveModifiers filters for modifiers relevant to the attribute
+		Attr->RemoveModifiers(ModifiersToRemove);
 	}
 }
 

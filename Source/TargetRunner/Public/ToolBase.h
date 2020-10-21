@@ -5,7 +5,7 @@
 #include "ToolData.h"
 #include "AttributeData.h"
 #include "NamedPrimitiveTypes.h"
-//#include "ToolActorBase.h"
+#include "ToolData.h"
 #include "TRProjectileBase.h"
 #include "GoodsQuantity.h"
 #include "ResourceRateFilter.h"
@@ -51,6 +51,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		FAttributeData BaseDamage;
 
+	// If this is false the weapon/tool cannot be fired/used by the player.
+	// Usually set to false for "passive only" tools that only have effects on equipping.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, SaveGame, Category = "Player Weapons")
+		bool bAllowsActivation;
+
 	// Minimum time in seconds between activations (i.e. between shots). Shots per second = (1 / FireDelay) + 1
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		FAttributeData ActivationDelay;
@@ -73,6 +78,8 @@ protected:
 
 	static const FName DAMAGE_RATES_NAME;				// = FName(TEXT("DamageRates"));
 	static const FName EXTRACTION_RATES_NAME;			// = FName(TEXT("ExtractionRates"));
+	static const FName EQUIP_MODS_NAME;					// = FName(TEXT("EquipModifiers"));
+	static const FName ACTIVATE_MODS_NAME;				// = FName(TEXT("ActivateModifiers"));
 	
 	// Value of the item in the shop
 	UPROPERTY(EditDefaultsOnly)
@@ -89,6 +96,12 @@ protected:
 	// The number of times projectile will bounce when hitting world surfaces. Default = 0
 	UPROPERTY(EditDefaultsOnly, Category = "Player Weapons")
 		FTRNamedInt MaximumBounces;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Weapons")
+		FNamedModifierSet EquipModifiers;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Weapons")
+		FNamedModifierSet ActivateModifiers;
 
 public:
 
@@ -111,6 +124,12 @@ public:
 	// The speed of the projectile
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE float GetProjectileSpeed() { return ProjectileSpeed.CurrentValue; }
+
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE TArray<FAttributeModifier> GetEquipModifiers() { return EquipModifiers.Modifiers; }
+
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE TArray<FAttributeModifier> GetActivateModifiers() { return ActivateModifiers.Modifiers; }
 
 	// Transform this tool to a ToolData struct.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

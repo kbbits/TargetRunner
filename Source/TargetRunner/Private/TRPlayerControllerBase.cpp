@@ -4,6 +4,7 @@
 #include "TRPlayerControllerBase.h"
 #include "TRPlayerState.h"
 #include "TargetRunner.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "..\Public\TRPlayerControllerBase.h"
 
@@ -11,6 +12,7 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 	: Super()
 {
 	MaxEquippedWeapons = 2;
+	MaxEquippedEquipment = 2;
 	CurrentTool = nullptr;
 	PersistentDataComponent = CreateDefaultSubobject<UTRPersistentDataComponent>(TEXT("PersistentDataComponent"));
 	if (PersistentDataComponent)
@@ -20,6 +22,48 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 	}
 }
 
+void ATRPlayerControllerBase::InitPlayerState()
+{
+	APlayerController::InitPlayerState();
+	ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
+	if (TRPlayerState)
+	{
+		TRPlayerState->RunSpeedAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnRunSpeedChanged);
+	}
+}
+
+void ATRPlayerControllerBase::OnPossess(APawn* InPawn)
+{
+	APlayerController::OnPossess(InPawn);
+	UpdateMovementFromAttributes();
+}
+
+void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
+{
+	APawn* TmpPawn = GetPawn();
+	if (TmpPawn == nullptr) { return; }
+
+	UCharacterMovementComponent* MoveComp = Cast<UCharacterMovementComponent>(TmpPawn->GetMovementComponent());
+	if (MoveComp)
+	{
+		ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
+		if (TRPlayerState)
+		{
+			MoveComp->MaxWalkSpeed = TRPlayerState->RunSpeedAttribute->GetCurrent();
+			UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
+		}
+	}
+}
+
+bool ATRPlayerControllerBase::UpdateMovementFromAttributes_Validate()
+{
+	return true;
+}
+
+void ATRPlayerControllerBase::OnRunSpeedChanged(float NewSpeed)
+{
+	UpdateMovementFromAttributes();
+}
 
 void ATRPlayerControllerBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
@@ -27,12 +71,41 @@ void ATRPlayerControllerBase::GetLifetimeReplicatedProps(TArray< FLifetimeProper
 
 	DOREPLIFETIME(ATRPlayerControllerBase, CurrentTool);
 	DOREPLIFETIME(ATRPlayerControllerBase, MaxEquippedWeapons);
+	DOREPLIFETIME(ATRPlayerControllerBase, MaxEquippedEquipment);
 }
 
 
 void ATRPlayerControllerBase::OnRep_CurrentTool()
 {
 	OnCurrentToolChanged.Broadcast(CurrentTool);
+}
+
+void ATRPlayerControllerBase::ApplyAttributeModifiers_Implementation(const TArray<FAttributeModifier>& NewModifiers)
+{
+	ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
+	if (TRPlayerState)
+	{
+		TRPlayerState->ApplyAttributeModifiers(NewModifiers);
+	}
+}
+
+bool ATRPlayerControllerBase::ApplyAttributeModifiers_Validate(const TArray<FAttributeModifier>& NewModifiers)
+{
+	return true;
+}
+
+void ATRPlayerControllerBase::RemoveAttributeModifiers_Implementation(const TArray<FAttributeModifier>& ModifiersToRemove)
+{
+	ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
+	if (TRPlayerState)
+	{
+		TRPlayerState->RemoveAttributeModifiers(ModifiersToRemove);
+	}
+}
+
+bool ATRPlayerControllerBase::RemoveAttributeModifiers_Validate(const TArray<FAttributeModifier>& ModifiersToRemove)
+{
+	return true;
 }
 
 void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(TSubclassOf<UToolBase> ToolClass)
@@ -102,13 +175,36 @@ void ATRPlayerControllerBase::ServerEquipTool_Implementation(const FGuid ToolGui
 		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase - ServerEquipTool tool guid %s not found in inventory."), *ToolGuid.ToString());
 		return;
 	}
-	while (EquippedTools.Num() >= MaxEquippedWeapons)
-	{
-		EquippedTools.RemoveAt(0);
-	}
 	UToolBase* TmpTool = UToolBase::CreateToolFromToolData(*ToolData, this);
-	if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
+	int CurrentEquipped = 0;
+	int MaxEquipped = 0;
+	if (TmpTool->IsA<UToolWeaponBase>())
+	{
+		TArray<UToolWeaponBase*> TmpWeapons;
+		GetEquippedWeapons(TmpWeapons);
+		MaxEquipped = MaxEquippedWeapons;
+		while (TmpWeapons.Num() > 0 && TmpWeapons.Num() >= MaxEquipped)
+		{
+			ServerUnequipTool(TmpWeapons[0]->ItemGuid);
+			TmpWeapons.RemoveAt(0);
+		}
+		CurrentEquipped = TmpWeapons.Num();
+	}
+	else 
+	{
+		TArray<UToolEquipmentBase*> TmpEquipment;
+		GetEquippedEquipment(TmpEquipment);
+		MaxEquipped = MaxEquippedEquipment;
+		while (TmpEquipment.Num() > 0 && TmpEquipment.Num() >= MaxEquipped)
+		{
+			ServerUnequipTool(TmpEquipment[0]->ItemGuid);
+			TmpEquipment.RemoveAt(0);
+		}
+		CurrentEquipped = TmpEquipment.Num();
+	}
+	if (TmpTool && CurrentEquipped < MaxEquipped) {
 		EquippedTools.Add(TmpTool);
+		ApplyAttributeModifiers(TmpTool->GetEquipModifiers());
 		OnEquippedToolsChanged.Broadcast();
 		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerEquipTool tool %s equipped."), *ToolData->AttributeData.ItemDisplayName.ToString());
 		if (!IsLocalController())
@@ -133,13 +229,36 @@ void ATRPlayerControllerBase::ClientEquipTool_Implementation(const FGuid ToolGui
 		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase - ClientEquipTool tool guid %s not found in inventory."), *ToolGuid.ToString());
 		return;
 	}
-	while (EquippedTools.Num() >= MaxEquippedWeapons)
-	{
-		EquippedTools.RemoveAt(0);
-	}
 	UToolBase* TmpTool = UToolBase::CreateToolFromToolData(*ToolData, this);
-	if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
+	int CurrentEquipped = 0;
+	int MaxEquipped = 0;
+	if (TmpTool->IsA<UToolWeaponBase>())
+	{
+		TArray<UToolWeaponBase*> TmpWeapons;
+		GetEquippedWeapons(TmpWeapons);
+		MaxEquipped = MaxEquippedWeapons;
+		while (TmpWeapons.Num() > 0 && TmpWeapons.Num() >= MaxEquipped)
+		{
+			ServerUnequipTool(TmpWeapons[0]->ItemGuid);
+			TmpWeapons.RemoveAt(0);
+		}
+		CurrentEquipped = TmpWeapons.Num();
+	}
+	else
+	{
+		TArray<UToolEquipmentBase*> TmpEquipment;
+		GetEquippedEquipment(TmpEquipment);
+		MaxEquipped = MaxEquippedEquipment;
+		while (TmpEquipment.Num() > 0 && TmpEquipment.Num() >= MaxEquipped)
+		{
+			ServerUnequipTool(TmpEquipment[0]->ItemGuid);
+			TmpEquipment.RemoveAt(0);
+		}
+		CurrentEquipped = TmpEquipment.Num();
+	}
+	if (TmpTool && CurrentEquipped < MaxEquipped) {
 		EquippedTools.Add(TmpTool);
+		// Only need to apply modifiers on server side.
 		OnEquippedToolsChanged.Broadcast();
 		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientEquipTool tool %s equipped."), *ToolData->AttributeData.ItemDisplayName.ToString());
 	}
@@ -165,6 +284,7 @@ void ATRPlayerControllerBase::ServerUnequipTool_Implementation(const FGuid ToolG
 	if (FoundTool)
 	{
 		EquippedTools.Remove(FoundTool);
+		RemoveAttributeModifiers(FoundTool->GetEquipModifiers());
 		OnEquippedToolsChanged.Broadcast();
 		if (!IsLocalController())
 		{
@@ -193,11 +313,58 @@ void ATRPlayerControllerBase::ClientUnequipTool_Implementation(const FGuid ToolG
 	if (FoundTool)
 	{
 		EquippedTools.Remove(FoundTool);
+		// Only remove modifiers on server side
 		OnEquippedToolsChanged.Broadcast();
 	}
 }
 
 bool ATRPlayerControllerBase::ClientUnequipTool_Validate(const FGuid ToolGuid)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::ServerUnequipAllTools_Implementation()
+{
+	UToolBase* FoundTool = nullptr;
+	bool bChanged = false;
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		if (TmpTool)
+		{
+			EquippedTools.Remove(TmpTool);
+			RemoveAttributeModifiers(TmpTool->GetEquipModifiers());
+			bChanged = true;
+		}
+	}
+	if (bChanged)
+	{
+		OnEquippedToolsChanged.Broadcast();
+		if (!IsLocalController())
+		{
+			ClientUnequipAllTools();
+		}
+	}
+}
+
+bool ATRPlayerControllerBase::ServerUnequipAllTools_Validate()
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::ClientUnequipAllTools_Implementation()
+{
+	UToolBase* FoundTool = nullptr;
+	bool bChanged = EquippedTools.Num() > 0;
+	EquippedTools.Empty();
+	if (bChanged)
+	{
+		OnEquippedToolsChanged.Broadcast();
+	}
+}
+
+bool ATRPlayerControllerBase::ClientUnequipAllTools_Validate()
 {
 	return true;
 }
@@ -374,6 +541,34 @@ void ATRPlayerControllerBase::SpawnAsCurrentTool_Implementation(UToolBase* NewCu
 }
 
 
+void ATRPlayerControllerBase::GetEquippedWeapons(TArray<UToolWeaponBase*>& EquippedWeapons)
+{
+	UToolWeaponBase* TmpWeapon;
+	EquippedWeapons.Empty();
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		TmpWeapon = Cast<UToolWeaponBase>(TmpTool);
+		if (TmpWeapon)
+		{
+			EquippedWeapons.Add(TmpWeapon);
+		}
+	}
+}
+
+void ATRPlayerControllerBase::GetEquippedEquipment(TArray<UToolEquipmentBase*>& EquippedEquipment)
+{
+	UToolEquipmentBase* TmpEquipment;
+	EquippedEquipment.Empty();
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		TmpEquipment = Cast<UToolEquipmentBase>(TmpTool);
+		if (TmpEquipment)
+		{
+			EquippedEquipment.Add(TmpEquipment);
+		}
+	}
+}
+
 ARoomPlatformGridMgr* ATRPlayerControllerBase::FindGridManager()
 {
 	ARoomPlatformGridMgr* GridManager = nullptr;
@@ -412,6 +607,7 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 		SaveData.LastEquippedItems.Add(TmpTool->ItemGuid);
 	}
 	SaveData.AttributeData.FloatAttributes.Add(FName(TEXT("MaxEquippedWeapons")), static_cast<float>(MaxEquippedWeapons));
+	SaveData.AttributeData.FloatAttributes.Add(FName(TEXT("MaxEquippedEquipment")), static_cast<float>(MaxEquippedEquipment));
 	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
 	if (TRPlayerState)
 	{
@@ -436,16 +632,19 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	}
 	MaxEquippedWeapons = static_cast<int32>(SaveData.AttributeData.FloatAttributes.FindRef(FName(TEXT("MaxEquippedWeapons"))));
 	MaxEquippedWeapons = MaxEquippedWeapons < 2 ? 2 : MaxEquippedWeapons;
-	EquippedTools.Empty(SaveData.LastEquippedItems.Num());
+	MaxEquippedEquipment = static_cast<int32>(SaveData.AttributeData.FloatAttributes.FindRef(FName(TEXT("MaxEquippedEquipment"))));
+	MaxEquippedEquipment = MaxEquippedEquipment < 2 ? 2 : MaxEquippedEquipment;
+	ServerUnequipAllTools();
 	for (FGuid TmpGuid : SaveData.LastEquippedItems)
 	{
-		if (ToolInventory.Contains(TmpGuid))
+		ServerEquipTool(TmpGuid);
+		/*if (ToolInventory.Contains(TmpGuid))
 		{
 			TmpTool = UToolBase::CreateToolFromToolData(ToolInventory[TmpGuid], this);
 			if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
 				EquippedTools.Add(TmpTool);
 			}
-		}
+		}*/
 	}
 	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
 	if (TRPlayerState)
@@ -459,3 +658,4 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 		return false;
 	}	
 }
+

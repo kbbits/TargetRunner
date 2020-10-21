@@ -9,7 +9,10 @@
 #include "RoomPlatformGridMgr.h"
 #include "RoomGridTemplate.h"
 #include "ToolActorBase.h"
+#include "ToolWeaponBase.h"
+#include "ToolEquipmentBase.h"
 #include "TRPersistentDataComponent.h"
+#include "TR_Character.h"
 #include "TRPlayerControllerBase.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToolInventoryAdded, const FToolData&, ToolDataAdded);
@@ -69,13 +72,38 @@ protected:
 	// All tool types available for purchase in the market
 	UPROPERTY(EditAnywhere)
 		TArray<TSubclassOf<UToolBase>> MarketToolClasses;
+
+protected:
+
+	virtual void InitPlayerState() override;
+
+	virtual void OnPossess(APawn* InPawn) override;
 	
 public:
+
+	// [Server]
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void UpdateMovementFromAttributes();
 
 	// [Client]
 	// Replication notification
 	UFUNCTION()
 		void OnRep_CurrentTool();
+
+	// [Both]
+	// Binds to RunSpeedAttribute to notify on speed changes.
+	UFUNCTION()
+		void OnRunSpeedChanged(float NewSpeed);
+
+	// [Server]
+	// Applies the given attribute modifiers to the controller and player state.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ApplyAttributeModifiers(const TArray<FAttributeModifier>& NewModifiers);
+
+	// [Server]
+	// Removes the given attribute modifiers from the controller and player state.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void RemoveAttributeModifiers(const TArray<FAttributeModifier>& ModifiersToRemove);
 
 	// [Any]
 	// The Tools available for purchase in the market.
@@ -115,6 +143,15 @@ public:
 		void ClientUnequipTool(const FGuid ToolGuid);
 
 	// [Server]
+	// Call this to unequip a tool from player. This handles rep. to client.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerUnequipAllTools();
+
+	// [Client]
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientUnequipAllTools();
+
+	// [Server]
 	// Call this to apply an upgrade to a tool in player's tool inventory. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerUpgradeTool(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta);
@@ -133,6 +170,12 @@ public:
 	// Override in BP.
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void SpawnAsCurrentTool(UToolBase* NewCurrentTool);
+
+	UFUNCTION(BlueprintCallable)
+		void GetEquippedWeapons(TArray<UToolWeaponBase*>& EquippedWeapons);
+
+	UFUNCTION(BlueprintCallable)
+		void GetEquippedEquipment(TArray<UToolEquipmentBase*>& EquippedEquipment);
 
 	// [Any]
 	// Finds the current grid manager in the level.
@@ -153,4 +196,5 @@ public:
 	// Updates the controller and player state from serialized data.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		bool UpdateFromPlayerSaveData(const FPlayerSaveData& SaveData);
+
 };

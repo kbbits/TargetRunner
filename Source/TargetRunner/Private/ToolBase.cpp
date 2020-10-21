@@ -7,6 +7,8 @@
 
 const FName UToolBase::DAMAGE_RATES_NAME = FName(TEXT("DamageRates"));
 const FName UToolBase::EXTRACTION_RATES_NAME = FName(TEXT("ExtractionRates"));
+const FName UToolBase::EQUIP_MODS_NAME = FName(TEXT("EquipModifiers"));
+const FName UToolBase::ACTIVATE_MODS_NAME = FName(TEXT("ActivateModifiers"));
 
 // Sets default values
 UToolBase::UToolBase()
@@ -23,7 +25,9 @@ UToolBase::UToolBase()
 	BaseDamage.Name = FName(TEXT("BaseDamage"));
 	ActivationDelay.Name = FName(TEXT("ActivationDelay"));
 	ProjectileSpeed.Name = FName(TEXT("ProjectileSpeed"));
-	
+
+	EquipModifiers.Name = EQUIP_MODS_NAME;
+	ActivateModifiers.Name = ACTIVATE_MODS_NAME;
 }
 
 
@@ -42,6 +46,9 @@ void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 	ToolData.AttributeData.Attributes.Add(ProjectileSpeed.Name, ProjectileSpeed);
 	ToolData.AttributeData.ResourceRateAttributes.Add(DAMAGE_RATES_NAME, FResourceRateFilterSet(BaseDamageRates));
 	ToolData.AttributeData.ResourceRateAttributes.Add(EXTRACTION_RATES_NAME, FResourceRateFilterSet(BaseResourceExtractionRates));
+	ToolData.AttributeData.BoolAttributes.Add(FName(TEXT("AllowActivate")), bAllowsActivation);
+	ToolData.Modifiers.Add(EquipModifiers.Name, EquipModifiers);
+	ToolData.Modifiers.Add(ActivateModifiers.Name, ActivateModifiers);
 }
 
 
@@ -131,6 +138,15 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 		}
 		if (ToolData.AttributeData.ResourceRateAttributes.Contains(EXTRACTION_RATES_NAME)) { 
 			BaseResourceExtractionRates = ToolData.AttributeData.ResourceRateAttributes[EXTRACTION_RATES_NAME].Rates; 
+		}
+		if (ToolData.AttributeData.BoolAttributes.Contains(FName(TEXT("AllowActivate")))) {
+			bAllowsActivation = ToolData.AttributeData.BoolAttributes[FName(TEXT("AllowActivate"))];
+		}
+		if (ToolData.Modifiers.Contains(EquipModifiers.Name)) {
+			EquipModifiers = ToolData.Modifiers[EquipModifiers.Name];
+		}
+		if (ToolData.Modifiers.Contains(ActivateModifiers.Name)) {
+			ActivateModifiers = ToolData.Modifiers[ActivateModifiers.Name];
 		}
 	}
 }
