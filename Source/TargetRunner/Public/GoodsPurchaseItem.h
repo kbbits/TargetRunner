@@ -14,9 +14,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Name;
 
+	// Goods become available in the market based on player's MaxTierCompleted.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 TierAvailable;
 
+	// The base cost (in goods) of this item.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (TitleProperty = "Name"))
 		TArray<FGoodsQuantity> Cost;
 };

@@ -501,3 +501,41 @@ bool UTRPersistentDataComponent::ClientEchoGoodsMarketData_Validate(const TArray
 {
 	return true;
 }
+
+
+void UTRPersistentDataComponent::ServerRetrieveToolsMarketData_Implementation()
+{
+	TArray<FToolPurchaseItem> ToolsMarketItems;
+	ATRGameModeLobby* GameMode = Cast<ATRGameModeLobby>(UGameplayStatics::GetGameMode(GetOwner()));
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (GameMode)
+	{
+		if (GameMode->GetToolMarketDataForPlayer(TRPlayerController, ToolsMarketItems) > 0)
+		{
+			if (TRPlayerController->IsLocalController())
+			{
+				OnToolsMarketDataRetrieved.Broadcast(ToolsMarketItems);
+			}
+			else
+			{
+				ClientEchoToolsMarketData(ToolsMarketItems);
+			}
+		}
+	}
+}
+
+bool UTRPersistentDataComponent::ServerRetrieveToolsMarketData_Validate()
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ClientEchoToolsMarketData_Implementation(const TArray<FToolPurchaseItem>& ToolsMarketData)
+{
+	OnToolsMarketDataRetrieved.Broadcast(ToolsMarketData);
+}
+
+bool UTRPersistentDataComponent::ClientEchoToolsMarketData_Validate(const TArray<FToolPurchaseItem>& ToolsMarketData)
+{
+	return true;
+}

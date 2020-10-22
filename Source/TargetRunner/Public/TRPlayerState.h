@@ -29,9 +29,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		UActorAttributeComponent* HealthAttribute;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		UActorAttributeComponent* RunSpeedAttribute;
-
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Replicated, SaveGame)
 		FGuid PlayerGuid;
 

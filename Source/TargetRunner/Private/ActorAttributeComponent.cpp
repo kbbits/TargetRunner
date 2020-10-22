@@ -54,6 +54,10 @@ void UActorAttributeComponent::CalculateModifiedAttributeValues()
 				case EAttributeModifierType::ValueMax:
 					MultiplierAttrData.MaxValue += Mod.Modifier.Value;
 					break;
+				case EAttributeModifierType::ValueMaxAndCurrent:
+					MultiplierAttrData.MaxValue += Mod.Modifier.Value;
+					ResetToMax();
+					break;
 				case EAttributeModifierType::Rate:
 					MultiplierAttrData.DeltaRate += Mod.Modifier.Value;
 					break;
@@ -67,6 +71,10 @@ void UActorAttributeComponent::CalculateModifiedAttributeValues()
 					break;
 				case EAttributeModifierType::ValueMax:
 					ScalarAttrData.MaxValue += Mod.Modifier.Value;
+					break;
+				case EAttributeModifierType::ValueMaxAndCurrent:
+					MultiplierAttrData.MaxValue += Mod.Modifier.Value;
+					ResetToMax();
 					break;
 				case EAttributeModifierType::Rate:
 					ScalarAttrData.DeltaRate += Mod.Modifier.Value;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AttributeData.h"
+#include "GoodsQuantity.h"
 #include "ResourceRateFilterSet.h"
 #include "AttributeDataSet.generated.h"
 
@@ -37,5 +38,9 @@ public:
 	// Vector Attributes
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
 		TMap<FName, FVector> VectorAttributes;
+
+	// GoodsQuantities
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
+		TMap<FName, FGoodsQuantitySet> GoodsQuantitiesAttributes;
 
 };

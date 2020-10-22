@@ -9,6 +9,7 @@
 #include "LevelTemplate.h"
 #include "LevelTemplateContextStruct.h"
 #include "GoodsPurchaseItem.h"
+#include "ToolPurchaseItem.h"
 #include "PlayerSaveData.h"
 #include "TRPersistentDataComponent.generated.h"
 
@@ -19,6 +20,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewLevelTemplatesPage, const TArr
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDataLoaded);
 // Delegate when goods market data has been retrieved
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGoodsMarketDataRetrieved, const TArray<FGoodsPurchaseItem>&, MarketGoods);
+// Delegate when tools market data has been retrieved
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToolsMarketDataRetrieved, const TArray<FToolPurchaseItem>&, ToolsMarketItems);
 // Tool Data dispatcher
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewPlayerToolData, const TArray<FToolData>&, NewPlayerToolData);
 
@@ -51,6 +54,10 @@ public:
 	// Delegate when goods market data has been retreived.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnGoodsMarketDataRetrieved OnGoodsMarketDataRetrieved;
+
+	// Delegate when tools market data has been retreived.
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnToolsMarketDataRetrieved OnToolsMarketDataRetrieved;
 
 	//UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_PlayerToolDataLoaded)
 	//	TArray<FToolData> PlayerToolData;
@@ -145,4 +152,14 @@ public:
 	// Server calls this on client to pass the goods market data for the player.
 	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
 		void ClientEchoGoodsMarketData(const TArray<FGoodsPurchaseItem>& GoodsMarketData);
+
+	// [Server]
+	// Retrieve the tools market data for the given player.  Results in call to client's ClientToolsMarketDataRetrieved.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerRetrieveToolsMarketData();
+
+	// [Client]
+	// Server calls this on client to pass the goods market data for the player.
+	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
+		void ClientEchoToolsMarketData(const TArray<FToolPurchaseItem>& ToolsMarketData);
 };

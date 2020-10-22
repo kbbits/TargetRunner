@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Delegates/Delegate.h"
+#include "ActorAttributeComponent.h"
 #include "TargetRunner.h"
 #include "RoomPlatformGridMgr.h"
 #include "RoomGridTemplate.h"
@@ -37,11 +38,24 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		UTRPersistentDataComponent* PersistentDataComponent;
 
+	// Base walk/run speed of player
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		UActorAttributeComponent* RunSpeedAttribute;
+
+	// Base jump force (height) of player
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		UActorAttributeComponent* JumpForceAttribute;
+
+	// Additional range boost for resource collection.
+	// Added to collection range of collector being used. Default = 0.0
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		UActorAttributeComponent* CollectionRangeAttribute;
+
 	// All tools owned by player
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		TMap<FGuid, FToolData> ToolInventory;
 
-	// Currently equipped tools
+	// Currently equipped tools (Weapons and Equipment)
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		TArray<UToolBase*> EquippedTools;
 
@@ -94,6 +108,16 @@ public:
 	// Binds to RunSpeedAttribute to notify on speed changes.
 	UFUNCTION()
 		void OnRunSpeedChanged(float NewSpeed);
+
+	// [Both]
+	// Binds to JumpForceAttribute to notify of attribute changes.
+	UFUNCTION()
+		void OnJumpForceChanged(float NewJumpForce);
+
+	// [Both]
+	// Binds to CollectionRangeAttribute to notify of attribute changes.
+	UFUNCTION()
+		void OnCollectionRangeChanged(float NewCollectionRange);
 
 	// [Server]
 	// Applies the given attribute modifiers to the controller and player state.

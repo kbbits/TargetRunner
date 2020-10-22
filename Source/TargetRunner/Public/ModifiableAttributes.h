@@ -7,16 +7,24 @@
 UENUM(BlueprintType)
 enum class EModifierType : uint8
 {
+	// Add this amount to base value
 	Scalar		UMETA(DisplayName = "Scalar"),
+	// All multipliers are added then base value is multiplied by 1.0 + sum_of_relevant_multipliers.
+	// ex: To increase attribute by 10% use "Multiplier" and set value to 0.10
 	Multiplier 	UMETA(DisplayName = "Multiplier")
 };
 
 UENUM(BlueprintType)
 enum class EAttributeModifierType : uint8
 {
-	ValueMin	UMETA(DisplayName = "ValueMin"),
-	ValueMax	UMETA(DisplayName = "ValueMax"),
-	Rate		UMETA(DisplayName = "Rate")
+	// Change attribute's min value
+	ValueMin			UMETA(DisplayName = "ValueMin"),
+	// Change attribute's max value
+	ValueMax			UMETA(DisplayName = "ValueMax"),
+	// Change attribute's max value and reset current = max.
+	ValueMaxAndCurrent	UMETA(DisplayName = "ValueMaxAndCurrent"),
+	// Change attribute's "recharge" rate. 
+	Rate				UMETA(DisplayName = "Rate")
 };
 
 UENUM(BlueprintType)
@@ -54,7 +62,7 @@ public:
 };
 
 /*
-	Represents a modifier that could be applied to an attriubute. (applied to a ActorAttributeComponent)
+	Represents a modifier that could be applied to an attriubute. (applied to an ActorAttributeComponent)
 */
 USTRUCT(BlueprintType)
 struct FAttributeModifier

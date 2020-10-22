@@ -82,8 +82,12 @@ protected:
 	static const FName ACTIVATE_MODS_NAME;				// = FName(TEXT("ActivateModifiers"));
 	
 	// Value of the item in the shop
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Meta = (DeprecatedProperty, DeprecationMessage = "Based on data table of ToolPurchaseItems now."))
 		FTRNamedFloat BuyValue;
+
+	// Cost of the item in the market. The GoodsQuantitySet is loaded from tool market data and should be set after tool is constructed.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FNamedGoodsQuantitySet CostValue;
 
 	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostFactor
 	UPROPERTY(EditDefaultsOnly)
@@ -108,6 +112,10 @@ public:
 	// Value of the item in the market
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE float GetBuyValue() { return BuyValue.Quantity; }
+
+	// Cost of the tool in the tool market
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE TArray<FGoodsQuantity> GetCostValue() { return CostValue.GoodsQuantitySet.Goods; }
 
 	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostFactor
 	UFUNCTION(BlueprintPure)

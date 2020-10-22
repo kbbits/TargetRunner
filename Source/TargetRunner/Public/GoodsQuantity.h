@@ -69,3 +69,28 @@ public:
 		return true;
 	}
 };
+
+USTRUCT(BlueprintType)
+struct FGoodsQuantitySet //: public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TArray<FGoodsQuantity> Goods;
+};
+
+USTRUCT(BlueprintType)
+struct FNamedGoodsQuantitySet //: public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FName Name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FGoodsQuantitySet GoodsQuantitySet;
+};

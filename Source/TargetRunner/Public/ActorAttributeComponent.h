@@ -36,14 +36,14 @@ public:
 
 	// The current state of the attribute, including any mods applied. Current Value is pulled from here.
 	// Use accessors to ensure correct getting/setting of values.
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, ReplicatedUsing = OnRep_ModifiedAttributeDataChanged, Transient, Category = "ItemAttributes")
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, ReplicatedUsing = OnRep_ModifiedAttributeDataChanged, Category = "ItemAttributes")
 		FAttributeData ModifiedAttributeData;
 			
 	// If true, attribute recharge will be suspended.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ItemAttributes")
 		bool bRechargePaused = false;
 
-	// Hit minimum value event
+	// Even fired when the current value of the attribute has changed.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnDeltaCurrent OnDeltaCurrent;
 	

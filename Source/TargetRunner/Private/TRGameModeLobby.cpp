@@ -12,7 +12,7 @@ ATRGameModeLobby::ATRGameModeLobby()
 
 int32 ATRGameModeLobby::GetMarketDataForPlayer(const ATRPlayerControllerBase* MarketPlayerController, TArray<FGoodsPurchaseItem>& MarketGoods)
 {
-	if (!IsValid(GoodsMarketTable)) { return false; }
+	if (!IsValid(GoodsMarketTable)) { return 0; }
 	ATRPlayerState* PlayerState = MarketPlayerController->GetPlayerState<ATRPlayerState>();
 	const FGoodsPurchaseItem* PurchaseItem = nullptr;
 
@@ -28,4 +28,25 @@ int32 ATRGameModeLobby::GetMarketDataForPlayer(const ATRPlayerControllerBase* Ma
 		}
 	}
 	return MarketGoods.Num();
+}
+
+
+int32 ATRGameModeLobby::GetToolMarketDataForPlayer(const ATRPlayerControllerBase* MarketPlayerController, TArray<FToolPurchaseItem>& ToolMarketGoods)
+{
+	if (!IsValid(ToolsMarketTable)) { return 0; }
+	ATRPlayerState* PlayerState = MarketPlayerController->GetPlayerState<ATRPlayerState>();
+	const FToolPurchaseItem* PurchaseItem = nullptr;
+
+	if (PlayerState == nullptr) { return 0; }
+	// Type-Safety
+	check(ToolsMarketTable->GetRowStruct()->IsChildOf(FToolPurchaseItem::StaticStruct()));
+	for (const TPair<FName, uint8*>& RowItr : ToolsMarketTable->GetRowMap())
+	{
+		PurchaseItem = reinterpret_cast<const FToolPurchaseItem*>(RowItr.Value);
+		if (PurchaseItem->TierAvailable <= PlayerState->MaxTierCompleted)
+		{
+			ToolMarketGoods.Add(*PurchaseItem);
+		}
+	}
+	return ToolMarketGoods.Num();
 }

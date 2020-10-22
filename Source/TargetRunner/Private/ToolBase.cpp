@@ -15,6 +15,7 @@ UToolBase::UToolBase()
 	: Super()
 {
 	BuyValue.Name = FName(TEXT("BuyValue"));
+	CostValue.Name = FName(TEXT("CostValue"));
 	UpgradeDamageCostMultiplier.Name = FName(TEXT("UpgradeDamageCostMultiplier"));
 	UpgradeDamageCostMultiplier.Quantity = 1.0f;
 	UpgradeExtractionCostMultiplier.Name = FName(TEXT("UpgradeExtractionCostMultiplier"));
@@ -37,6 +38,7 @@ void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 	ToolData.AttributeData.ItemDisplayName = DisplayName;
 	ToolData.AttributeData.ItemGuid = ItemGuid;
 	ToolData.AttributeData.FloatAttributes.Add(BuyValue.Name, BuyValue.Quantity);
+	ToolData.AttributeData.GoodsQuantitiesAttributes.Add(CostValue.Name, CostValue.GoodsQuantitySet);
 	ToolData.AttributeData.FloatAttributes.Add(UpgradeDamageCostMultiplier.Name, UpgradeDamageCostMultiplier.Quantity);
 	ToolData.AttributeData.FloatAttributes.Add(UpgradeExtractionCostMultiplier.Name, UpgradeExtractionCostMultiplier.Quantity);
 	ToolData.AttributeData.FloatAttributes.Add(MaximumBounces.Name, static_cast<float>(MaximumBounces.Quantity));
@@ -86,6 +88,14 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 			NamedInt.Quantity = static_cast<int32>(ToolData.AttributeData.FloatAttributes[NamedInt.Name]);
 		}
 	};
+
+	auto UpdateNamedGoodsQuantitySetAttr = [ToolData](FNamedGoodsQuantitySet& NamedGoodsQuantitySet)
+	{
+		if (ToolData.AttributeData.GoodsQuantitiesAttributes.Contains(NamedGoodsQuantitySet.Name))
+		{
+			NamedGoodsQuantitySet.GoodsQuantitySet = ToolData.AttributeData.GoodsQuantitiesAttributes[NamedGoodsQuantitySet.Name];
+		}
+	};
 	/////////////////////////////////////////////////////////////
 
 	if (ToolData.ToolClass.Get()->IsChildOf(GetClass()))
@@ -97,34 +107,7 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 			ItemGuid = ToolData.AttributeData.ItemGuid;
 		}
 		DisplayName = ToolData.AttributeData.ItemDisplayName;
-		/*
-		// Float Attributes
-		if (ToolData.AttributeData.FloatAttributes.Contains(BUY_VALUE_NAME)) {
-			BuyValue = ToolData.AttributeData.FloatAttributes[BUY_VALUE_NAME];
-		}
-		if (ToolData.AttributeData.FloatAttributes.Contains(UPGRADE_DAMAGE_MULTIPLIER_NAME)) {
-			UpgradeDamageCostMultiplier = ToolData.AttributeData.FloatAttributes[UPGRADE_DAMAGE_MULTIPLIER_NAME];
-		}
-		if (ToolData.AttributeData.FloatAttributes.Contains(UPGRADE_EXTRACTION_MULTIPLIER_NAME)) {
-			UpgradeExtractionCostMultiplier = ToolData.AttributeData.FloatAttributes[UPGRADE_EXTRACTION_MULTIPLIER_NAME];
-		}
-		if (ToolData.AttributeData.FloatAttributes.Contains(MAXIMUM_BOUNCES_NAME)) {
-			MaximumBounces = static_cast<int32>(ToolData.AttributeData.FloatAttributes[MAXIMUM_BOUNCES_NAME]);
-		}
-		// Attributes
-		if (ToolData.AttributeData.Attributes.Contains(EnergyPerShot.Name)) { 
-			EnergyPerShot = ToolData.AttributeData.Attributes[EnergyPerShot.Name]; 
-		}
-		if (ToolData.AttributeData.Attributes.Contains(BaseDamage.Name)) { 
-			BaseDamage = ToolData.AttributeData.Attributes[BaseDamage.Name]; 
-		}
-		if (ToolData.AttributeData.Attributes.Contains(ActivationDelay.Name)) {
-			ActivationDelay = ToolData.AttributeData.Attributes[ActivationDelay.Name];
-		}
-		if (ToolData.AttributeData.Attributes.Contains(ProjectileSpeed.Name)) {
-			ProjectileSpeed = ToolData.AttributeData.Attributes[ProjectileSpeed.Name];
-		}
-		*/
+		UpdateNamedGoodsQuantitySetAttr(CostValue);
 		UpdateNamedFloatAttr(BuyValue);
 		UpdateNamedFloatAttr(UpgradeDamageCostMultiplier);
 		UpdateNamedFloatAttr(UpgradeExtractionCostMultiplier);

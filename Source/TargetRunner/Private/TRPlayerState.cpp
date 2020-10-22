@@ -23,11 +23,6 @@ ATRPlayerState::ATRPlayerState()
 	AddOwnedComponent(HealthAttribute);
 	HealthAttribute->SetIsReplicated(true); // Enable replication by default
 	HealthAttribute->AttributeData.Name = FName(TEXT("Health"));
-
-	RunSpeedAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("RunSpeedAttribute"));
-	AddOwnedComponent(RunSpeedAttribute);
-	RunSpeedAttribute->SetIsReplicated(true);
-	RunSpeedAttribute->AttributeData.Name = FName(TEXT("RunSpeed"));
 }
 
 

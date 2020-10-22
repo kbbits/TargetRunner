@@ -20,16 +20,32 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 		AddOwnedComponent(PersistentDataComponent);
 		PersistentDataComponent->SetIsReplicated(true);
 	}
+
+	RunSpeedAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("RunSpeedAttribute"));
+	AddOwnedComponent(RunSpeedAttribute);
+	RunSpeedAttribute->SetIsReplicated(true);
+	RunSpeedAttribute->AttributeData.Name = FName(TEXT("RunSpeed"));
+	RunSpeedAttribute->AttributeData.MinValue = 100;
+	RunSpeedAttribute->AttributeData.MaxValue = 600;
+	RunSpeedAttribute->AttributeData.CurrentValue = 600;
+	RunSpeedAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnRunSpeedChanged);
+
+	JumpForceAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("JumpForceAttribute"));
+	AddOwnedComponent(JumpForceAttribute);
+	JumpForceAttribute->SetIsReplicated(true);
+	JumpForceAttribute->AttributeData.Name = FName(TEXT("JumpForce"));
+	JumpForceAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnJumpForceChanged);
+
+	CollectionRangeAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("CollectionRangeAttribute"));
+	AddOwnedComponent(CollectionRangeAttribute);
+	CollectionRangeAttribute->SetIsReplicated(true);
+	CollectionRangeAttribute->AttributeData.Name = FName(TEXT("CollectionRange"));
+	CollectionRangeAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnCollectionRangeChanged);
 }
 
 void ATRPlayerControllerBase::InitPlayerState()
 {
-	APlayerController::InitPlayerState();
-	ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
-	if (TRPlayerState)
-	{
-		TRPlayerState->RunSpeedAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnRunSpeedChanged);
-	}
+	APlayerController::InitPlayerState();	
 }
 
 void ATRPlayerControllerBase::OnPossess(APawn* InPawn)
@@ -46,12 +62,9 @@ void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
 	UCharacterMovementComponent* MoveComp = Cast<UCharacterMovementComponent>(TmpPawn->GetMovementComponent());
 	if (MoveComp)
 	{
-		ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
-		if (TRPlayerState)
-		{
-			MoveComp->MaxWalkSpeed = TRPlayerState->RunSpeedAttribute->GetCurrent();
-			UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
-		}
+		MoveComp->MaxWalkSpeed = RunSpeedAttribute->GetCurrent();
+		//UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
+		MoveComp->JumpZVelocity = JumpForceAttribute->GetCurrent();
 	}
 }
 
@@ -63,6 +76,15 @@ bool ATRPlayerControllerBase::UpdateMovementFromAttributes_Validate()
 void ATRPlayerControllerBase::OnRunSpeedChanged(float NewSpeed)
 {
 	UpdateMovementFromAttributes();
+}
+
+void ATRPlayerControllerBase::OnJumpForceChanged(float NewJumpForce)
+{
+	UpdateMovementFromAttributes();
+}
+
+void ATRPlayerControllerBase::OnCollectionRangeChanged(float NewCollectionRange)
+{
 }
 
 void ATRPlayerControllerBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
@@ -600,14 +622,24 @@ void ATRPlayerControllerBase::ClientUpdateRoomGridTemplate_Implementation(const 
 
 bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 {
+	// Attribute components
+	TArray<UActorAttributeComponent*> AttributeComps;
+	GetComponents<UActorAttributeComponent>(AttributeComps);
+	for (UActorAttributeComponent* Attr : AttributeComps)
+	{
+		Attr->FillAttributeDataMap(SaveData.AttributeData.Attributes);
+	}
+	// Tools & equipped tools
 	ToolInventory.GenerateValueArray(SaveData.ToolInventory);
 	SaveData.LastEquippedItems.Empty(EquippedTools.Num());
 	for (UToolBase* TmpTool : EquippedTools)
 	{
 		SaveData.LastEquippedItems.Add(TmpTool->ItemGuid);
 	}
+	// Other data
 	SaveData.AttributeData.FloatAttributes.Add(FName(TEXT("MaxEquippedWeapons")), static_cast<float>(MaxEquippedWeapons));
 	SaveData.AttributeData.FloatAttributes.Add(FName(TEXT("MaxEquippedEquipment")), static_cast<float>(MaxEquippedEquipment));
+	// Get data from PlayerState
 	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
 	if (TRPlayerState)
 	{
@@ -625,27 +657,31 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
 	UToolBase* TmpTool = nullptr;
+	// Attribute components
+	TArray<UActorAttributeComponent*> AttributeComps;
+	GetComponents<UActorAttributeComponent>(AttributeComps);
+	for (UActorAttributeComponent* Attr : AttributeComps)
+	{
+		Attr->UpdateFromAttributeDataMap(SaveData.AttributeData.Attributes);
+	}
+	// Tools
 	ToolInventory.Empty();
 	for (FToolData CurToolData : SaveData.ToolInventory)
 	{
 		ToolInventory.Add(CurToolData.AttributeData.ItemGuid, CurToolData);
 	}
+	// Other data
 	MaxEquippedWeapons = static_cast<int32>(SaveData.AttributeData.FloatAttributes.FindRef(FName(TEXT("MaxEquippedWeapons"))));
 	MaxEquippedWeapons = MaxEquippedWeapons < 2 ? 2 : MaxEquippedWeapons;
 	MaxEquippedEquipment = static_cast<int32>(SaveData.AttributeData.FloatAttributes.FindRef(FName(TEXT("MaxEquippedEquipment"))));
 	MaxEquippedEquipment = MaxEquippedEquipment < 2 ? 2 : MaxEquippedEquipment;
+	// Re-equip all tools
 	ServerUnequipAllTools();
 	for (FGuid TmpGuid : SaveData.LastEquippedItems)
 	{
 		ServerEquipTool(TmpGuid);
-		/*if (ToolInventory.Contains(TmpGuid))
-		{
-			TmpTool = UToolBase::CreateToolFromToolData(ToolInventory[TmpGuid], this);
-			if (TmpTool && EquippedTools.Num() <= MaxEquippedWeapons) {
-				EquippedTools.Add(TmpTool);
-			}
-		}*/
 	}
+	// Update PlayerState
 	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
 	if (TRPlayerState)
 	{

@@ -30,31 +30,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		FName Name;
 
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-	//	FText DisplayName;
-
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-	//	TSubclassOf<ATRProjectileBase> ProjectileClass;
-
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-	//	float EnergyPerShot;
-
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-	//	FGoodsQuantity AmmoPerShot;
-
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-	//	float BaseDamage;
-
-	// The effective damage rates of this tool against given resource types. Expressed as a percent of base damage (0.0 - 1.0).
-	// Values > 1.0 are allowed. Calculated damage against a resource type not matching any filters will = 0;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
-	//	TArray<FResourceRateFilter> BaseDamageRates;
-
-	// The effective extraction rates of this tool against given resource types. Expressed as a percent (0.0 - 1.0).
-	// Values > 1.0 are allowed. Calculated extracted amounts against a resource type not matching any filters will = 0;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
-	//	TArray<FResourceRateFilter> BaseResourceExtractionRates;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		TAssetPtr<USoundBase> FireSound;
 
@@ -93,11 +68,6 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
 		ETRWeaponState GetCurrentState();
 	virtual ETRWeaponState GetCurrentState_Implementation();
-
-	// Sets the new weapon state.  Returns the old state.
-	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
-    //ETRWeaponState SetCurrentState(const ETRWeaponState NewState);
-	//virtual ETRWeaponState SetCurrentState_Implementation(const ETRWeaponState NewState);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
 		void BeginFire();
