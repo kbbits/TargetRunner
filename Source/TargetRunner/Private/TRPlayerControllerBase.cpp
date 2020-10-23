@@ -25,9 +25,9 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 	AddOwnedComponent(RunSpeedAttribute);
 	RunSpeedAttribute->SetIsReplicated(true);
 	RunSpeedAttribute->AttributeData.Name = FName(TEXT("RunSpeed"));
-	RunSpeedAttribute->AttributeData.MinValue = 100;
-	RunSpeedAttribute->AttributeData.MaxValue = 600;
-	RunSpeedAttribute->AttributeData.CurrentValue = 600;
+	//RunSpeedAttribute->AttributeData.MinValue = 100;
+	//RunSpeedAttribute->AttributeData.MaxValue = 600;
+	//RunSpeedAttribute->AttributeData.CurrentValue = 600;
 	RunSpeedAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnRunSpeedChanged);
 
 	JumpForceAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("JumpForceAttribute"));
@@ -63,7 +63,7 @@ void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
 	if (MoveComp)
 	{
 		MoveComp->MaxWalkSpeed = RunSpeedAttribute->GetCurrent();
-		//UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
+		UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
 		MoveComp->JumpZVelocity = JumpForceAttribute->GetCurrent();
 	}
 }
@@ -130,62 +130,45 @@ bool ATRPlayerControllerBase::RemoveAttributeModifiers_Validate(const TArray<FAt
 	return true;
 }
 
-void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(TSubclassOf<UToolBase> ToolClass)
+void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(UToolBase* Tool)
 {
-	UToolBase* TmpTool = NewObject<UToolBase>(this, ToolClass);
-	if (TmpTool)
-	{
-		FToolData TmpToolData;
-		TmpTool->ItemGuid = FGuid::NewGuid();
-		TmpTool->ToToolData(TmpToolData);
-		ToolInventory.Add(TmpTool->ItemGuid, TmpToolData);
+	FToolData TmpToolData;
+	bool bSuccess = false;
+	if (Tool)
+	{		
+		if (!Tool->ItemGuid.IsValid()) { Tool->ItemGuid = FGuid::NewGuid(); }
+		Tool->ToToolData(TmpToolData);
+		ToolInventory.Add(Tool->ItemGuid, TmpToolData);
 		OnToolInventoryAdded.Broadcast(TmpToolData);
+		bSuccess = true;
 	}
-	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory added tool guid %s."), *TmpTool->ItemGuid.ToString());
-	if (!IsLocalController())
+	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory added tool guid %s."), *Tool->ItemGuid.ToString());
+	if (bSuccess && !IsLocalController())
 	{
 		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory calling client."));
-		ClientAddToolToInventory(ToolClass, TmpTool->ItemGuid);
+		ClientAddToolToInventory(TmpToolData, Tool->ItemGuid);
 	}
 }
 
-bool ATRPlayerControllerBase::ServerAddToolToInventory_Validate(TSubclassOf<UToolBase> ToolClass)
+bool ATRPlayerControllerBase::ServerAddToolToInventory_Validate(UToolBase* Tool)
 {
 	return true;
 }
 
 
-void ATRPlayerControllerBase::ClientAddToolToInventory_Implementation(TSubclassOf<UToolBase> ToolClass, const FGuid AddedGuid)
+void ATRPlayerControllerBase::ClientAddToolToInventory_Implementation(const FToolData& ToolData, const FGuid AddedGuid)
 {
-	UToolBase* TmpTool = NewObject<UToolBase>(this, ToolClass);
-	if (TmpTool)
+	if (IsValid(ToolData.ToolClass))
 	{
-		FToolData TmpToolData;
-		TmpTool->ItemGuid = AddedGuid;
-		TmpTool->ToToolData(TmpToolData);
-		ToolInventory.Add(TmpTool->ItemGuid, TmpToolData);
-		OnToolInventoryAdded.Broadcast(TmpToolData);
+		ToolInventory.Add(ToolData.AttributeData.ItemGuid, ToolData);
+		OnToolInventoryAdded.Broadcast(ToolData);
 	}
-	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientAddToolToInventory added tool guid %s."), *TmpTool->ItemGuid.ToString());
+	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientAddToolToInventory added tool guid %s."), *ToolData.AttributeData.ItemGuid.ToString());
 }
 
-bool ATRPlayerControllerBase::ClientAddToolToInventory_Validate(TSubclassOf<UToolBase> ToolClass, const FGuid AddedGuid)
+bool ATRPlayerControllerBase::ClientAddToolToInventory_Validate(const FToolData& ToolData, const FGuid AddedGuid)
 {
 	return true;
-}
-
-
-void ATRPlayerControllerBase::GetMarketTools_Implementation(TArray<TSubclassOf<UToolBase>>& AvailableMarketToolClasses)
-{
-	AvailableMarketToolClasses.Empty(MarketToolClasses.Num());
-	AvailableMarketToolClasses.Append(MarketToolClasses);
-}
-
-
-void ATRPlayerControllerBase::SetMarketTools_Implementation(const TArray<TSubclassOf<UToolBase>>& AvailableMarketToolClasses)
-{
-	MarketToolClasses.Empty(AvailableMarketToolClasses.Num());
-	MarketToolClasses.Append(AvailableMarketToolClasses);
 }
 
 

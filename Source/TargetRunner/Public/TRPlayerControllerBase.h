@@ -129,24 +129,14 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void RemoveAttributeModifiers(const TArray<FAttributeModifier>& ModifiersToRemove);
 
-	// [Any]
-	// The Tools available for purchase in the market.
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure)
-		void GetMarketTools(TArray<TSubclassOf<UToolBase>>& AvailableMarketToolClasses);
-
-	// [Any]
-	// Set the Tools available for purchase in the market.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		void SetMarketTools(const TArray<TSubclassOf<UToolBase>>& AvailableMarketToolClasses);
-
 	// [Server]
 	// Call this to add a tool to player's inventory. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerAddToolToInventory(TSubclassOf<UToolBase> ToolClass);
+		void ServerAddToolToInventory(UToolBase* Tool);
 
 	// [Client]
 	UFUNCTION(Client, Reliable, WithValidation)
-		void ClientAddToolToInventory(TSubclassOf<UToolBase> ToolClass, const FGuid AddedGuid);
+		void ClientAddToolToInventory(const FToolData& ToolData, const FGuid AddedGuid);
 
 	// [Server]
 	// Call this to equip a tool from player's inventory. This handles rep. to client.
