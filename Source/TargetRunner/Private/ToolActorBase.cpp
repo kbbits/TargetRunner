@@ -51,31 +51,47 @@ ETRWeaponState AToolActorBase::GetCurrentState_Implementation()
 	return WeaponState;
 }
 
-// Base class does nothing but set state if this tool allows activating.
+// Base class does nothing
 void AToolActorBase::BeginFire_Implementation()
 {
-	if (Tool && Tool->bAllowsActivation)
-	{
-		WeaponState = ETRWeaponState::Firing;
-	}
+	//if (Tool && Tool->bAllowsActivation && WeaponState == ETRWeaponState::Idle)
+	//{
+	//	WeaponState = ETRWeaponState::Firing;
+	//}
 }
 
+// Base class does nothing
 void AToolActorBase::EndFire_Implementation()
 {
-	// Base class does nothing but set state.
-	WeaponState = ETRWeaponState::Idle;
+	//if (GetActivationDelay() <= 0.0f)
+	//{
+	//	WeaponState = ETRWeaponState::Idle;
+	//}
+	//else 
+	//{
+	//	if (WeaponState == ETRWeaponState::Firing)
+	//	{
+	//		WeaponState = ETRWeaponState::FireBusy;
+	//	}
+	//}
 }
 
 float AToolActorBase::GetEnergyPerShot_Implementation()
 {
-	if (Tool != nullptr) { return Tool->EnergyPerShot.CurrentValue; }
+	if (Tool != nullptr) { return Tool->GetEnergyPerShot(); }
 	return 0.0f;
 }
 
-FGoodsQuantity AToolActorBase::GetAmmoPerShot_Implementation()
+TArray<FGoodsQuantity> AToolActorBase::GetAmmoPerShot_Implementation()
 {
-	if (Tool != nullptr) { return Tool->AmmoPerShot; }
-	return FGoodsQuantity();
+	if (Tool != nullptr) { return Tool->GetAmmoPerShot(); }
+	return TArray<FGoodsQuantity>();
+}
+
+FGoodsQuantitySet AToolActorBase::GetAmmoPerShotAsSet_Implementation()
+{
+	if (Tool != nullptr) { return Tool->AmmoPerShot.GoodsQuantitySet; }
+	return FGoodsQuantitySet();
 }
 
 float AToolActorBase::GetDamagePerShot_Implementation()

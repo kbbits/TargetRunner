@@ -5,6 +5,8 @@
 #include "..\Public\ToolBase.h"
 #include "ResourceRateFilterSet.h"
 
+const FName UToolBase::EMIT_TYPE_NAME = FName(TEXT("EmitType"));
+const FName UToolBase::ACTIVATION_TYPE_NAME = FName(TEXT("ActivationType"));
 const FName UToolBase::DAMAGE_RATES_NAME = FName(TEXT("DamageRates"));
 const FName UToolBase::EXTRACTION_RATES_NAME = FName(TEXT("ExtractionRates"));
 const FName UToolBase::EQUIP_MODS_NAME = FName(TEXT("EquipModifiers"));
@@ -14,6 +16,8 @@ const FName UToolBase::ACTIVATE_MODS_NAME = FName(TEXT("ActivateModifiers"));
 UToolBase::UToolBase()
 	: Super()
 {
+	AutoFireDelay.Name = FName(TEXT("AutoFireDelay"));
+	AutoFireBurstLimit.Name = FName(TEXT("AutoFireBurstLimit"));
 	BuyValue.Name = FName(TEXT("BuyValue"));
 	CostValue.Name = FName(TEXT("CostValue"));
 	UpgradeDamageCostMultiplier.Name = FName(TEXT("UpgradeDamageCostMultiplier"));
@@ -23,6 +27,7 @@ UToolBase::UToolBase()
 	MaximumBounces.Name = FName(TEXT("MaximumBounces"));
 
 	EnergyPerShot.Name = FName(TEXT("EnergyPerShot"));
+	AmmoPerShot.Name = FName(TEXT("AmmoPerShot"));
 	BaseDamage.Name = FName(TEXT("BaseDamage"));
 	ActivationDelay.Name = FName(TEXT("ActivationDelay"));
 	ProjectileSpeed.Name = FName(TEXT("ProjectileSpeed"));
@@ -37,12 +42,17 @@ void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 	ToolData.ToolClass = this->GetClass();
 	ToolData.AttributeData.ItemDisplayName = DisplayName;
 	ToolData.AttributeData.ItemGuid = ItemGuid;
+	ToolData.AttributeData.FloatAttributes.Add(EMIT_TYPE_NAME, static_cast<float>(static_cast<uint8>(EmitType)));
+	ToolData.AttributeData.FloatAttributes.Add(ACTIVATION_TYPE_NAME, static_cast<float>(static_cast<uint8>(ActivationType)));
+	ToolData.AttributeData.Attributes.Add(AutoFireDelay.Name, AutoFireDelay);
+	ToolData.AttributeData.Attributes.Add(AutoFireBurstLimit.Name, AutoFireBurstLimit);
 	ToolData.AttributeData.FloatAttributes.Add(BuyValue.Name, BuyValue.Quantity);
 	ToolData.AttributeData.GoodsQuantitiesAttributes.Add(CostValue.Name, CostValue.GoodsQuantitySet);
 	ToolData.AttributeData.FloatAttributes.Add(UpgradeDamageCostMultiplier.Name, UpgradeDamageCostMultiplier.Quantity);
 	ToolData.AttributeData.FloatAttributes.Add(UpgradeExtractionCostMultiplier.Name, UpgradeExtractionCostMultiplier.Quantity);
 	ToolData.AttributeData.FloatAttributes.Add(MaximumBounces.Name, static_cast<float>(MaximumBounces.Quantity));
 	ToolData.AttributeData.Attributes.Add(EnergyPerShot.Name, EnergyPerShot);
+	ToolData.AttributeData.GoodsQuantitiesAttributes.Add(AmmoPerShot.Name, AmmoPerShot.GoodsQuantitySet);
 	ToolData.AttributeData.Attributes.Add(BaseDamage.Name, BaseDamage);
 	ToolData.AttributeData.Attributes.Add(ActivationDelay.Name, ActivationDelay);
 	ToolData.AttributeData.Attributes.Add(ProjectileSpeed.Name, ProjectileSpeed);
@@ -107,6 +117,18 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 			ItemGuid = ToolData.AttributeData.ItemGuid;
 		}
 		DisplayName = ToolData.AttributeData.ItemDisplayName;
+		if (ToolData.AttributeData.FloatAttributes.Contains(EMIT_TYPE_NAME))
+		{
+			// Perhaps some excessive casting here. Just being explicit.
+			EmitType = static_cast<EToolEmitType>(static_cast<uint8>(ToolData.AttributeData.FloatAttributes[EMIT_TYPE_NAME]));
+		}
+		if (ToolData.AttributeData.FloatAttributes.Contains(ACTIVATION_TYPE_NAME))
+		{
+			ActivationType = static_cast<EToolActivationType>(static_cast<uint8>(ToolData.AttributeData.FloatAttributes[ACTIVATION_TYPE_NAME]));
+		}
+		UpdateAttr(AutoFireDelay);
+		UpdateAttr(AutoFireBurstLimit);
+		UpdateNamedGoodsQuantitySetAttr(AmmoPerShot);
 		UpdateNamedGoodsQuantitySetAttr(CostValue);
 		UpdateNamedFloatAttr(BuyValue);
 		UpdateNamedFloatAttr(UpgradeDamageCostMultiplier);

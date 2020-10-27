@@ -69,10 +69,12 @@ public:
 		ETRWeaponState GetCurrentState();
 	virtual ETRWeaponState GetCurrentState_Implementation();
 
+	// Base class does nothing
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
 		void BeginFire();
 	virtual void BeginFire_Implementation();
 
+	// Base class does nothing
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
 		void EndFire();
 	virtual void EndFire_Implementation();
@@ -82,9 +84,12 @@ public:
 	virtual float GetEnergyPerShot_Implementation();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
-		FGoodsQuantity GetAmmoPerShot();
-	virtual FGoodsQuantity GetAmmoPerShot_Implementation();
+		TArray<FGoodsQuantity> GetAmmoPerShot();
+	virtual TArray<FGoodsQuantity> GetAmmoPerShot_Implementation();
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
+		FGoodsQuantitySet GetAmmoPerShotAsSet();
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
 		float GetDamagePerShot();
 	virtual float GetDamagePerShot_Implementation();

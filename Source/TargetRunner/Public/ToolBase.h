@@ -11,6 +11,32 @@
 #include "ResourceRateFilter.h"
 #include "ToolBase.generated.h"
 
+UENUM(BlueprintType)
+enum class EToolEmitType : uint8
+{
+	// When activated this tool emits no projectile, beam, etc.
+	None = 0	UMETA(DisplayName = "None"),
+	// When activated this tool fires a projectile
+	Projectile = 1	UMETA(DisplayName = "Projectile"),
+	// When activated this tool emits a beam
+	Beam = 2	UMETA(DisplayName = "Beam")
+
+	// TODO: implement
+	// When activated this tool emits a field of effect in an area
+	//Area = 4	UMETA(DisplayName = "Area")
+};
+
+UENUM(BlueprintType)
+enum class EToolActivationType : uint8
+{
+	// Weapon cannot be activated.
+	None = 0	UMETA(DisplayName = "None"),
+	// Single "botton press" fires a single activation. i.e. a single shot.
+	Single = 1	UMETA(DisplayName = "Single"),
+	// Tool repeatedly activates while "button press is held". i.e. fires while trigger is held.
+	Auto = 2	UMETA(DisplayName = "Auto")
+};
+
 UCLASS(BlueprintType, Blueprintable)
 class TARGETRUNNER_API UToolBase : public UObject
 {
@@ -38,32 +64,55 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		FText DisplayName;
 
-	// Type of projectile this tool fires. Can be None.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-		TSubclassOf<ATRProjectileBase> ProjectileClass;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-		FAttributeData EnergyPerShot;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-		FGoodsQuantity AmmoPerShot;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
-		FAttributeData BaseDamage;
-
 	// If this is false the weapon/tool cannot be fired/used by the player.
 	// Usually set to false for "passive only" tools that only have effects on equipping.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, SaveGame, Category = "Player Weapons")
 		bool bAllowsActivation;
 
-	// Minimum time in seconds between activations (i.e. between shots). Shots per second = (1 / FireDelay) + 1
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		EToolEmitType EmitType;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		EToolActivationType ActivationType;
+
+	// Minimum time in seconds between when an activation ends and the next activations can begin. 
+	// (i.e. between shots fired for single-fire tools and between bursts/beams for auto-fire tools). 
+	// For single-fire tools, shots per second = (1 / FireDelay) + 1
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		FAttributeData ActivationDelay;
+
+	// The delay between tool activations for a tool with ActivationType = EToolActivationType::Auto.
+	// That is, the amount of time in seconds, between each auto-fire activation.
+	// Shots per second = (1 / FireDelay) + 1
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FAttributeData AutoFireDelay;
+
+	// Limit of activations in an auto-fire burst before tool de-activates.
+	// i.e. number of shots each time an auto-fire tool is activated.
+	// Set to 0 (default) for no limit.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FAttributeData AutoFireBurstLimit;
+
+	// The class of projectile this tool fires. Can be None.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+		TSubclassOf<ATRProjectileBase> ProjectileClass;
 
 	// The speed of the projectile
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		FAttributeData ProjectileSpeed;
 
+	// Energy used each time tool is activated
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+		FAttributeData EnergyPerShot;
+
+	// Ammo consumed for each tool activation. i.e. each time it fires
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+		FNamedGoodsQuantitySet AmmoPerShot;
+
+	// The base damage tool deals to target. Usually only relevant for Weapons.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
+		FAttributeData BaseDamage;
+	
 	// The effective damage rates of this tool against given resource types. Expressed as a percent of base damage (0.0 - 1.0).
 	// Values > 1.0 are allowed. Calculated damage against a resource type not matching any filters will = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (TitleProperty = "ResourceTypeFilter"))
@@ -76,6 +125,8 @@ public:
 
 protected:
 
+	static const FName EMIT_TYPE_NAME;					// = FName(TEXT("EmitType"));
+	static const FName ACTIVATION_TYPE_NAME;			// = FName(TEXT("ActivationType"));
 	static const FName DAMAGE_RATES_NAME;				// = FName(TEXT("DamageRates"));
 	static const FName EXTRACTION_RATES_NAME;			// = FName(TEXT("ExtractionRates"));
 	static const FName EQUIP_MODS_NAME;					// = FName(TEXT("EquipModifiers"));
@@ -109,6 +160,15 @@ protected:
 
 public:
 
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE float GetActivationDelay() { return ActivationDelay.CurrentValue; }
+
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE float GetAutoFireDelay() { return AutoFireDelay.CurrentValue; }
+
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE float GetAutoFireBurstLimit() { return AutoFireBurstLimit.CurrentValue; }
+
 	// Value of the item in the market
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE float GetBuyValue() { return BuyValue.Quantity; }
@@ -132,6 +192,15 @@ public:
 	// The speed of the projectile
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE float GetProjectileSpeed() { return ProjectileSpeed.CurrentValue; }
+
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE float GetEnergyPerShot() { return EnergyPerShot.CurrentValue; }
+
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE TArray<FGoodsQuantity> GetAmmoPerShot() { return AmmoPerShot.GoodsQuantitySet.Goods; }
+
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE float GetBaseDamage() { return BaseDamage.CurrentValue; }
 
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE TArray<FAttributeModifier> GetEquipModifiers() { return EquipModifiers.Modifiers; }

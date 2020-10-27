@@ -58,7 +58,7 @@ public:
 		float GetEnergyPerShot();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
-		FGoodsQuantity GetAmmoPerShot();
+		TArray<FGoodsQuantity> GetAmmoPerShot();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Player Weapons")
 		float GetDamagePerShot();
