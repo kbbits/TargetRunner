@@ -27,15 +27,10 @@ class TARGETRUNNER_API AResourceNodeBase : public AActor, public IExtractableRes
 public:	
 	// Sets default values for this actor's properties
 	AResourceNodeBase();
-
-	
+		
 	// Starting health for this node
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 		float BaseHealth;
-
-	// Current health of this node.  When health reaches 0 ResourcesOnDestroy will be extracted if damager implements IExtractsResources.
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, ReplicatedUsing=OnRep_CurrentHealth)
-		float CurrentHealth;
 
 	// The ResourceType of this node. This affects, for example, the damage done by sources that implement IDoesDamageByType interface.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
@@ -59,6 +54,10 @@ protected:
 	// Root scene for the node
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		USceneComponent* RootScene;
+
+	// Current health of this node.  When health reaches 0 ResourcesOnDestroy will be extracted if damager implements IExtractsResources.
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentHealth)
+		float CurrentHealth;
 
 protected:
 	// Called when the game starts or when spawned

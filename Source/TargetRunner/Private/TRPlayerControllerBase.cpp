@@ -65,6 +65,7 @@ void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
 		MoveComp->MaxWalkSpeed = RunSpeedAttribute->GetCurrent();
 		UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
 		MoveComp->JumpZVelocity = JumpForceAttribute->GetCurrent();
+		UE_LOG(LogTRGame, Log, TEXT("Player jump velocity changed to: %.0f"), MoveComp->JumpZVelocity);
 	}
 }
 

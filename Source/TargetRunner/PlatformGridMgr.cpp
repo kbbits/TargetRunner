@@ -36,7 +36,7 @@ void APlatformGridMgr::BeginPlay()
 
 void APlatformGridMgr::MovePlayerStarts()
 {
-	FVector Offset(150.0, -200, 32.0);
+	FVector Offset(150.0, -200, 50.0);
 	int32 MaxPlayerStarts = 4;
 	APlayerStart* PlayerStart;
 	FTransform SpawnTransform;
@@ -64,7 +64,7 @@ void APlatformGridMgr::MovePlayerStarts()
 			PlayerStarts.Add(PlayerStart);
 			if (CurStart % 3 == 0)
 			{
-				Offset.Set(150.0 - ((CurStart / 3) * 150.0), -200, 32.0);
+				Offset.Set(150.0 - ((CurStart / 3) * 150.0), -200, 50.0);
 			}
 			else
 			{
@@ -72,7 +72,6 @@ void APlatformGridMgr::MovePlayerStarts()
 			}
 		}
 		PlayerStart = nullptr;
-		//CurStart++;
 	}	
 }
 

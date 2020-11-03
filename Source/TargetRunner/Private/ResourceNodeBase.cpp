@@ -14,13 +14,14 @@ AResourceNodeBase::AResourceNodeBase()
 
 	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene"));
 	SetRootComponent(RootScene);
+	CurrentHealth = BaseHealth;
 }
 
 // Called when the game starts or when spawned
 void AResourceNodeBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	if (CurrentHealth != BaseHealth) { CurrentHealth = BaseHealth; }
 }
 
 // Called every frame
@@ -39,6 +40,10 @@ void AResourceNodeBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& 
 
 void AResourceNodeBase::OnRep_CurrentHealth_Implementation()
 {
+	if (CurrentHealth <= 0.0f)
+	{
+		OnNodeDestroyed.Broadcast();
+	}
 }
 
 void AResourceNodeBase::OnRep_ResourcesByDamageCurrent()
@@ -51,11 +56,7 @@ void AResourceNodeBase::ServerSetCurrentHealth_Implementation(const float NewCur
 	{
 		CurrentHealth = NewCurrentHealth;
 		// Replication will call this on clients. This is a direct call for server.
-		OnRep_CurrentHealth();
-		if (CurrentHealth <= 0.0f)
-		{
-			OnNodeDestroyed.Broadcast();
-		}
+		OnRep_CurrentHealth();	
 	}	
 }
 
