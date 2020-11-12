@@ -117,6 +117,11 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 		int32 PlacedObjects;
 
+#if WITH_EDITOR
+	UPROPERTY(BlueprintReadOnly)
+		TArray<AActor*> PlacedObjectRefs;
+#endif
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -125,6 +130,8 @@ protected:
 
 public:	
 	
+	void BeginDestroy() override;
+
 	void PostInitProperties() override;
 
 #if WITH_EDITOR
@@ -140,6 +147,9 @@ public:
 #if WITH_EDITOR
 	UFUNCTION(CallInEditor)
 		void TryPlaceOne();
+
+	UFUNCTION(CallInEditor)
+		void ClearPlaced();
 #endif
 
 	UFUNCTION(BlueprintPure)

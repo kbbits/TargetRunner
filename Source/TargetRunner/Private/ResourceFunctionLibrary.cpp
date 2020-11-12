@@ -264,3 +264,62 @@ int32 UResourceFunctionLibrary::ResourceDataByTier(const UDataTable* ResourceDat
 	}
 	return FoundCount;
 }
+
+
+bool UResourceFunctionLibrary::CalculateExtractedResources(const TArray<FResourceQuantity>& ExtractableResources, const float PercentOfTotal, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities)
+{
+	ExtractedQuantities.Empty();
+	// If we have no resources to extract just return
+	if (ExtractableResources.Num() == 0) { return false; }
+	// If 0% or extraction rates is empty just return
+	if (PercentOfTotal <= 0 || ExtractionRates.Num() == 0) { return false; }
+
+	float ExtractedQuantity;
+	FResourceRateFilter FoundRate;
+	ETRResourceMatch FoundSimilarity;
+
+	ExtractedQuantities.Reserve(ExtractableResources.Num());
+	for (FResourceQuantity CurResource : ExtractableResources)
+	{
+		if (FindBestResourceRateFilter(ExtractionRates, CurResource.ResourceType, FoundRate, FoundSimilarity))
+		{
+			//UE_LOG(LogTRGame, Log, TEXT("CalculateExtractedResources - target resource type: %s Found resource rate: %s  %.2f"), *CurResource.ResourceType.Code.ToString(), *FoundRate.ResourceTypeFilter.Code.ToString(), FoundRate.Rate)
+			ExtractedQuantity = FMath::CeilToFloat((CurResource.Quantity * PercentOfTotal) * FoundRate.Rate);
+			if (ExtractedQuantity <= 0.0f) { continue; }
+			if (ExtractedQuantity > CurResource.Quantity) { ExtractedQuantity = CurResource.Quantity; }
+			ExtractedQuantities.Add(FResourceQuantity(CurResource.ResourceType, ExtractedQuantity));
+		}
+	}
+	return ExtractedQuantities.Num() > 0;
+}
+
+
+bool UResourceFunctionLibrary::SubtractExtractedResources(TArray<FResourceQuantity>& ExtractableResources, const float PercentOfTotal, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities)
+{
+	ExtractedQuantities.Empty();
+	// If we have no resources to extract just return
+	if (ExtractableResources.Num() == 0) { return false; }
+	// If 0% or extraction rates is empty just return
+	if (PercentOfTotal <= 0 || ExtractionRates.Num() == 0) { return false; }
+
+	float ExtractedQuantity;
+	FResourceRateFilter FoundRate;
+	ETRResourceMatch FoundSimilarity;
+	FResourceQuantity* CurResource;
+
+	ExtractedQuantities.Reserve(ExtractableResources.Num());
+	for (int i = 0; i < ExtractableResources.Num(); i++)
+	{
+		CurResource = &ExtractableResources[i];
+		if (FindBestResourceRateFilter(ExtractionRates, CurResource->ResourceType, FoundRate, FoundSimilarity))
+		{
+			//UE_LOG(LogTRGame, Log, TEXT("CalculateExtractedResources - target resource type: %s Found resource rate: %s  %.2f"), *CurResource.ResourceType.Code.ToString(), *FoundRate.ResourceTypeFilter.Code.ToString(), FoundRate.Rate)
+			ExtractedQuantity = FMath::CeilToFloat((CurResource->Quantity * PercentOfTotal) * FoundRate.Rate);
+			if (ExtractedQuantity <= 0.0f) { continue; }
+			if (ExtractedQuantity > CurResource->Quantity) { ExtractedQuantity = CurResource->Quantity; }
+			ExtractedQuantities.Add(FResourceQuantity(CurResource->ResourceType, ExtractedQuantity));
+			CurResource->Quantity -= ExtractedQuantity;
+		}
+	}
+	return ExtractedQuantities.Num() > 0;
+}

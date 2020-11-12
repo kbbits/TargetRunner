@@ -72,6 +72,13 @@ protected:
 	void CalculateModifiedAttributeValues();
 
 public:	
+
+	void PostInitProperties() override;
+
+#if WITH_EDITOR
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 	// [Client]
 	// Replication notification
 	UFUNCTION()

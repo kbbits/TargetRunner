@@ -4,7 +4,6 @@
 #include "ObjectPlacer.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "UnrealEd.h"
 #include "ResourceClusterBase.h"
 
 // Sets default values
@@ -29,6 +28,7 @@ AObjectPlacer::AObjectPlacer()
 	BoxTarget->AttachToComponent(FacingArrow, FAttachmentTransformRules::KeepRelativeTransform);
 	UpdateComponents();
 }
+
 
 // Called when the game starts or when spawned
 void AObjectPlacer::BeginPlay()
@@ -63,6 +63,15 @@ void AObjectPlacer::UpdateComponents()
 		BoxTarget->SetRelativeLocation(FVector(TargetDistance, 0.0f, 0.0f));
 		BoxTarget->SetBoxExtent(BoxExtent, false);
 	}
+}
+
+
+void AObjectPlacer::BeginDestroy()
+{
+#if WITH_EDITOR
+	ClearPlaced();
+#endif
+	Super::BeginDestroy();
 }
 
 
@@ -109,6 +118,7 @@ AActor* AObjectPlacer::PlaceOne(FRandomStream& RandStream, const AActor* PlacedO
 	SpawnTransform = GetPlaceTransform(RandStream, bPlacedSuccessfully);
 	if (!bPlacedSuccessfully) { return nullptr; }
 	TmpPlacedObject = GetWorld()->SpawnActor<AActor>(ClassToPlace, SpawnTransform, SpawnParams);
+	PlacedObjects++;
 	return TmpPlacedObject;
 }
 
@@ -118,29 +128,22 @@ void AObjectPlacer::TryPlaceOne()
 {
 	FRandomStream RandStream;
 	AActor* PlacedActor;
-	AActor* ParentActor = nullptr;
 	bool bSuccess;
-	if (GEditor && GEditor->GetSelectedActorCount() > 1)
-	{
-		USelection* SelectedActors = GEditor->GetSelectedActors();
-		for (FSelectionIterator Iter(*SelectedActors); Iter; ++Iter)
-		{
-			AActor* Actor = Cast<AActor>(*Iter);
-			if (Actor && !Actor->IsA<AObjectPlacer>())
-			{
-				ParentActor = Actor;
-				break;
-			}
-		}
-		if (!IsValid(ParentActor)) { ParentActor = nullptr; }
-	}
 	RandStream.GenerateNewSeed();
-	PlacedActor = PlaceOne(RandStream, ParentActor, bSuccess);
-	FText AttachError;
-	if (PlacedActor && ParentActor && PlacedActor->EditorCanAttachTo(ParentActor, AttachError))
-	{		
-		PlacedActor->AttachToActor(ParentActor, FAttachmentTransformRules::KeepWorldTransform);
+	PlacedActor = PlaceOne(RandStream, nullptr, bSuccess);
+	PlacedObjectRefs.Add(PlacedActor);
+}
+
+void AObjectPlacer::ClearPlaced()
+{
+	for (AActor* TmpActor : PlacedObjectRefs)
+	{
+		if (TmpActor)
+		{
+			TmpActor->Destroy();
+		}
 	}
+	PlacedObjectRefs.Empty();
 }
 #endif
 

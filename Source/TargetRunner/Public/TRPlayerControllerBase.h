@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Delegates/Delegate.h"
 #include "ActorAttributeComponent.h"
+#include "GenericTeamAgentInterface.h"
 #include "TargetRunner.h"
 #include "RoomPlatformGridMgr.h"
 #include "RoomGridTemplate.h"
@@ -24,7 +25,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentToolChanged, const AToolAc
  * 
  */
 UCLASS()
-class TARGETRUNNER_API ATRPlayerControllerBase : public APlayerController
+class TARGETRUNNER_API ATRPlayerControllerBase : public APlayerController, public IGenericTeamAgentInterface
 {
 	GENERATED_BODY()
 
@@ -81,6 +82,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnCurrentToolChanged OnCurrentToolChanged;
 
+	// Our faction. Should be one of ETRFaction enum
+	UPROPERTY(EditAnywhere)
+	FGenericTeamId FactionId;
+
 protected:
 
 	// All tool types available for purchase in the market
@@ -92,6 +97,9 @@ protected:
 	virtual void InitPlayerState() override;
 
 	virtual void OnPossess(APawn* InPawn) override;
+
+	// Implement GenericTeamAgentInterface
+	FGenericTeamId GetGenericTeamId() const;
 	
 public:
 

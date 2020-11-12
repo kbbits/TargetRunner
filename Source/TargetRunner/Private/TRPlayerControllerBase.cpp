@@ -11,6 +11,7 @@
 ATRPlayerControllerBase::ATRPlayerControllerBase()
 	: Super()
 {
+	FactionId = FGenericTeamId(static_cast<uint8>(ETRFaction::Player));
 	MaxEquippedWeapons = 2;
 	MaxEquippedEquipment = 2;
 	CurrentTool = nullptr;
@@ -43,16 +44,25 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 	CollectionRangeAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnCollectionRangeChanged);
 }
 
+
 void ATRPlayerControllerBase::InitPlayerState()
 {
 	APlayerController::InitPlayerState();	
 }
+
 
 void ATRPlayerControllerBase::OnPossess(APawn* InPawn)
 {
 	APlayerController::OnPossess(InPawn);
 	UpdateMovementFromAttributes();
 }
+
+
+FGenericTeamId ATRPlayerControllerBase::GetGenericTeamId() const
+{
+	return FactionId;
+}
+
 
 void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
 {
@@ -69,24 +79,29 @@ void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
 	}
 }
 
+
 bool ATRPlayerControllerBase::UpdateMovementFromAttributes_Validate()
 {
 	return true;
 }
+
 
 void ATRPlayerControllerBase::OnRunSpeedChanged(float NewSpeed)
 {
 	UpdateMovementFromAttributes();
 }
 
+
 void ATRPlayerControllerBase::OnJumpForceChanged(float NewJumpForce)
 {
 	UpdateMovementFromAttributes();
 }
 
+
 void ATRPlayerControllerBase::OnCollectionRangeChanged(float NewCollectionRange)
 {
 }
+
 
 void ATRPlayerControllerBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
@@ -103,6 +118,7 @@ void ATRPlayerControllerBase::OnRep_CurrentTool()
 	OnCurrentToolChanged.Broadcast(CurrentTool);
 }
 
+
 void ATRPlayerControllerBase::ApplyAttributeModifiers_Implementation(const TArray<FAttributeModifier>& NewModifiers)
 {
 	ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
@@ -112,10 +128,12 @@ void ATRPlayerControllerBase::ApplyAttributeModifiers_Implementation(const TArra
 	}
 }
 
+
 bool ATRPlayerControllerBase::ApplyAttributeModifiers_Validate(const TArray<FAttributeModifier>& NewModifiers)
 {
 	return true;
 }
+
 
 void ATRPlayerControllerBase::RemoveAttributeModifiers_Implementation(const TArray<FAttributeModifier>& ModifiersToRemove)
 {
@@ -126,10 +144,12 @@ void ATRPlayerControllerBase::RemoveAttributeModifiers_Implementation(const TArr
 	}
 }
 
+
 bool ATRPlayerControllerBase::RemoveAttributeModifiers_Validate(const TArray<FAttributeModifier>& ModifiersToRemove)
 {
 	return true;
 }
+
 
 void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(UToolBase* Tool)
 {
@@ -150,6 +170,7 @@ void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(UToolBase*
 		ClientAddToolToInventory(TmpToolData, Tool->ItemGuid);
 	}
 }
+
 
 bool ATRPlayerControllerBase::ServerAddToolToInventory_Validate(UToolBase* Tool)
 {
@@ -221,6 +242,7 @@ void ATRPlayerControllerBase::ServerEquipTool_Implementation(const FGuid ToolGui
 	}
 }
 
+
 bool ATRPlayerControllerBase::ServerEquipTool_Validate(const FGuid ToolGuid)
 {
 	return true;
@@ -270,6 +292,7 @@ void ATRPlayerControllerBase::ClientEquipTool_Implementation(const FGuid ToolGui
 	}
 }
 
+
 bool ATRPlayerControllerBase::ClientEquipTool_Validate(const FGuid ToolGuid)
 {
 	return true;
@@ -299,6 +322,7 @@ void ATRPlayerControllerBase::ServerUnequipTool_Implementation(const FGuid ToolG
 	}	
 }
 
+
 bool ATRPlayerControllerBase::ServerUnequipTool_Validate(const FGuid ToolGuid)
 {
 	return true;
@@ -323,6 +347,7 @@ void ATRPlayerControllerBase::ClientUnequipTool_Implementation(const FGuid ToolG
 		OnEquippedToolsChanged.Broadcast();
 	}
 }
+
 
 bool ATRPlayerControllerBase::ClientUnequipTool_Validate(const FGuid ToolGuid)
 {
@@ -353,6 +378,7 @@ void ATRPlayerControllerBase::ServerUnequipAllTools_Implementation()
 	}
 }
 
+
 bool ATRPlayerControllerBase::ServerUnequipAllTools_Validate()
 {
 	return true;
@@ -369,6 +395,7 @@ void ATRPlayerControllerBase::ClientUnequipAllTools_Implementation()
 		OnEquippedToolsChanged.Broadcast();
 	}
 }
+
 
 bool ATRPlayerControllerBase::ClientUnequipAllTools_Validate()
 {
@@ -430,6 +457,7 @@ void ATRPlayerControllerBase::ServerUpgradeTool_Implementation(const FGuid ToolG
 	}
 }
 
+
 bool ATRPlayerControllerBase::ServerUpgradeTool_Validate(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta)
 {
 	return true;
@@ -485,6 +513,7 @@ void ATRPlayerControllerBase::ClientUpgradeTool_Implementation(const FGuid ToolG
 	}
 }
 
+
 bool ATRPlayerControllerBase::ClientUpgradeTool_Validate(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta)
 {
 	return true;
@@ -511,6 +540,7 @@ void ATRPlayerControllerBase::ServerSetCurrentTool_Implementation(const FGuid To
 		UE_LOG(LogTRGame, Error, TEXT("TRPlayerController::ServerSetCurrentTool - Tool guid: %s not found in equipped tools."), *ToolGuid.ToString(EGuidFormats::Digits));
 	}
 }
+
 
 bool ATRPlayerControllerBase::ServerSetCurrentTool_Validate(const FGuid ToolGuid)
 {
@@ -561,6 +591,7 @@ void ATRPlayerControllerBase::GetEquippedWeapons(TArray<UToolWeaponBase*>& Equip
 	}
 }
 
+
 void ATRPlayerControllerBase::GetEquippedEquipment(TArray<UToolEquipmentBase*>& EquippedEquipment)
 {
 	UToolEquipmentBase* TmpEquipment;
@@ -574,6 +605,7 @@ void ATRPlayerControllerBase::GetEquippedEquipment(TArray<UToolEquipmentBase*>& 
 		}
 	}
 }
+
 
 ARoomPlatformGridMgr* ATRPlayerControllerBase::FindGridManager()
 {

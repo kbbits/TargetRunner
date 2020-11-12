@@ -73,4 +73,14 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static int32 ResourceDataByTier(const UDataTable* ResourceDataTable, const float MinTier, const float MaxTier, TMap<int32, FResourceTypeDataCollection>& ResourceDataByTier);
 
+	// Calculates the amount of resources that should be extracted with the given extraction rates.
+	//	PercentOfTotal - 0.0 to 1.0 is 0% to 100%, but can be over 1.0. The percent of the resources to extract. ex: if 25% of object's health was damaged, could extract 25% (0.25) of the resources.
+	// Makes no changes to current resource quantities.
+	// Returns true if any resources were calculated to be extracted.
+	UFUNCTION(BlueprintCallable, Category = "Resource Functions")
+		static bool CalculateExtractedResources(const TArray<FResourceQuantity>& ExtractableResources, const float PercentOfTotal, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
+
+	// Similar to CalculateExtractedResources, but this also subtracts the extracted quantities from ExtractableResources.
+	UFUNCTION(BlueprintCallable, Category = "Resource Functions")
+		static bool SubtractExtractedResources(UPARAM(ref) TArray<FResourceQuantity>& ExtractableResources, const float PercentOfTotal, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
 };

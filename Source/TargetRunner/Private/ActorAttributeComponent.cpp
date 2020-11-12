@@ -91,6 +91,28 @@ void UActorAttributeComponent::CalculateModifiedAttributeValues()
 }
 
 
+void UActorAttributeComponent::PostInitProperties()
+{
+	Super::PostInitProperties();
+	ModifiedAttributeData.CurrentValue = AttributeData.CurrentValue;
+	CalculateModifiedAttributeValues();
+}
+
+
+#if WITH_EDITOR
+void UActorAttributeComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	FName PropertyName = PropertyChangedEvent.MemberProperty == nullptr ? PropertyChangedEvent.GetPropertyName() : PropertyChangedEvent.MemberProperty->GetFName();
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UActorAttributeComponent, AttributeData))
+	{
+		ModifiedAttributeData.CurrentValue = AttributeData.CurrentValue;
+		CalculateModifiedAttributeValues();
+	}
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+}
+#endif
+
+
 void UActorAttributeComponent::OnRep_AttributeDataChanged(FAttributeData OldAttributeData)
 {
 	/*
@@ -187,6 +209,7 @@ void UActorAttributeComponent::RemoveModifiers_Implementation(const TArray<FAttr
 void UActorAttributeComponent::SetAttributeData(const FAttributeData& NewData)
 {
 	AttributeData = NewData;
+	ModifiedAttributeData = AttributeData;
 	CalculateModifiedAttributeValues();
 }
 
@@ -301,6 +324,7 @@ void UActorAttributeComponent::SetCurrentBase(const float NewValue)
 	if (AttributeData.CurrentValue != NewValueClamped)
 	{
 		AttributeData.CurrentValue = NewValueClamped;
+		ModifiedAttributeData.CurrentValue = AttributeData.CurrentValue;
 		CalculateModifiedAttributeValues();
 		/*
 		OnDeltaCurrent.Broadcast(AttributeData.CurrentValue);

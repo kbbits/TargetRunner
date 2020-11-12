@@ -12,6 +12,15 @@ static FORCEINLINE FString GetEnumValueAsString(/*const FString& Name,*/ TEnum V
 }
 
 UENUM(BlueprintType)
+enum class ETRFaction : uint8
+{
+	None = 0			UMETA(DisplayName = "None"),
+	Player = 1			UMETA(DisplayName = "Player"),
+	Enemy = 8			UMETA(DisplayName = "Enemy"),
+	AllNeutral = 255	UMETA(DisplayName = "AllNeutral")
+};
+
+UENUM(BlueprintType)
 enum class ETRDirection : uint8
 {
 	North		UMETA(DisplayName = "North"),
@@ -38,6 +47,8 @@ UENUM(BlueprintType)
 enum class ETRWeaponState : uint8
 {
 	Idle		UMETA(DisplayName = "Idle"),
+	Aiming		UMETA(DisplayName = "Aming"),
+	ReadyToFire	UMETA(DisplayName = "ReadyToFire"),
 	Firing		UMETA(DisplayName = "Firing"),
 	FireBusy	UMETA(DisplayName = "FireBusy"),
 	Reloading	UMETA(DisplayName = "Reloading"),
@@ -84,7 +95,7 @@ enum class ETRResourceMatch : uint8
 	Category = 1	UMETA(DisplayName = "Category"),
 	Type = 2		UMETA(DisplayName = "Type"),
 	SubType	= 4		UMETA(DisplayName = "SubType"),
-	Exact = 127		UMETA(DisplayName = "Exact Match")
+	Exact = 255		UMETA(DisplayName = "Exact Match")
 };
 
 //UENUM(BlueprintType)
