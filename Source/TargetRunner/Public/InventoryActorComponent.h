@@ -11,7 +11,7 @@
 // replicated to owning client via RPCs called from the ServerXxxx functions.
 
 // Event dispatcher for when CurrentValue changes
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInventoryChanged, const TArray<FGoodsQuantity>&, ChangedItems);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryChanged, const TArray<FGoodsQuantity>&, GoodsDeltas, const TArray<FGoodsQuantity>&, ChangedTotals);
 
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

@@ -70,7 +70,7 @@ bool UResourceFunctionLibrary::FindResourceRateFilter(const TArray<FResourceRate
 		TmpDegree = ResourceFilterMatch(TargetType, RateFilter);
 		if (TmpDegree == ETRResourceMatch::Exact)
 		{
-			UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found exact match %s -- %s"), *TargetType.Code.ToString(), *RateFilter.ResourceTypeFilter.Code.ToString());
+			//UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found exact match %s -- %s"), *TargetType.Code.ToString(), *RateFilter.ResourceTypeFilter.Code.ToString());
 			// Found exact match, so stop looking.
 			FoundRate = RateFilter;
 			FoundMatchDegree = ETRResourceMatch::Exact;
@@ -89,7 +89,7 @@ bool UResourceFunctionLibrary::FindResourceRateFilter(const TArray<FResourceRate
 	}
 	if (BestMatchDegree != ETRResourceMatch::None && bestDegree >= minDegree)
 	{
-		UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found match %s -- %s"), *TargetType.Code.ToString(), *BestMatch.ResourceTypeFilter.Code.ToString());
+		//UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found match %s -- %s"), *TargetType.Code.ToString(), *BestMatch.ResourceTypeFilter.Code.ToString());
 		FoundRate = BestMatch;
 		FoundMatchDegree = BestMatchDegree;
 		return true;
@@ -112,14 +112,14 @@ bool UResourceFunctionLibrary::FindBestResourceRateFilter(const TArray<FResource
 		if (TmpDegree == ETRResourceMatch::Type && !RateFilter.ResourceTypeFilter.SubType.IsNone()) { continue; }
 		if (static_cast<uint8>(TmpDegree) >= MinDegree && RateFilter.Rate > BestRate.Rate)
 		{
-			UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found match %s -- %s"), *TargetType.Code.ToString(), *RateFilter.ResourceTypeFilter.Code.ToString());
+			//UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found match %s -- %s"), *TargetType.Code.ToString(), *RateFilter.ResourceTypeFilter.Code.ToString());
 			BestRate = RateFilter;
 			BestMatchDegree = TmpDegree;
 		}
 	}
 	if (BestMatchDegree != ETRResourceMatch::None)
 	{
-		UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - best matching rate %s %.2f"), *BestRate.ResourceTypeFilter.Code.ToString(), BestRate.Rate);
+		//UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - best matching rate %s %.2f"), *BestRate.ResourceTypeFilter.Code.ToString(), BestRate.Rate);
 		FoundRate = BestRate;
 		FoundMatchDegree = BestMatchDegree;
 		return true;
