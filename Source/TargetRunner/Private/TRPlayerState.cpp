@@ -23,6 +23,9 @@ ATRPlayerState::ATRPlayerState()
 	AddOwnedComponent(HealthAttribute);
 	HealthAttribute->SetIsReplicated(true); // Enable replication by default
 	HealthAttribute->AttributeData.Name = FName(TEXT("Health"));
+
+	if (ExperienceLevel <= 0) { ExperienceLevel = 1; }
+	LevelUpGoodsProgress.Name = FName(TEXT("LevelUpGoodsProgress"));
 }
 
 
@@ -33,6 +36,8 @@ void ATRPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& Out
 	DOREPLIFETIME(ATRPlayerState, PlayerGuid);
 	DOREPLIFETIME(ATRPlayerState, ProfileName);
 	DOREPLIFETIME(ATRPlayerState, DisplayName);
+	DOREPLIFETIME(ATRPlayerState, ExperienceLevel);
+	DOREPLIFETIME(ATRPlayerState, LevelUpGoodsProgress);
 }
 
 
@@ -89,6 +94,8 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 	{
 		Attr->FillAttributeDataMap(SaveData.AttributeData.Attributes);
 	}
+	// Goods quantities properties
+	SaveData.AttributeData.GoodsQuantitiesAttributes.Add(LevelUpGoodsProgress.Name, LevelUpGoodsProgress.GoodsQuantitySet);
 }
 
 
@@ -107,5 +114,10 @@ void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveDa
 	for (UActorAttributeComponent* Attr : AttributeComps)
 	{
 		Attr->UpdateFromAttributeDataMap(SaveData.AttributeData.Attributes);
+	}
+	// Goods quantities attributes
+	if (SaveData.AttributeData.GoodsQuantitiesAttributes.Contains(LevelUpGoodsProgress.Name))
+	{
+		LevelUpGoodsProgress.GoodsQuantitySet = SaveData.AttributeData.GoodsQuantitiesAttributes[LevelUpGoodsProgress.Name];
 	}
 }

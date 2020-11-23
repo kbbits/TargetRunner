@@ -36,6 +36,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float HighScore;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 ExperienceLevel;
+
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 	//	float MaxHealth;
 

@@ -4,16 +4,19 @@
 #include "TRPlayerControllerBase.h"
 #include "TRPlayerState.h"
 #include "TargetRunner.h"
+#include "TRGameModeLobby.h"
+#include "GoodsFunctionLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+//#include "Engine/World.h"
 #include "..\Public\TRPlayerControllerBase.h"
 
 ATRPlayerControllerBase::ATRPlayerControllerBase()
 	: Super()
 {
 	FactionId = FGenericTeamId(static_cast<uint8>(ETRFaction::Player));
-	MaxEquippedWeapons = 2;
-	MaxEquippedEquipment = 2;
+	MaxEquippedWeapons = 1;
+	MaxEquippedEquipment = 1;
 	CurrentTool = nullptr;
 	PersistentDataComponent = CreateDefaultSubobject<UTRPersistentDataComponent>(TEXT("PersistentDataComponent"));
 	if (PersistentDataComponent)
@@ -545,6 +548,97 @@ void ATRPlayerControllerBase::ServerSetCurrentTool_Implementation(const FGuid To
 bool ATRPlayerControllerBase::ServerSetCurrentTool_Validate(const FGuid ToolGuid)
 {
 	return true;
+}
+
+
+void ATRPlayerControllerBase::ServerAddLevelUpGoods_Implementation(const FGoodsQuantitySet& ContributedGoods)
+{
+	if (GetWorld() == nullptr) { return; }
+	ATRGameModeLobby* TRGameMode = GetWorld()->GetAuthGameMode<ATRGameModeLobby>();
+	ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
+
+	if (TRGameMode && TRPlayerState)
+	{
+		FPlayerLevelUpData LevelUpData;
+		// Add the goods quantities to player progress.
+		TRPlayerState->LevelUpGoodsProgress.GoodsQuantitySet.Goods = UGoodsFunctionLibrary::AddGoodsQuantities(TRPlayerState->LevelUpGoodsProgress.GoodsQuantitySet.Goods, ContributedGoods.Goods);
+		// Check for level up
+		if (TRGameMode->GetLevelUpDataForPlayer(this, LevelUpData))
+		{
+			bool bHasLevelUpReqs = true;
+			TMap<FName, FGoodsQuantity> CurrentProgress = UGoodsFunctionLibrary::GoodsQuantityArrayToMap(TRPlayerState->LevelUpGoodsProgress.GoodsQuantitySet.Goods);
+			for (FGoodsQuantity RequiredGoods : LevelUpData.GoodsRequired.Goods)
+			{
+				if (CurrentProgress.Contains(RequiredGoods.Name))
+				{
+					if (CurrentProgress[RequiredGoods.Name].Quantity < RequiredGoods.Quantity)
+					{
+						bHasLevelUpReqs = false;
+						break;
+					}
+				}
+				else
+				{
+					bHasLevelUpReqs = false;
+					break;
+				}
+			}
+			// If ready for level up, perform the level up.
+			if (bHasLevelUpReqs)
+			{
+				// PlayerController changes from level up.
+				if (LevelUpData.AddEquippedWeapons > 0) {
+					MaxEquippedWeapons += LevelUpData.AddEquippedWeapons;
+				}
+				if (LevelUpData.AddEquippedEquipment > 0) {
+					MaxEquippedEquipment += LevelUpData.AddEquippedEquipment;
+				}
+				// Player state changes from level up
+				// TODO: Move this to TRPlayerState function
+				TRPlayerState->ExperienceLevel = LevelUpData.Level;
+				if (LevelUpData.AddMaxAnimus != 0.f) {
+					TRPlayerState->AnimusAttribute->SetMaxBase(TRPlayerState->AnimusAttribute->AttributeData.MaxValue + LevelUpData.AddMaxAnimus);
+				}
+				if (LevelUpData.AddMaxEnergy != 0.f) {
+					TRPlayerState->EnergyAttribute->SetMaxBase(TRPlayerState->EnergyAttribute->AttributeData.MaxValue + LevelUpData.AddMaxEnergy);
+				}
+				if (LevelUpData.AddMaxHealth != 0.f) {
+					TRPlayerState->HealthAttribute->SetMaxBase(TRPlayerState->HealthAttribute->AttributeData.MaxValue + LevelUpData.AddMaxHealth);
+				}
+				// Subtract the level up goods from the player's level up progress.
+				TRPlayerState->LevelUpGoodsProgress.GoodsQuantitySet.Goods = UGoodsFunctionLibrary::AddGoodsQuantities(TRPlayerState->LevelUpGoodsProgress.GoodsQuantitySet.Goods, LevelUpData.GoodsRequired.Goods, true);
+
+				// Save updated player data
+				PersistentDataComponent->ServerSavePlayerData();				
+				
+				// Notify player on client.
+				ClientOnPlayerLevelUp(LevelUpData);
+			}
+		}
+	}
+}
+
+bool ATRPlayerControllerBase::ServerAddLevelUpGoods_Validate(const FGoodsQuantitySet& ContributedGoods)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::ClientOnPlayerLevelUp_Implementation(const FPlayerLevelUpData& LevelUpData)
+{
+	// Base class just calls OnPlayerLevelUp_BP
+	OnPlayerLevelUp_BP(LevelUpData);
+}
+
+bool ATRPlayerControllerBase::ClientOnPlayerLevelUp_Validate(const FPlayerLevelUpData& LevelUpData)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::OnPlayerLevelUp_BP_Implementation(const FPlayerLevelUpData& LevelUpData)
+{
+
 }
 
 

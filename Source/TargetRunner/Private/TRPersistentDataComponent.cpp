@@ -539,3 +539,39 @@ bool UTRPersistentDataComponent::ClientEchoToolsMarketData_Validate(const TArray
 {
 	return true;
 }
+
+
+void UTRPersistentDataComponent::ServerRetrieveNextPlayerLevelUpData_Implementation()
+{
+	ATRGameModeLobby* GameMode = Cast<ATRGameModeLobby>(UGameplayStatics::GetGameMode(GetOwner()));
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (GameMode)
+	{
+		FPlayerLevelUpData LevelUpData;
+		bool bHasNextLevel = GameMode->GetLevelUpDataForPlayer(TRPlayerController, LevelUpData);
+		if (TRPlayerController->IsLocalController())
+		{
+			OnNextPlayerLevelUpDataRetrieved.Broadcast(bHasNextLevel, LevelUpData);
+		}
+		else
+		{
+			ClientEchoNextPlayerLevelUpData(bHasNextLevel, LevelUpData);
+		}
+	}
+}
+
+bool UTRPersistentDataComponent::ServerRetrieveNextPlayerLevelUpData_Validate()
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ClientEchoNextPlayerLevelUpData_Implementation(const bool bHasNextLevel, const FPlayerLevelUpData& LevelUpData)
+{
+	OnNextPlayerLevelUpDataRetrieved.Broadcast(bHasNextLevel, LevelUpData);
+}
+
+bool UTRPersistentDataComponent::ClientEchoNextPlayerLevelUpData_Validate(const bool bHasNextLevel, const FPlayerLevelUpData& LevelUpData)
+{
+	return true;
+}

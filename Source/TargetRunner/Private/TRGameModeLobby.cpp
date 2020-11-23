@@ -3,6 +3,7 @@
 
 #include "TRGameModeLobby.h"
 #include "TRPlayerState.h"
+#include "PlayerLevelUpData.h"
 
 ATRGameModeLobby::ATRGameModeLobby()
 	: Super()
@@ -49,4 +50,19 @@ int32 ATRGameModeLobby::GetToolMarketDataForPlayer(const ATRPlayerControllerBase
 		}
 	}
 	return ToolMarketGoods.Num();
+}
+
+bool ATRGameModeLobby::GetLevelUpDataForPlayer(const ATRPlayerControllerBase* PlayerController, FPlayerLevelUpData& LevelUpData)
+{
+	if (!IsValid(LevelUpTable)) { return false; }
+	ATRPlayerState* PlayerState = PlayerController->GetPlayerState<ATRPlayerState>();
+	if (PlayerState == nullptr) { return false; }
+	// Check data table row type
+	check(LevelUpTable->GetRowStruct()->IsChildOf(FPlayerLevelUpData::StaticStruct()));
+
+	FString NextLevel = FString::FromInt(PlayerState->ExperienceLevel + 1);
+	FPlayerLevelUpData* FoundLevelUpData = LevelUpTable->FindRow<FPlayerLevelUpData>(FName(NextLevel), "", false);
+	if (FoundLevelUpData == nullptr) { return false; }
+	LevelUpData = *FoundLevelUpData;
+	return true;
 }

@@ -15,6 +15,7 @@
 #include "ToolEquipmentBase.h"
 #include "TRPersistentDataComponent.h"
 #include "TR_Character.h"
+#include "PlayerLevelUpData.h"
 #include "TRPlayerControllerBase.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToolInventoryAdded, const FToolData&, ToolDataAdded);
@@ -186,6 +187,25 @@ public:
 	// Call this to set the player's current active tool. This handles rep. to client.
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 		void ServerSetCurrentTool(const FGuid ToolGuid);
+
+	// [Server]
+	// Call this to add goods towards the player's level progress.
+	// NOTE: This does allow for contributing more than the required amounts.
+	// If level up requirements are met this will re-set PlayerState.LevelUpGoodsProgress, then call ClientOnPlayerLevelUp() with the new level up data.
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+		void ServerAddLevelUpGoods(const FGoodsQuantitySet& ContributedGoods);
+
+	// [Client]
+	// Called by ServerAddLevelUpGoods after the player has reached next higher experience level.
+	//   LevelUpData - info related to the new experience level.
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientOnPlayerLevelUp(const FPlayerLevelUpData& LevelUpData);
+
+	// [Client]
+	// Called by ClientOnPlayerLevelUp.
+	// Override and implement in Blueprint to respond to player experience level increases.
+	UFUNCTION(BlueprintNativeEvent)
+		void OnPlayerLevelUp_BP(const FPlayerLevelUpData& LevelUpData);
 
 	// [Server]
 	// Does the actual spawning of the current tool actor.

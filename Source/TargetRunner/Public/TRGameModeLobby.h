@@ -8,6 +8,7 @@
 #include "TRPlayerControllerBase.h"
 #include "GoodsPurchaseItem.h"
 #include "ToolPurchaseItem.h"
+#include "PlayerLevelUpData.h"
 #include "TRGameModeLobby.generated.h"
 
 /**
@@ -27,6 +28,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* ToolsMarketTable;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UDataTable* LevelUpTable;
+
 public:
 	
 	// [Any]
@@ -36,8 +40,13 @@ public:
 		int32 GetMarketDataForPlayer(const ATRPlayerControllerBase* MarketPlayerController, TArray<FGoodsPurchaseItem>& MarketGoods);
 
 	// [Any]
-	// Gets the available tools in the toosl market available to the provided player.
+	// Gets the available tools in the tools market available to the provided player.
 	// Return the number of goods market items found.
 	UFUNCTION(BlueprintCallable)
 		int32 GetToolMarketDataForPlayer(const ATRPlayerControllerBase* MarketPlayerController, TArray<FToolPurchaseItem>& ToolMarketGoods);
+
+	// Gets the cost for the given player to upgrade to the next experience level.
+	// Returns false if there is no higher experience level for the player. Returns true and a populated GoodsRequired if there does exist a higher xp level for player.
+	UFUNCTION(BlueprintCallable)
+		bool GetLevelUpDataForPlayer(const ATRPlayerControllerBase* PlayerController, FPlayerLevelUpData& LevelUpData);
 };

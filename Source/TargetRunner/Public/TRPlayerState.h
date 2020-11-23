@@ -38,6 +38,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, SaveGame)
 		FText DisplayName;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, SaveGame)
+		int32 ExperienceLevel;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, SaveGame)
+		FNamedGoodsQuantitySet LevelUpGoodsProgress;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float MaxTierCompleted;
 
@@ -46,7 +52,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float TotalPlaytimeInRuns;
-	
+		
 public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

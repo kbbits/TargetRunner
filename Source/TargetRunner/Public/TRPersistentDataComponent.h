@@ -11,6 +11,7 @@
 #include "GoodsPurchaseItem.h"
 #include "ToolPurchaseItem.h"
 #include "PlayerSaveData.h"
+#include "PlayerLevelUpData.h"
 #include "TRPersistentDataComponent.generated.h"
 
 
@@ -22,6 +23,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDataLoaded);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGoodsMarketDataRetrieved, const TArray<FGoodsPurchaseItem>&, MarketGoods);
 // Delegate when tools market data has been retrieved
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToolsMarketDataRetrieved, const TArray<FToolPurchaseItem>&, ToolsMarketItems);
+// Delegate when player level up data has been retrieved
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNextPlayerLevelUpDataRetrieved, const bool, bNextLevelAvailable, const FPlayerLevelUpData&, LevelUpData);
 // Tool Data dispatcher
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewPlayerToolData, const TArray<FToolData>&, NewPlayerToolData);
 
@@ -58,6 +61,10 @@ public:
 	// Delegate when tools market data has been retreived.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnToolsMarketDataRetrieved OnToolsMarketDataRetrieved;
+
+	// Delegate when player level up data has been retreived.
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnNextPlayerLevelUpDataRetrieved OnNextPlayerLevelUpDataRetrieved;
 
 	//UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_PlayerToolDataLoaded)
 	//	TArray<FToolData> PlayerToolData;
@@ -162,4 +169,15 @@ public:
 	// Server calls this on client to pass the goods market data for the player.
 	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
 		void ClientEchoToolsMarketData(const TArray<FToolPurchaseItem>& ToolsMarketData);
+
+	// [Server]
+	// Get the level up data for next player level for TRPlayerControllerBase that this component is attached to.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerRetrieveNextPlayerLevelUpData();
+
+	// [Client]
+	// Server calls this to pass the player's next level up data to the client.
+	// This calls the notifiation delegate OnNextPlayerLevelUpDataRetrieved
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientEchoNextPlayerLevelUpData(const bool bHasNextLevel, const FPlayerLevelUpData& LevelUpData);
 };

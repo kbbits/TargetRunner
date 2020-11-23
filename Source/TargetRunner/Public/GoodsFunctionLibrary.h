@@ -24,6 +24,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Goods")
 		static TArray<FGoodsQuantity> MultiplyGoodsQuantities(const TArray<FGoodsQuantity> GoodsQuantities, const float Multiplier);
 
+	// Adds the quantities of the two GoodsQuantities arrays.
+	// bNegateGoodsQuantitesTwo - if true, this will subtract GoodsQuantitiesTwo from GoodQuantitiesOne.
+	UFUNCTION(BlueprintPure, Category = "Goods")
+		static TArray<FGoodsQuantity> AddGoodsQuantities(const TArray<FGoodsQuantity>& GoodsQuantitiesOne, const TArray<FGoodsQuantity>& GoodsQuantitiesTwo, const bool bNegateGoodsQuantitiesTwo = false);
+
 	// Transform a goods quantity range to a goods quantity. 
 	// If optional QuantityScale is provided, the quantity will be mapped from min to max according to the scale (0-1) instead of determining randomly.
 	UFUNCTION(BlueprintCallable, Category = "Goods")

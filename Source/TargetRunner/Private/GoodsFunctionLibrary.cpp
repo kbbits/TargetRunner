@@ -13,6 +13,25 @@ TArray<FGoodsQuantity> UGoodsFunctionLibrary::MultiplyGoodsQuantities(const TArr
 	return NewQuantities;
 }
 
+TArray<FGoodsQuantity> UGoodsFunctionLibrary::AddGoodsQuantities(const TArray<FGoodsQuantity>& GoodsQuantitiesOne, const TArray<FGoodsQuantity>& GoodsQuantitiesTwo, const bool bNegateGoodsQuantitiesTwo)
+{
+	// May actually be better to just loop through both instead of converting to map first, then back again.
+	TMap<FName, float> SummedQuantities = GoodsQuantityArrayToNameFloatMap(GoodsQuantitiesOne);
+	for (FGoodsQuantity GoodsTwo : GoodsQuantitiesTwo)
+	{
+		float Delta = bNegateGoodsQuantitiesTwo ? -1.0f * GoodsTwo.Quantity : GoodsTwo.Quantity;
+		if (SummedQuantities.Contains(GoodsTwo.Name))
+		{
+			SummedQuantities[GoodsTwo.Name] = SummedQuantities[GoodsTwo.Name] + Delta;
+		}
+		else
+		{
+			SummedQuantities.Add(GoodsTwo.Name, Delta);
+		}
+	}
+	return NameQuantityMapToGoodsQuantityArray(SummedQuantities);
+}
+
 FGoodsQuantity UGoodsFunctionLibrary::GoodsQuantityFromRange(FRandomStream& RandStream, const FGoodsQuantityRange& QuantityRange, const float QuantityScale /* 0.0 - 1.0 */)
 {
 	FGoodsQuantity Goods(QuantityRange.GoodsName, 0.0f);
