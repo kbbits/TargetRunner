@@ -46,13 +46,13 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	}
 	// Unlock cost
 	TArray<FGoodsQuantityRange> CostFactors;
-	float Qty = 0.0f;
+	float GoodsCostFactor = 0.0f;
 	NewLevelTemplate.UnlockCost = FMath::RoundFromZero(FMath::Pow(DifficultyTier, UnlockCostScalingExp) * (BaseUnlockCost / 10.0f)) * 10.f;
 	UnlockGoodsCostFactorForTier((int32)DifficultyTier, CostFactors);
 	for (FGoodsQuantityRange TmpRange : CostFactors)
 	{
-		Qty = LevelStream.FRandRange(0.0f, TmpRange.QuantityMax - TmpRange.QuantityMin) + TmpRange.QuantityMin;
-		NewLevelTemplate.UnlockGoods.Add(FGoodsQuantity(TmpRange.GoodsName, FMath::RoundFromZero((NewLevelTemplate.UnlockCost * Qty) / 10.0f) * 10.0f));
+		GoodsCostFactor = LevelStream.FRandRange(0.0f, TmpRange.QuantityMax - TmpRange.QuantityMin) + TmpRange.QuantityMin;
+		NewLevelTemplate.UnlockGoods.Add(FGoodsQuantity(TmpRange.GoodsName, FMath::RoundFromZero((NewLevelTemplate.UnlockCost * GoodsCostFactor) / 10.0f) * 10.0f));
 	}
 	
 	// TODO: Theme, ThemeTags, OtherResourcesAvailable

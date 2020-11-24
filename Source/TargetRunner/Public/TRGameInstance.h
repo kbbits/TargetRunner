@@ -46,11 +46,6 @@ public:
 		TSubclassOf<ULevelForgeBase> DefaultLevelForgeClass;
 
 	// [Server]
-	// Array of all level templates. Will only be valid on server.
-	//UPROPERTY(BlueprintReadWrite)
-	//	TArray<FLevelTemplate> LevelTemplates;
-
-	// [Server]
 	// Map of all level templates with LevelId as key. Will only be valid on server.
 	UPROPERTY(BlueprintReadWrite)
 		TMap<FName, ULevelTemplateContext*> LevelTemplatesMap;
@@ -109,6 +104,7 @@ public:
 		void SaveLevelTemplatesData();
 
 	// [Server Only]
+	// Saves the level template data related to each player. (template unlock, total runs, etc.)
 	UFUNCTION(BlueprintNativeEvent)
 		void SavePlayerRecordsData();
 

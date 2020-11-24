@@ -605,6 +605,12 @@ void ATRPlayerControllerBase::ServerAddLevelUpGoods_Implementation(const FGoodsQ
 				if (LevelUpData.AddMaxHealth != 0.f) {
 					TRPlayerState->HealthAttribute->SetMaxBase(TRPlayerState->HealthAttribute->AttributeData.MaxValue + LevelUpData.AddMaxHealth);
 				}
+
+				//  TODO: Add level up goods and tools - need to move inventory component to this native class instead of BP.
+				if (LevelUpData.GoodsAwarded.Goods.Num() > 0)
+				{
+
+				}
 				// Subtract the level up goods from the player's level up progress.
 				TRPlayerState->LevelUpGoodsProgress.GoodsQuantitySet.Goods = UGoodsFunctionLibrary::AddGoodsQuantities(TRPlayerState->LevelUpGoodsProgress.GoodsQuantitySet.Goods, LevelUpData.GoodsRequired.Goods, true);
 
