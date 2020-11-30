@@ -18,9 +18,12 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 	MaxEquippedWeapons = 1;
 	MaxEquippedEquipment = 1;
 	CurrentTool = nullptr;
+	GoodsInventory = CreateDefaultSubobject<UInventoryActorComponent>(TEXT("GoodsInventory"));
+	if (GoodsInventory)	{
+		AddOwnedComponent(GoodsInventory);
+	}
 	PersistentDataComponent = CreateDefaultSubobject<UTRPersistentDataComponent>(TEXT("PersistentDataComponent"));
-	if (PersistentDataComponent)
-	{
+	if (PersistentDataComponent) {
 		AddOwnedComponent(PersistentDataComponent);
 		PersistentDataComponent->SetIsReplicated(true);
 	}
@@ -605,19 +608,29 @@ void ATRPlayerControllerBase::ServerAddLevelUpGoods_Implementation(const FGoodsQ
 				if (LevelUpData.AddMaxHealth != 0.f) {
 					TRPlayerState->HealthAttribute->SetMaxBase(TRPlayerState->HealthAttribute->AttributeData.MaxValue + LevelUpData.AddMaxHealth);
 				}
-
-				//  TODO: Add level up goods and tools - need to move inventory component to this native class instead of BP.
+				//  Add level up goods and tools
 				if (LevelUpData.GoodsAwarded.Goods.Num() > 0)
 				{
-
+					TArray<FGoodsQuantity> CurrentQuant;
+					GoodsInventory->AddSubtractGoodsArray(LevelUpData.GoodsAwarded.Goods, false , CurrentQuant);
 				}
-				// Subtract the level up goods from the player's level up progress.
+				if (LevelUpData.ToolsAwarded.Num() > 0)
+				{
+					for (TSubclassOf<UToolBase> NewToolClass : LevelUpData.ToolsAwarded)
+					{
+						UToolBase* NewTool = NewToolClass.GetDefaultObject();
+						if (NewTool) {
+							ServerAddToolToInventory(NewTool);
+						}
+					}
+				}
+				// Subtract the level up goods from the player's level up progress
 				TRPlayerState->LevelUpGoodsProgress.GoodsQuantitySet.Goods = UGoodsFunctionLibrary::AddGoodsQuantities(TRPlayerState->LevelUpGoodsProgress.GoodsQuantitySet.Goods, LevelUpData.GoodsRequired.Goods, true);
-
 				// Save updated player data
 				PersistentDataComponent->ServerSavePlayerData();				
-				
-				// Notify player on client.
+				// Call delegate here on server
+				OnPlayerLevelUp.Broadcast(LevelUpData);
+				// Notify client
 				ClientOnPlayerLevelUp(LevelUpData);
 			}
 		}
@@ -632,19 +645,13 @@ bool ATRPlayerControllerBase::ServerAddLevelUpGoods_Validate(const FGoodsQuantit
 
 void ATRPlayerControllerBase::ClientOnPlayerLevelUp_Implementation(const FPlayerLevelUpData& LevelUpData)
 {
-	// Base class just calls OnPlayerLevelUp_BP
-	OnPlayerLevelUp_BP(LevelUpData);
+	// Base class just calls OnPlayerLevelUp
+	OnPlayerLevelUp.Broadcast(LevelUpData);
 }
 
 bool ATRPlayerControllerBase::ClientOnPlayerLevelUp_Validate(const FPlayerLevelUpData& LevelUpData)
 {
 	return true;
-}
-
-
-void ATRPlayerControllerBase::OnPlayerLevelUp_BP_Implementation(const FPlayerLevelUpData& LevelUpData)
-{
-
 }
 
 
@@ -788,9 +795,9 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	}
 	// Other data
 	MaxEquippedWeapons = static_cast<int32>(SaveData.AttributeData.FloatAttributes.FindRef(FName(TEXT("MaxEquippedWeapons"))));
-	MaxEquippedWeapons = MaxEquippedWeapons < 2 ? 2 : MaxEquippedWeapons;
+	MaxEquippedWeapons = MaxEquippedWeapons < 1 ? 1 : MaxEquippedWeapons;
 	MaxEquippedEquipment = static_cast<int32>(SaveData.AttributeData.FloatAttributes.FindRef(FName(TEXT("MaxEquippedEquipment"))));
-	MaxEquippedEquipment = MaxEquippedEquipment < 2 ? 2 : MaxEquippedEquipment;
+	MaxEquippedEquipment = MaxEquippedEquipment < 0 ? 0 : MaxEquippedEquipment;
 	// Re-equip all tools
 	ServerUnequipAllTools();
 	for (FGuid TmpGuid : SaveData.LastEquippedItems)

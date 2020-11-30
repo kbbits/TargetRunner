@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/DataTable.h"
 #include "GoodsQuantity.h"
 #include "GoodsPurchaseItem.generated.h"
 
@@ -14,9 +15,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Name;
 
-	// Goods become available in the market based on player's MaxTierCompleted.
+	// Goods become available in the market based on player's experience level
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		int32 TierAvailable;
+		int32 LevelAvailable;
 
 	// The base cost (in goods) of this item.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (TitleProperty = "Name"))

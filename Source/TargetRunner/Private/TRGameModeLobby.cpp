@@ -23,7 +23,7 @@ int32 ATRGameModeLobby::GetMarketDataForPlayer(const ATRPlayerControllerBase* Ma
 	for (const TPair<FName, uint8*>& RowItr : GoodsMarketTable->GetRowMap())
 	{
 		PurchaseItem = reinterpret_cast<const FGoodsPurchaseItem*>(RowItr.Value);
-		if (PurchaseItem->TierAvailable <= PlayerState->MaxTierCompleted)
+		if (PurchaseItem->LevelAvailable <= PlayerState->ExperienceLevel)
 		{
 			MarketGoods.Add(*PurchaseItem);
 		}
@@ -44,7 +44,7 @@ int32 ATRGameModeLobby::GetToolMarketDataForPlayer(const ATRPlayerControllerBase
 	for (const TPair<FName, uint8*>& RowItr : ToolsMarketTable->GetRowMap())
 	{
 		PurchaseItem = reinterpret_cast<const FToolPurchaseItem*>(RowItr.Value);
-		if (PurchaseItem->TierAvailable <= PlayerState->MaxTierCompleted)
+		if (PurchaseItem->LevelAvailable <= PlayerState->ExperienceLevel)
 		{
 			ToolMarketGoods.Add(*PurchaseItem);
 		}
@@ -52,17 +52,26 @@ int32 ATRGameModeLobby::GetToolMarketDataForPlayer(const ATRPlayerControllerBase
 	return ToolMarketGoods.Num();
 }
 
+
+bool ATRGameModeLobby::GetLevelUpData(const int32 Level, FPlayerLevelUpData& LevelUpData)
+{
+	if (!IsValid(LevelUpTable)) { return false; }
+	// Check data table row type
+	check(LevelUpTable->GetRowStruct()->IsChildOf(FPlayerLevelUpData::StaticStruct()));
+
+	FString NextLevel = FString::FromInt(Level);
+	FPlayerLevelUpData* FoundLevelUpData = LevelUpTable->FindRow<FPlayerLevelUpData>(FName(NextLevel), "", false);
+	if (FoundLevelUpData == nullptr) { return false; }
+	LevelUpData = *FoundLevelUpData;
+	return true;
+}
+
+
 bool ATRGameModeLobby::GetLevelUpDataForPlayer(const ATRPlayerControllerBase* PlayerController, FPlayerLevelUpData& LevelUpData)
 {
 	if (!IsValid(LevelUpTable)) { return false; }
 	ATRPlayerState* PlayerState = PlayerController->GetPlayerState<ATRPlayerState>();
 	if (PlayerState == nullptr) { return false; }
 	// Check data table row type
-	check(LevelUpTable->GetRowStruct()->IsChildOf(FPlayerLevelUpData::StaticStruct()));
-
-	FString NextLevel = FString::FromInt(PlayerState->ExperienceLevel + 1);
-	FPlayerLevelUpData* FoundLevelUpData = LevelUpTable->FindRow<FPlayerLevelUpData>(FName(NextLevel), "", false);
-	if (FoundLevelUpData == nullptr) { return false; }
-	LevelUpData = *FoundLevelUpData;
-	return true;
+	return GetLevelUpData(PlayerState->ExperienceLevel + 1, LevelUpData);
 }

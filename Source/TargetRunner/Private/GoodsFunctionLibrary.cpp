@@ -74,4 +74,3 @@ TArray<FGoodsQuantity> UGoodsFunctionLibrary::GoodsQuantitiesFromRanges(FRandomS
 	return Goods;
 }
 
-

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Delegates/Delegate.h"
+#include "InventoryActorComponent.h"
 #include "ActorAttributeComponent.h"
 #include "GenericTeamAgentInterface.h"
 #include "TargetRunner.h"
@@ -21,6 +22,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToolInventoryAdded, const FToolData&, ToolDataAdded);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedToolsChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCurrentToolChanged, const AToolActorBase*, CurrentTool);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerLevelUp, const FPlayerLevelUpData&, LevelUpData);
 
 /**
  * 
@@ -35,6 +37,10 @@ public:
 	ATRPlayerControllerBase();
 
 public:
+	
+	// Player Goods inventory
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		UInventoryActorComponent* GoodsInventory;
 
 	// This component handles save/load and replication of data to client.
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
@@ -82,6 +88,11 @@ public:
 	// Delegate event notification when player's current active Tool has changed.
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnCurrentToolChanged OnCurrentToolChanged;
+
+	// Delegate event notification when player has leveled up.
+	// LevelUpData is the data for the new level.
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnPlayerLevelUp OnPlayerLevelUp;
 
 	// Our faction. Should be one of ETRFaction enum
 	UPROPERTY(EditAnywhere)
@@ -191,21 +202,16 @@ public:
 	// [Server]
 	// Call this to add goods towards the player's level progress.
 	// NOTE: This does allow for contributing more than the required amounts.
-	// If level up requirements are met this will re-set PlayerState.LevelUpGoodsProgress, then call ClientOnPlayerLevelUp() with the new level up data.
+	// If level up requirements are met this will re-set PlayerState.LevelUpGoodsProgress, calls OnPlayerLevelUpDelegate, then call ClientOnPlayerLevelUp() with the new level up data.
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 		void ServerAddLevelUpGoods(const FGoodsQuantitySet& ContributedGoods);
 
 	// [Client]
 	// Called by ServerAddLevelUpGoods after the player has reached next higher experience level.
 	//   LevelUpData - info related to the new experience level.
+	// Base class calls the OnPlayerLevelUp delegate on client side.
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientOnPlayerLevelUp(const FPlayerLevelUpData& LevelUpData);
-
-	// [Client]
-	// Called by ClientOnPlayerLevelUp.
-	// Override and implement in Blueprint to respond to player experience level increases.
-	UFUNCTION(BlueprintNativeEvent)
-		void OnPlayerLevelUp_BP(const FPlayerLevelUpData& LevelUpData);
 
 	// [Server]
 	// Does the actual spawning of the current tool actor.

@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "GoodsQuantity.h"
 #include "GoodsQuantityRange.h"
+#include "GoodsTypeQuantity.h"
 #include "GoodsDropChance.h"
 #include "TargetRunner.h"
 #include "GoodsFunctionLibrary.generated.h"
@@ -24,20 +25,24 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Goods")
 		static TArray<FGoodsQuantity> MultiplyGoodsQuantities(const TArray<FGoodsQuantity> GoodsQuantities, const float Multiplier);
 
+
 	// Adds the quantities of the two GoodsQuantities arrays.
 	// bNegateGoodsQuantitesTwo - if true, this will subtract GoodsQuantitiesTwo from GoodQuantitiesOne.
 	UFUNCTION(BlueprintPure, Category = "Goods")
 		static TArray<FGoodsQuantity> AddGoodsQuantities(const TArray<FGoodsQuantity>& GoodsQuantitiesOne, const TArray<FGoodsQuantity>& GoodsQuantitiesTwo, const bool bNegateGoodsQuantitiesTwo = false);
+
 
 	// Transform a goods quantity range to a goods quantity. 
 	// If optional QuantityScale is provided, the quantity will be mapped from min to max according to the scale (0-1) instead of determining randomly.
 	UFUNCTION(BlueprintCallable, Category = "Goods")
 		static FGoodsQuantity GoodsQuantityFromRange(UPARAM(ref) FRandomStream& RandStream, const FGoodsQuantityRange& QuantityRange, const float QuantityScale = -1.0f /* 0.0 - 1.0 */);
 
+
 	// Transform an array of goods quantity ranges to an array of goods quantities. 
 	// If optional QuantityScale is provided, each quantity will be mapped from min to max according to the scale instead of determining randomly.
 	UFUNCTION(BlueprintCallable, Category = "Goods")
 		static TArray<FGoodsQuantity> GoodsQuantitiesFromRanges(UPARAM(ref) FRandomStream& RandStream, const TArray<FGoodsQuantityRange>& QuantityRanges, const float QuantityScale = -1.0f /* 0.0 - 1.0 */);
+
 
 	// Create an array of FGoodsQuantities from a map of Name (key) and Quantity (float value).
 	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
@@ -51,6 +56,7 @@ public:
 		return GoodsQuantities;
 	}
 
+
 	// Create a map of Name -> FGoodsQuantity from an array of FGoodsQuantities.
 	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
 	static FORCEINLINE TMap<FName, FGoodsQuantity> GoodsQuantityArrayToMap(TArray<FGoodsQuantity> GoodsQuantityArray)
@@ -58,12 +64,57 @@ public:
 		return NamedItemsToMap(GoodsQuantityArray);
 	}
 
+
 	// Create a map of Name -> Quantity from an array of FGoodsQuantities.
 	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
 	static FORCEINLINE TMap<FName, float> GoodsQuantityArrayToNameFloatMap(TArray<FGoodsQuantity> GoodsQuantityArray)
 	{
 		return NamedQuantitiesToFloatMap(GoodsQuantityArray);
 	}
+
+
+	// Returns the quantity of goods of the given name contained in the supplied goods quantity array
+	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
+	static FORCEINLINE float CountInGoodsQuantityArray(const FName GoodsName, const TArray<FGoodsQuantity>& GoodsQuantities, bool& bFound)
+	{
+		const FGoodsQuantity* FoundGoods = GoodsQuantities.FindByKey<FName>(GoodsName);
+		if (FoundGoods)
+		{
+			bFound = true;
+			return FoundGoods->Quantity;
+		}
+		bFound = false;
+		return 0.f;
+	}
+
+
+	// Returns the quantity of goods of the given name contained in the supplied goods quantity set
+	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
+	static FORCEINLINE float CountInGoodsQuantitySet(const FName GoodsName, const FGoodsQuantitySet& GoodsQuantitySet, bool& bFound)
+	{
+		return CountInGoodsQuantityArray(GoodsName, GoodsQuantitySet.Goods, bFound);
+	}
+
+
+	// Finds the GoodsTypeQuantity with the given goods name within the array.
+	// Also returns the quantity of found item as convenience.
+	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
+	static FORCEINLINE float GoodsTypeDataInGoodsTypeQuantityArray(const FName GoodsName, const TArray<FGoodsTypeQuantity>& GoodsTypeQuantities, FGoodsTypeQuantity& FoundGoodsTypeQuantity, bool& bFound)
+	{
+		const FGoodsTypeQuantity* TmpGTQ = GoodsTypeQuantities.FindByKey<FName>(GoodsName);
+		if (TmpGTQ)
+		{
+			FoundGoodsTypeQuantity = *TmpGTQ;
+			bFound = true;
+			return TmpGTQ->Quantity;
+		}
+		else
+		{
+			bFound = false;
+			return 0.f;
+		}
+	}
+
 
 	// Create a map from an array. Each element in the array must have a Name (FName) property. (ex: FGoodsQuantity)
 	// New map has Name as key and element as value.  Collisions of Name in array are overwritten, last one wins.
@@ -77,6 +128,7 @@ public:
 		}
 		return NamedItemMap;
 	}
+
 
 	// Create a map from an array. Each element in array must have a Name (FName) and a Quantity (int) property. (ex: FGoodsQuantity)
 	// New map will have Name as key and Quantity as value. Collisions of Name in array are overwritten, last one wins.
@@ -92,6 +144,7 @@ public:
 		return NamedCountMap;
 	}
 
+
 	// Create a map from an array. Each element in array must have a Name (FName) and a Quantity (float) property. (ex: FGoodsQuantity)
 	// New map will have Name as key and Quantity as value. Collisions of Name in array are overwritten, last one wins.
 	// ex: Useful for transforming an array of GoodsQuantities to a map with each key as the GoodsQuantity.Name and the Quantity as the value.
@@ -105,6 +158,7 @@ public:
 		}
 		return NamedFloatMap;
 	}
+
 
 	// For an array where each item has a Chance (float) property that is > 0.0, this will pick one item from the array.
 	// Item picked is a random selection in the weighted list. 

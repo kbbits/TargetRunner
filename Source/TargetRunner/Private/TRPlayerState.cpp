@@ -87,6 +87,7 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 	SaveData.MaxTierCompleted = MaxTierCompleted;
 	SaveData.TotalRunsPlayed = TotalRunsPlayed;
 	SaveData.TotalPlaytimeInRuns = TotalPlaytimeInRuns;
+	SaveData.ExperienceLevel = ExperienceLevel;
 	// Do the attribute components
 	TArray<UActorAttributeComponent*> AttributeComps;
 	GetComponents<UActorAttributeComponent>(AttributeComps);
@@ -108,6 +109,7 @@ void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveDa
 	MaxTierCompleted = SaveData.MaxTierCompleted;
 	TotalRunsPlayed = SaveData.TotalRunsPlayed;
 	TotalPlaytimeInRuns = SaveData.TotalPlaytimeInRuns;
+	ExperienceLevel = SaveData.ExperienceLevel;
 	// Do the attribute components
 	TArray<UActorAttributeComponent*> AttributeComps;
 	GetComponents<UActorAttributeComponent>(AttributeComps);

@@ -14,9 +14,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TSubclassOf<class UToolBase> ToolClass;
 
-	// Tool becomes available in the market based on player's MaxTierCompleted.
+	// Tool becomes available in the market based on player's experience level.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		int32 TierAvailable;
+		int32 LevelAvailable;
 
 	// The tool should not be available in the market if the player already has InventoryLimit number of this tool in their tool inventory.
 	// Value of <= 0 means no limit. Default = 0

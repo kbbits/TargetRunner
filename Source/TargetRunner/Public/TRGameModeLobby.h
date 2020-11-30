@@ -45,6 +45,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 		int32 GetToolMarketDataForPlayer(const ATRPlayerControllerBase* MarketPlayerController, TArray<FToolPurchaseItem>& ToolMarketGoods);
 
+	// Gets the cost for a player to upgrade to the given experience level.
+	// Returns false if there is no such experience level. Returns true and a populated GoodsRequired if there is matching data for the experience level.
+	UFUNCTION(BlueprintCallable)
+		bool GetLevelUpData(const int32 Level, FPlayerLevelUpData& LevelUpData);
+
 	// Gets the cost for the given player to upgrade to the next experience level.
 	// Returns false if there is no higher experience level for the player. Returns true and a populated GoodsRequired if there does exist a higher xp level for player.
 	UFUNCTION(BlueprintCallable)
