@@ -115,18 +115,31 @@ public:
 	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		FName GetAttributeName();
 
+	// Current minimum value including modifiers
 	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetMin();
+
+	// Get the minimum value without including modifiers
+	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
+		float GetMinBase();
 	
+	// Set the minimum value, before modifiers are calculated
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void SetMinBase(const float NewMin);
 
+	// Current maximum value including modifiers
 	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetMax();
 
+	// Get the maximum value without including modifiers
+	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
+		float GetMaxBase();
+
+	// Set the maximum value, before modifiers are calculated
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void SetMaxBase(const float NewMax);
 
+	// Get the current value including modifiers
 	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetCurrent();
 
@@ -150,7 +163,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "ItemAttributes")
 		float GetCurrentPercent();
 
-	// Add the given amount from the current value of this attribute. Value can be negative.
+	// Add the given amount to the current value of this attribute. Value can be negative.
+	//		bAllowOverspill -	if true this will allow a delta adjustment that would push the value outside of 
+	//							the min/max range to succeed and will set the value to the clamped range.
+	//							If this is false a delta that would result in exceeding min/max range will return false and make no change to the current value.
+	// Returns true if successful and current value was changed, false if current value was not changed.
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		bool DeltaValue(const float ToAdd, const bool bAllowOverspill);
 

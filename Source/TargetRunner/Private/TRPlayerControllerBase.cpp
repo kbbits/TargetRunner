@@ -409,6 +409,85 @@ bool ATRPlayerControllerBase::ClientUnequipAllTools_Validate()
 }
 
 
+void ATRPlayerControllerBase::ServerRenameTool_Implementation(const FGuid& ToolGuid, const FText& NewName)
+{
+	FToolData* ToolData = ToolInventory.Find(ToolGuid);
+	UToolBase* FoundTool = nullptr;
+	if (ToolData == nullptr)
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase - ServerRenameTool tool guid %s not found in inventory."), *ToolGuid.ToString());
+		return;
+	}
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		if (TmpTool->ItemGuid == ToolGuid)
+		{
+			FoundTool = TmpTool;
+			break;
+		}
+	}
+	if (FoundTool == nullptr)
+	{
+		FoundTool = UToolBase::CreateToolFromToolData(*ToolData, this);
+	}
+	if (FoundTool && !FoundTool->DisplayName.EqualTo(NewName, ETextComparisonLevel::Default))
+	{
+		FToolData TmpToolData;
+		FoundTool->DisplayName = NewName;
+		FoundTool->ToToolData(TmpToolData);
+		ToolInventory.Add(FoundTool->ItemGuid, TmpToolData);
+		OnEquippedToolsChanged.Broadcast();
+		if (!IsLocalController())
+		{
+			//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerRenameTool calling client rpc."));
+			ClientRenameTool(ToolGuid, NewName);
+		}
+	}
+}
+
+bool ATRPlayerControllerBase::ServerRenameTool_Validate(const FGuid& ToolGuid, const FText& NewName)
+{
+	return true;
+}
+
+
+void ATRPlayerControllerBase::ClientRenameTool_Implementation(const FGuid& ToolGuid, const FText& NewName)
+{
+	FToolData* ToolData = ToolInventory.Find(ToolGuid);
+	UToolBase* FoundTool = nullptr;
+	if (ToolData == nullptr)
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase - ClientRenameTool tool guid %s not found in inventory."), *ToolGuid.ToString());
+		return;
+	}
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		if (TmpTool->ItemGuid == ToolGuid)
+		{
+			FoundTool = TmpTool;
+			break;
+		}
+	}
+	if (FoundTool == nullptr)
+	{
+		FoundTool = UToolBase::CreateToolFromToolData(*ToolData, this);
+	}
+	if (FoundTool && !FoundTool->DisplayName.EqualTo(NewName, ETextComparisonLevel::Default))
+	{
+		FToolData TmpToolData;
+		FoundTool->DisplayName = NewName;
+		FoundTool->ToToolData(TmpToolData);
+		ToolInventory.Add(FoundTool->ItemGuid, TmpToolData);
+		OnEquippedToolsChanged.Broadcast();
+	}
+}
+
+bool ATRPlayerControllerBase::ClientRenameTool_Validate(const FGuid& ToolGuid, const FText& NewName)
+{
+	return true;
+}
+
+
 void ATRPlayerControllerBase::ServerUpgradeTool_Implementation(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta)
 {
 	FToolData* ToolData = ToolInventory.Find(ToolGuid);
@@ -462,7 +541,6 @@ void ATRPlayerControllerBase::ServerUpgradeTool_Implementation(const FGuid ToolG
 		ClientUpgradeTool(ToolGuid, UpgradeType, RateDelta);
 	}
 }
-
 
 bool ATRPlayerControllerBase::ServerUpgradeTool_Validate(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta)
 {
@@ -600,13 +678,13 @@ void ATRPlayerControllerBase::ServerAddLevelUpGoods_Implementation(const FGoodsQ
 				// TODO: Move this to TRPlayerState function
 				TRPlayerState->ExperienceLevel = LevelUpData.Level;
 				if (LevelUpData.AddMaxAnimus != 0.f) {
-					TRPlayerState->AnimusAttribute->SetMaxBase(TRPlayerState->AnimusAttribute->AttributeData.MaxValue + LevelUpData.AddMaxAnimus);
+					TRPlayerState->AnimusAttribute->SetMaxBase(TRPlayerState->AnimusAttribute->GetMaxBase() + LevelUpData.AddMaxAnimus);
 				}
 				if (LevelUpData.AddMaxEnergy != 0.f) {
-					TRPlayerState->EnergyAttribute->SetMaxBase(TRPlayerState->EnergyAttribute->AttributeData.MaxValue + LevelUpData.AddMaxEnergy);
+					TRPlayerState->EnergyAttribute->SetMaxBase(TRPlayerState->EnergyAttribute->GetMaxBase() + LevelUpData.AddMaxEnergy);
 				}
 				if (LevelUpData.AddMaxHealth != 0.f) {
-					TRPlayerState->HealthAttribute->SetMaxBase(TRPlayerState->HealthAttribute->AttributeData.MaxValue + LevelUpData.AddMaxHealth);
+					TRPlayerState->HealthAttribute->SetMaxBase(TRPlayerState->HealthAttribute->GetMaxBase() + LevelUpData.AddMaxHealth);
 				}
 				//  Add level up goods and tools
 				if (LevelUpData.GoodsAwarded.Goods.Num() > 0)
@@ -645,7 +723,7 @@ bool ATRPlayerControllerBase::ServerAddLevelUpGoods_Validate(const FGoodsQuantit
 
 void ATRPlayerControllerBase::ClientOnPlayerLevelUp_Implementation(const FPlayerLevelUpData& LevelUpData)
 {
-	// Base class just calls OnPlayerLevelUp
+	// Base class just calls OnPlayerLevelUp event
 	OnPlayerLevelUp.Broadcast(LevelUpData);
 }
 

@@ -186,6 +186,16 @@ public:
 		void ClientUnequipAllTools();
 
 	// [Server]
+	// Call this to rename a tool in player's inventory. This handles rep. to client.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerRenameTool(const FGuid& ToolGuid, const FText& NewName);
+
+	// [Client]
+	// Server calls this to update tool name on the client side.
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientRenameTool(const FGuid& ToolGuid, const FText& NewName);
+
+	// [Server]
 	// Call this to apply an upgrade to a tool in player's tool inventory. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerUpgradeTool(const FGuid ToolGuid, const ETRToolUpgrade UpgradeType, const FResourceRateFilter RateDelta);
@@ -202,14 +212,15 @@ public:
 	// [Server]
 	// Call this to add goods towards the player's level progress.
 	// NOTE: This does allow for contributing more than the required amounts.
-	// If level up requirements are met this will re-set PlayerState.LevelUpGoodsProgress, calls OnPlayerLevelUpDelegate, then call ClientOnPlayerLevelUp() with the new level up data.
+	// If level up requirements are met this will re-set PlayerState.LevelUpGoodsProgress, calls OnPlayerLevelUp event, then call ClientOnPlayerLevelUp() with the new level up data.
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 		void ServerAddLevelUpGoods(const FGoodsQuantitySet& ContributedGoods);
 
 	// [Client]
 	// Called by ServerAddLevelUpGoods after the player has reached next higher experience level.
+	// Useful for client side notifications, GUI, etc. Underlying level up stats, etc. are replicated from ServerAddLevelUpGoods.
 	//   LevelUpData - info related to the new experience level.
-	// Base class calls the OnPlayerLevelUp delegate on client side.
+	// Base class implementation calls the OnPlayerLevelUp event.
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientOnPlayerLevelUp(const FPlayerLevelUpData& LevelUpData);
 

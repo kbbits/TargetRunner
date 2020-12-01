@@ -46,6 +46,28 @@ public:
 
 	UToolBase();
 
+	FORCEINLINE bool operator==(const FGuid& OtherItemGuid) const
+	{
+		return (ItemGuid == OtherItemGuid);
+	}
+
+	FORCEINLINE bool operator==(const FGuid& OtherItemGuid)
+	{
+		return (ItemGuid == OtherItemGuid);
+	}
+
+	FORCEINLINE bool operator==(FGuid& OtherItemGuid)
+	{
+		return (ItemGuid == OtherItemGuid);
+	}
+	
+	// Does this tool have this ItemGuid?
+	UFUNCTION(BlueprintPure, meta = (DisplayName = "== (guid)", CompactNodeTitle = "==", Keywords = "= equal"), Category = "Player Weapons|Guid")
+	FORCEINLINE bool EqualsGuid(const FGuid& OtherGuid)
+	{
+		return ItemGuid == OtherGuid;
+	}
+
 public:
 
 	// Unique instance ID
@@ -136,7 +158,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Meta = (DeprecatedProperty, DeprecationMessage = "Based on data table of ToolPurchaseItems now."))
 		FTRNamedFloat BuyValue;
 
-	// Cost of the item in the market. The GoodsQuantitySet is loaded from tool market data and should be set after tool is constructed.
+	// Determines the cost of the item in the market (if available) as well as upgrade costs.
+	// For items from the market, the CostValue is loaded from tool market data which overwrites the defaults.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FNamedGoodsQuantitySet CostValue;
 

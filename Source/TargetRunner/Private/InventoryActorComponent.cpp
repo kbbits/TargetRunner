@@ -545,3 +545,8 @@ void UInventoryActorComponent::GetSnapshotGoods(TArray<FGoodsQuantity>& AllSnaps
 {
 	AllSnapshotGoods.Append(SnapshotInventory);
 }
+
+bool UInventoryActorComponent::SnapshotInventoryIsEmpty()
+{
+	return SnapshotInventory.Num() == 0;
+}

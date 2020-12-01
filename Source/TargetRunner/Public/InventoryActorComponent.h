@@ -154,4 +154,9 @@ public:
 	UFUNCTION(BlueprintPure)
 		void GetSnapshotGoods(TArray<FGoodsQuantity>& AllSnapshotGoods);
 
+	// [Any]
+	// Returns true if snapshot inventory is empty.
+	UFUNCTION(BlueprintPure)
+		bool SnapshotInventoryIsEmpty();
+
 };
