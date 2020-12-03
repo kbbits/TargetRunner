@@ -3,6 +3,7 @@
 
 #include "PlatformBase.h"
 #include "TR_GameMode.h"
+#include "TREnemyCharacter.h"
 #include "UnrealNetwork.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -54,7 +55,6 @@ void APlatformBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
-
 void APlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -79,4 +79,41 @@ void APlatformBase::DestroyPlatform_Implementation()
 	}
 	PlatformActorCache.Empty(0);
 	Destroy();
+}
+
+
+void APlatformBase::StasisSleepActors_Implementation()
+{
+	TArray<AActor*> PlatformActors;
+	IStasisObject* StasisObject;
+	PlatformControlZone->GetOverlappingActors(PlatformActors);
+	for (AActor* CurActor : PlatformActors)
+	{
+		StasisObject = Cast<IStasisObject>(CurActor);
+		if (StasisObject && StasisObject->Execute_GetStasisState(CurActor) != ETRStasisState::InStasis)
+		{
+			StasisObject->Execute_StasisSleep(CurActor);
+		}
+	}
+	bStasisAwake = false;
+}
+
+
+void APlatformBase::StasisWakeActors_Implementation()
+{
+	if (!bStasisAwake)
+	{
+		TArray<AActor*> PlatformActors;
+		IStasisObject* StasisObject;
+		PlatformControlZone->GetOverlappingActors(PlatformActors);
+		for (AActor* CurActor : PlatformActors)
+		{
+			StasisObject = Cast<IStasisObject>(CurActor);
+			if (StasisObject && StasisObject->Execute_GetStasisState(CurActor) != ETRStasisState::Awake)
+			{
+				StasisObject->Execute_StasisWake(CurActor);
+			}
+		}
+		bStasisAwake = true;
+	}
 }

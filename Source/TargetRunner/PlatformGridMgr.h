@@ -79,6 +79,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 		TMap<FName, AActor*> GridActorCache;
 
+	// Distance from a given platform that we will wake actors.
+	// Default = 1
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 StasisWakeRange;
+
 protected:
 
 	TArray<APlayerStart*> PlayerStarts;
@@ -164,6 +169,14 @@ public:
 	// Resulting in cell 0 being at [GridExtentMinX, GridExtentMinY] and the highest cell number at [GridExtentMaxX, GridExtentMaxY].
 	UFUNCTION(BlueprintPure)
 		int32 GridCoordsToCellNumber(const FVector2D Coords);
+
+	// Wake neighbor platforms within StasisWakeRange distance from given platform coords.
+	// Does not wake diagonal neighbors.
+	UFUNCTION(BlueprintCallable)
+		void WakeNeighbors(const FVector2D AroundGridCoords);
+
+	// Native function to do the work, so native subclasses can override.
+	virtual void WakeNeighborsImpl(const FVector2D AroundGridCoords);
 
 	// Debug
 #if WITH_EDITOR

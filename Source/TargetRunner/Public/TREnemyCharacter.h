@@ -7,12 +7,13 @@
 #include "NiagaraSystem.h"
 #include "ActorAttributeComponent.h"
 #include "ExtractableResource.h"
+#include "StasisObject.h"
 #include "ResourceQuantity.h"
 #include "ResourceRateFilter.h"
 #include "TREnemyCharacter.generated.h"
 
 UCLASS()
-class TARGETRUNNER_API ATREnemyCharacter : public ACharacter, public IExtractableResource
+class TARGETRUNNER_API ATREnemyCharacter : public ACharacter, public IExtractableResource, public IStasisObject
 {
 	GENERATED_BODY()
 
@@ -33,6 +34,7 @@ public:
 		bool bTargetInRange;
 
 	// True if we have Line of sight to the current target.
+	// NOT IMPLEMENTED
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite, SaveGame)
 		bool bLosToTarget;
 
@@ -46,10 +48,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", TitleProperty = "ResourceType"))
 		TArray<FResourceQuantity> ResourcesOnDestroy;
 
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_StasisState)
+		ETRStasisState StasisState;
+
 private:
 
-	UPROPERTY()
-	class ATREnemyAIController* TRAIController;
+	ATREnemyAIController* TRAIController;
 
 protected:
 	// Called when the game starts or when spawned
@@ -61,6 +66,11 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	// Statis replication function.
+	// Stop/Start tick on this actor and stop/start tick and logic in it's AIController
+	UFUNCTION(BlueprintNativeEvent)
+		void OnRep_StasisState(ETRStasisState OldState);
 
 	//UFUNCTION()
 	//	virtual void OnRep_ResourcesByDamageCurrent();
@@ -103,12 +113,22 @@ public:
 	// IExtractableResource interface functions
 
 	// Gets the current quanties of resources available in this entity.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extractable Resource")
-		TArray<FResourceQuantity> GetResourceQuantities();
 	virtual TArray<FResourceQuantity> GetResourceQuantities_Implementation();
 
 	// Gets the current quanty of a resource available in this entity.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extractable Resource")
-		float GetResourceQuantity(const FResourceType ResourceType);
 	virtual float GetResourceQuantity_Implementation(const FResourceType ResourceType);
+
+	// IStasisObject interface functions
+
+	// Gets current statsis state
+	virtual ETRStasisState GetStasisState_Implementation() override;
+	
+	// [Call on Server]
+	// Stop tick and AI.
+	virtual void StasisSleep_Implementation() override;
+
+	// [Call on Server]
+	// Start tick and AI
+	virtual void StasisWake_Implementation() override;
+	
 };

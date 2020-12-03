@@ -15,6 +15,7 @@ ARoomPlatformBase::ARoomPlatformBase()
 	bRoomTemplateSet = false;	
 }
 
+
 void ARoomPlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -155,4 +156,29 @@ bool ARoomPlatformBase::SpawnResources_Implementation()
 }
 
 
-
+ARoomPlatformBase* ARoomPlatformBase::GetConnectedNeighbor(const ETRDirection Direction)
+{
+	if (MyGridManager == nullptr)
+	{
+		GetGridManager();
+	}
+	bool bConnected = false;
+	ARoomPlatformBase* NeighborRoom = Cast<ARoomPlatformBase>(MyGridManager->GetPlatformNeighbor(GetGridCoordinates(), Direction));
+	if (NeighborRoom == nullptr) { return nullptr; }
+	switch (Direction)
+	{
+	case ETRDirection::North :
+		bConnected = (RoomTemplate.NorthWall != ETRWallState::Blocked && NeighborRoom->RoomTemplate.SouthWall != ETRWallState::Blocked);
+		break;
+	case ETRDirection::East :
+		bConnected = (RoomTemplate.EastWall != ETRWallState::Blocked && NeighborRoom->RoomTemplate.WestWall != ETRWallState::Blocked);
+		break;
+	case ETRDirection::South :
+		bConnected = (RoomTemplate.SouthWall != ETRWallState::Blocked && NeighborRoom->RoomTemplate.NorthWall != ETRWallState::Blocked);
+		break;
+	case ETRDirection::West :
+		bConnected = (RoomTemplate.WestWall != ETRWallState::Blocked && NeighborRoom->RoomTemplate.EastWall != ETRWallState::Blocked);
+		break;
+	}
+	return bConnected ? NeighborRoom : nullptr;
+}

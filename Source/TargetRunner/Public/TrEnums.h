@@ -21,6 +21,13 @@ enum class ETRFaction : uint8
 };
 
 UENUM(BlueprintType)
+enum class ETRStasisState : uint8
+{
+	Awake		UMETA(DispalyName = "Awake"),
+	InStasis	UMETA(DispalyName = "InStasis")
+};
+
+UENUM(BlueprintType)
 enum class ETRDirection : uint8
 {
 	North		UMETA(DisplayName = "North"),

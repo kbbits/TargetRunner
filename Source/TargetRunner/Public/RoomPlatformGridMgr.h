@@ -78,6 +78,14 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Gets the room at the given coordinates.
+	// Will return nullptr if no room exists at those coords.
+	UFUNCTION(BlueprintPure)
+		ARoomPlatformBase* GetRoomInGrid(const FVector2D& RoomCoords);
+
+	UFUNCTION(BlueprintPure)
+		ARoomPlatformBase* GetRoomNeighbor(const FVector2D& RoomCoords, const ETRDirection DirectionToNeighbor);
+
 	// Spawns all rooms in the room template grid
 	//UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 	UFUNCTION(BlueprintNativeEvent, CallInEditor)
@@ -95,6 +103,10 @@ public:
 	virtual void GenerateGridImpl() override;
 
 	virtual void DestroyGridImpl() override;
+
+	// Wake connected neighbor rooms within StasisWakeRange distance from given platform coords.
+	// Does not wake diagonal neighbors.
+	virtual void WakeNeighborsImpl(FVector2D AroundGridCoords) override;
 
 protected:
 

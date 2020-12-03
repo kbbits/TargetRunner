@@ -3,12 +3,14 @@
 
 #include "TREnemyCharacter.h"
 #include "TREnemyAIController.h"
+#include "BrainComponent.h"
 #include "ResourceFunctionLibrary.h"
 
 // Sets default values
 ATREnemyCharacter::ATREnemyCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	bReplicates = true;
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	HealthAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("HealthAttribute"));
@@ -21,11 +23,19 @@ ATREnemyCharacter::ATREnemyCharacter()
 	HealthAttribute->OnHitMinimum.AddDynamic(this, &ATREnemyCharacter::OnHealthDepleted);
 }
 
+void ATREnemyCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATREnemyCharacter, StasisState);
+}
+
 // Called when the game starts or when spawned
 void ATREnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	ResetAttributesToMax();
+	OnRep_StasisState(StasisState);
 }
 
 
@@ -42,6 +52,38 @@ void ATREnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+
+void ATREnemyCharacter::OnRep_StasisState_Implementation(ETRStasisState OldState)
+{
+	ATREnemyAIController* AIController = GetTRAIController();
+	if (AIController == nullptr)
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TREnemyCharacter - no AI Controller found"));
+		return;
+	}
+	if (StasisState == ETRStasisState::Awake)
+	{
+		SetActorTickEnabled(true);
+		AIController->SetActorTickEnabled(true);
+		if (AIController->GetBrainComponent()) {
+			AIController->GetBrainComponent()->StartLogic();
+		}
+		// Handle components?
+		UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
+	}
+	else if (StasisState == ETRStasisState::InStasis)
+	{
+		StopAnimMontage();
+		SetActorTickEnabled(false);
+		AIController->SetActorTickEnabled(false);
+		if (AIController->GetBrainComponent()) {
+			AIController->GetBrainComponent()->StopLogic(FString(TEXT("Stasis")));
+		}
+		AIController->StopMovement();
+		UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Put In Stasis: %s"), *GetNameSafe(this));
+	}
 }
 
 
@@ -118,4 +160,34 @@ float ATREnemyCharacter::GetResourceQuantity_Implementation(const FResourceType 
 		if (CurQuantity.ResourceType == ResourceType) { QuantityTotal += CurQuantity.Quantity; }
 	}
 	return QuantityTotal;
+}
+
+
+ETRStasisState ATREnemyCharacter::GetStasisState_Implementation()
+{
+	return StasisState;
+}
+
+
+void ATREnemyCharacter::StasisSleep_Implementation()
+{
+	ETRStasisState OldState = StasisState;
+	StasisState = ETRStasisState::InStasis;
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// Must call OnRep directly on server
+		OnRep_StasisState(OldState);
+	}
+}
+
+
+void ATREnemyCharacter::StasisWake_Implementation()
+{
+	ETRStasisState OldState = StasisState;
+	StasisState = ETRStasisState::Awake;
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		// Must call OnRep directly on server
+		OnRep_StasisState(OldState);
+	}
 }

@@ -77,5 +77,11 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		bool SpawnResources();
 
+	// If this room is connected to another room in the given direction, this returns the connected room.
+	// If not connected in that direction, this returns nullptr.
+	UFUNCTION(BlueprintPure)
+		ARoomPlatformBase* GetConnectedNeighbor(const ETRDirection Direction);
+
+	// Must include this in header since we are subclass of custom class?
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };

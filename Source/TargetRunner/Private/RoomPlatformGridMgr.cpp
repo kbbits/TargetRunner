@@ -2,7 +2,7 @@
 
 #include "RoomPlatformGridMgr.h"
 #include "..\Public\RoomPlatformGridMgr.h"
-
+#include "TRMath.h"
 #include "TargetRunner.h"
 #include "RoomFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -43,6 +43,19 @@ void ARoomPlatformGridMgr::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
+}
+
+
+ARoomPlatformBase* ARoomPlatformGridMgr::GetRoomInGrid(const FVector2D& RoomCoords)
+{
+	bool bFound;
+	return Cast<ARoomPlatformBase>(GetPlatformInGrid(RoomCoords, bFound));
+}
+
+
+ARoomPlatformBase* ARoomPlatformGridMgr::GetRoomNeighbor(const FVector2D& RoomCoords, const ETRDirection DirectionToNeighbor)
+{
+	return Cast<ARoomPlatformBase>(GetPlatformNeighbor(RoomCoords, DirectionToNeighbor));
 }
 
 
@@ -335,4 +348,39 @@ void ARoomPlatformGridMgr::SetRoomGridTemplateData_Implementation(const FRoomGri
 	//{
 	//	RoomGridTemplate = UpdatedTemplate;
 	//}
+}
+
+
+void ARoomPlatformGridMgr::WakeNeighborsImpl(FVector2D AroundGridCoords)
+{
+	const TArray<ETRDirection> OrthogonalDirections = { ETRDirection::North, ETRDirection::East, ETRDirection::South, ETRDirection::West };
+	FVector2D OffsetCoords;
+	ARoomPlatformBase* CurRoom = nullptr;
+	ARoomPlatformBase* NeighborRoom = nullptr;
+	ARoomPlatformBase* AroundRoom = GetRoomInGrid(AroundGridCoords);
+
+	if (AroundRoom && !AroundRoom->bStasisWokeNeighbors)
+	{
+		// Orthogonal directions only
+		for (ETRDirection Direction : OrthogonalDirections)
+		{
+			OffsetCoords = AroundGridCoords;
+			for (int32 i = 1; i <= StasisWakeRange; i++)
+			{
+				CurRoom = GetRoomInGrid(OffsetCoords);
+				if (CurRoom)
+				{
+					// Connected neighbors only
+					NeighborRoom = CurRoom->GetConnectedNeighbor(Direction);
+					if (NeighborRoom)
+					{
+						NeighborRoom->StasisWakeActors();
+					}
+				}
+				// Move OffsetCoords to get next room over, even if there was no room here.
+				OffsetCoords += UTRMath::DirectionToOffsetVector(Direction);
+			}
+		}
+		AroundRoom->bStasisWokeNeighbors = true;
+	}
 }

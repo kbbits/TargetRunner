@@ -3,6 +3,7 @@
 #include "PlatformGridMgr.h"
 #include "RoomPlatformBase.h"
 #include "TargetRunner.h"
+#include "TRMath.h"
 #include "Kismet/GameplayStatics.h"
 #include "TR_GameMode.h"
 
@@ -12,7 +13,10 @@ APlatformGridMgr::APlatformGridMgr()
 	bReplicates = true;
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	StasisWakeRange = 1;
 }
+
 
 void APlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
@@ -28,11 +32,13 @@ void APlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& O
 	DOREPLIFETIME_CONDITION(APlatformGridMgr, RoomCellSubdivision, COND_InitialOnly);
 }
 
+
 // Called when the game starts or when spawned
 void APlatformGridMgr::BeginPlay()
 {
 	Super::BeginPlay();	
 }
+
 
 void APlatformGridMgr::MovePlayerStarts()
 {
@@ -75,11 +81,13 @@ void APlatformGridMgr::MovePlayerStarts()
 	}	
 }
 
+
 // Called every frame
 void APlatformGridMgr::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
 
 void APlatformGridMgr::FillGridFromExistingPlatforms()
 {
@@ -93,6 +101,7 @@ void APlatformGridMgr::FillGridFromExistingPlatforms()
 	}
 }
 
+
 void APlatformGridMgr::ClientFillGridFromExistingPlatforms_Implementation()
 {
 	// Multicast replication but only the clients need to update.
@@ -102,12 +111,14 @@ void APlatformGridMgr::ClientFillGridFromExistingPlatforms_Implementation()
 	}
 }
 
+
 FTransform APlatformGridMgr::GetGridCellWorldTransform(const FVector2D& GridCoords)
 {
 	FVector CellLocation = GetActorLocation();
 	CellLocation += FVector(GridCoords.X * GridCellWorldSize, GridCoords.Y * GridCellWorldSize, 0.0).RotateAngleAxis(GetActorRotation().Yaw, FVector(0.0, 0.0, 1.0));
 	return FTransform(GetActorRotation(), CellLocation, FVector(1.0, 1.0, 1.0));
 }
+
 
 void APlatformGridMgr::GenerateGrid_Implementation()
 {
@@ -133,10 +144,12 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 	GenerateGridImpl();	
 }
 
+
 void APlatformGridMgr::GenerateGridImpl()
 {
 	// TODO Implement something for base class.
 }
+
 
 void APlatformGridMgr::DestroyGrid_Implementation()
 {
@@ -155,6 +168,7 @@ void APlatformGridMgr::DestroyGrid_Implementation()
 		//ClientFillGridFromExistingPlatforms();
 	}
 }
+
 
 void APlatformGridMgr::DestroyGridImpl()
 {
@@ -197,6 +211,7 @@ void APlatformGridMgr::AddPlatformToGridMap(APlatformBase* Platform)
 	}
 }
 
+
 APlatformBase * APlatformGridMgr::GetPlatformInGridMap(const int32 X, const int32 Y, bool& Found)
 {
 	Found = false;
@@ -210,32 +225,22 @@ APlatformBase * APlatformGridMgr::GetPlatformInGridMap(const int32 X, const int3
 	return nullptr;
 }
 
+
 APlatformBase* APlatformGridMgr::GetPlatformInGrid(const FVector2D Coords, bool& Found)
 {
 	return GetPlatformInGridMap(static_cast<int32>(Coords.X), static_cast<int32>(Coords.Y), Found);
 }
 
+
 APlatformBase* APlatformGridMgr::GetPlatformNeighbor(const FVector2D& MyCoords, const ETRDirection DirectionToNeighbor)
 {
 	APlatformBase* Platform = nullptr;
 	bool bFound = false;
-	switch (DirectionToNeighbor)
-	{
-	case ETRDirection::North:
-		Platform = GetPlatformInGrid(MyCoords + FVector2D(1.0f, 0.0f), bFound);
-		break;
-	case ETRDirection::East:
-		Platform = GetPlatformInGrid(MyCoords + FVector2D(0.0f, 1.0f), bFound);
-		break;
-	case ETRDirection::South:
-		Platform = GetPlatformInGrid(MyCoords + FVector2D(-1.0f, 0.0f), bFound);
-		break;
-	case ETRDirection::West:
-		Platform = GetPlatformInGrid(MyCoords + FVector2D(0.0f, -1.0f), bFound);
-	}
+	Platform = GetPlatformInGrid(MyCoords + UTRMath::DirectionToOffsetVector(DirectionToNeighbor), bFound);
 	if (!bFound) { return nullptr; }
 	return Platform;
 }
+
 
 APlatformBase * APlatformGridMgr::RemovePlatformFromGridMap(const int32 X, const int32 Y, bool& Success)
 {
@@ -248,10 +253,12 @@ APlatformBase * APlatformGridMgr::RemovePlatformFromGridMap(const int32 X, const
 	return Platform;
 }
 
+
 APlatformBase* APlatformGridMgr::RemovePlatformFromGrid(const FVector2D Coords, bool& Success)
 {
 	return RemovePlatformFromGridMap(static_cast<int32>(Coords.X), static_cast<int32>(Coords.Y), Success);
 }
+
 
 int32 APlatformGridMgr::GetPlatformCount()
 {
@@ -266,17 +273,20 @@ int32 APlatformGridMgr::GetPlatformCount()
 	return TotalCount;
 }
 
+
 int32 APlatformGridMgr::GetGridWidthX()
 {
 	// Add one for the zero row
 	return (GridExtentMaxX - GridExtentMinX) + 1;
 }
 
+
 int32 APlatformGridMgr::GetGridWidthY()
 {
 	// Add one for the zero row
 	return (GridExtentMaxY - GridExtentMinY) + 1;
 }
+
 
 bool APlatformGridMgr::IsInGrid(const FVector2D Coords)
 {
@@ -287,6 +297,7 @@ bool APlatformGridMgr::IsInGrid(const FVector2D Coords)
 	return true;
 }
 
+
 bool APlatformGridMgr::IsInGridSwitch(FVector2D Coords, EInGrid& InGrid)
 {
 	if (IsInGrid(Coords)) {	InGrid = EInGrid::InGrid; }
@@ -294,9 +305,68 @@ bool APlatformGridMgr::IsInGridSwitch(FVector2D Coords, EInGrid& InGrid)
 	return InGrid == EInGrid::InGrid;
 }
 
+
 int32 APlatformGridMgr::GridCoordsToCellNumber(const FVector2D Coords)
 {
 	if (!IsInGrid(Coords)) return -1;
 	//      Cells in prior rows                                                   Cells in this row before us
 	return ((static_cast<int32>(Coords.X) - GridExtentMinX) * GetGridWidthY()) + (static_cast<int32>(Coords.Y) - GridExtentMinY);
+}
+
+
+void APlatformGridMgr::WakeNeighbors(const FVector2D AroundGridCoords)
+{
+	// Call native Impl function.
+	WakeNeighborsImpl(AroundGridCoords);
+}
+
+void APlatformGridMgr::WakeNeighborsImpl(const FVector2D AroundGridCoords)
+{
+	bool bFound;
+	const TArray<ETRDirection> OrthogonalDirections = { ETRDirection::North, ETRDirection::East, ETRDirection::South, ETRDirection::West };
+	FVector2D OffsetCoords;
+	APlatformBase* CurPlatform = nullptr;	
+	APlatformBase* AroundPlatform = GetPlatformInGrid(AroundGridCoords, bFound);
+
+	// Orthogonal directions only
+	if (bFound && AroundPlatform && !AroundPlatform->bStasisWokeNeighbors)
+	{
+		for (ETRDirection Direction : OrthogonalDirections)
+		{
+			OffsetCoords = AroundGridCoords;
+			for (int32 i = 1; i <= StasisWakeRange; i++)
+			{
+				CurPlatform = GetPlatformNeighbor(OffsetCoords, Direction);
+				if (CurPlatform)
+				{
+					CurPlatform->StasisWakeActors();
+				}
+				OffsetCoords = OffsetCoords + UTRMath::DirectionToOffsetVector(Direction);
+			}
+		}
+		AroundPlatform->bStasisWokeNeighbors = true;
+	}
+	
+	// All directions
+	//APlatformBase* AroundPlatform = GetPlatformInGrid(AroundGridCoords, bFound);
+	//if (bFound && AroundPlatform && !AroundPlatform->bStasisWokeNeighbors)
+	//{
+	//	for (int32 i = -StasisWakeRange; i <= StasisWakeRange; i++)
+	//	{
+	//		OffsetCoords.X = i;
+	//		for (int32 j = -StasisWakeRange; j <= StasisWakeRange; j++)
+	//		{
+	//			OffsetCoords.Y = j;
+	//			// Skip the center one
+	//			if (OffsetCoords.IsZero()) { continue; }
+	//			// Get the neighbor
+	//			CurPlatform = GetPlatformInGrid(AroundGridCoords + OffsetCoords, bFound);
+	//			if (bFound && CurPlatform)
+	//			{
+	//				CurPlatform->StasisWakeActors();
+	//			}
+	//		}
+	//	}
+	//	AroundPlatform->bStasisWokeNeighbors = true;
+	//}
 }

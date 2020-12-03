@@ -45,6 +45,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FRandomStream PlatformRandStream;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bStasisWokeNeighbors;
+
+protected:
+
+	UPROPERTY(EditAnywhere)
+		bool bStasisAwake;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -63,11 +71,24 @@ public:
 	UFUNCTION(BlueprintPure)
 		FVector2D GetGridCoordinates();
 
+	UFUNCTION(BlueprintPure)
+		FORCEINLINE FIntPoint GetGridCoordinatesInt() {	return FIntPoint(GridX, GridY);	};
+
 	// [Server]
 	// Note this destroys self.
 	// Destroys all actors in the PlatformActorCache, then destroys self.
 	// If overridden in blueprints, you should call the parent function at end because this destroys self.
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, CallInEditor)
 		void DestroyPlatform();
+
+	// [Call on Server]
+	// Puts all IStasisObject actors in this platform's control zone into stasis
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		void StasisSleepActors();
+
+	// [Call on Server]
+	// Awakens all IStasisObject actors in this platform's control zone out of stasis
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		void StasisWakeActors();
 
 };
