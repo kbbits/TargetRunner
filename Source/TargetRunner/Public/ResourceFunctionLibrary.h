@@ -22,6 +22,11 @@ class TARGETRUNNER_API UResourceFunctionLibrary : public UBlueprintFunctionLibra
 		
 public:
 
+	// Does the FResourceType represent a valid resource?.
+	//   i.e. a valid Code, Category and Type
+	UFUNCTION(BlueprintPure, Category = "Resource Functions")
+		static bool IsResourceTypeValid(const FResourceType& ResourceType);
+
 	// Determines how well the ResourceRateFilter matches the ResourceType
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static ETRResourceMatch ResourceFilterMatch(const FResourceType& ResourceType, const FResourceRateFilter& ResourceFilter);

@@ -44,6 +44,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSoftObjectPtr<UNiagaraSystem> DeathParticleSystem;
 
+	// Can be set to a valid ResourceType. If so, damage dealt to this actor by sources that implement DoesDamageByType (i.e. all player weapons)
+	// will have damage dealt accordingly.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FResourceType TakesDamageAs;
+
 	// Resources that will be extracted when the character's health reaches 0.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", TitleProperty = "ResourceType"))
 		TArray<FResourceQuantity> ResourcesOnDestroy;
@@ -108,8 +113,7 @@ public:
 	// Returns true if any resources were calculated to be extracted.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		bool GetExtractedResourcesOnDestroy(const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
-	//virtual bool ExtractedResourcesOnDestroy_Implementation(const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
-
+	
 	// IExtractableResource interface functions
 
 	// Gets the current quanties of resources available in this entity.

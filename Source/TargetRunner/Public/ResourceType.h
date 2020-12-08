@@ -108,5 +108,5 @@ public:
 	}
 
 public:
-	FORCEINLINE bool IsValid() { return !(Code == NAME_None || Category == NAME_None || Type == NAME_None); }
+	FORCEINLINE bool IsValid() const { return !(Code == NAME_None || Category == NAME_None || Type == NAME_None); }
 };

@@ -4,6 +4,7 @@
 #include "GridForgeBase.h"
 #include "RoomTemplate.h"
 #include "TrEnums.h"
+#include "TRMath.h"
 #include "..\Public\GridForgeBase.h"
 
 UGridForgeBase::UGridForgeBase()
@@ -344,7 +345,7 @@ void UGridForgeBase::TranslateCellToRoom(UPARAM(ref)FRandomStream& RandStream, U
 			// Determine wall state
 			// North	
 			TmpRoom = GetRoomNeighbor(RoomGridTemplate, RoomCoords, ETRDirection::North);
-			bConnected = Cell->ConnectedCells.Contains(RoomCoords + DirectionToOffset(ETRDirection::North));
+			bConnected = Cell->ConnectedCells.Contains(RoomCoords + UTRMath::DirectionToOffset(ETRDirection::North));
 			NeighborWallState = ETRWallState::Empty;
 			if (TmpRoom != nullptr) { NeighborWallState = TmpRoom->SouthWall; }
 			else { DebugLog(TEXT("No north neighbor found.")); }
@@ -698,7 +699,7 @@ bool UGridForgeBase::GetBlockingCellGroupNumber(const FVector2D& Coords, TMap<ET
 		}
 	}
 	// Can't join two or more different groups that are already anchored.
-	// TODO: Add special cases where we can join two anchored groups. ex: if the two groups are orthogonnally opposite of each other and other orthogonal neighbor is a wall. (rectangle grids only)
+	// TODO: Add special cases where we can join two anchored groups. ex: if the two groups are orthogonnally opposite of each other and third orthogonal neighbor is a wall. (rectangle grids only)
 	if (AnchoredCount > 1) { return false;	}
 	if (UseGroupNumber > 0)
 	{
@@ -780,7 +781,7 @@ bool UGridForgeBase::AllGroupCellsAdjacent(const FVector2D& Coords, const TMap<E
 		
 		// Orthogonal neighbors block each other if not open. Handle this here.
 		// If the current neighbor we are checking is orthognoal and the previous orthogonal neighbor is 
-		// blocking (i.e. group > 0), then we need to compare agains the previous orthogonal instead of the previous diagonal.
+		// blocking (i.e. group > 0), then we need to compare against the previous orthogonal instead of the previous diagonal.
 		if (bIsOrthogonal && LastOrthogonalGroup != 0)
 		{
 			CurrentGroup = LastOrthogonalGroup;
@@ -877,7 +878,7 @@ UGridTemplateCell* UGridForgeBase::GetOrCreateCell(const FVector2D& Coords)
 UGridTemplateCell* UGridForgeBase::GetOrCreateCellNeighbor(const int32 X, const int32 Y, const ETRDirection Direction)
 {
 	UGridTemplateCell* Cell = nullptr;
-	Cell = GetOrCreateCell(FVector2D(X, Y) + DirectionToOffset(Direction));
+	Cell = GetOrCreateCell(FVector2D(X, Y) + UTRMath::DirectionToOffset(Direction));
 	return Cell;
 }
 
@@ -1196,32 +1197,6 @@ const bool UGridForgeBase::IsInGrid(const FVector2D& Coords)
 	if (X < WorkingRoomGridTemplate->GridExtentMinX || X > WorkingRoomGridTemplate->GridExtentMaxX) { return false; }
 	if (Y < WorkingRoomGridTemplate->GridExtentMinY || Y > WorkingRoomGridTemplate->GridExtentMaxY) { return false; }
 	return true;
-}
-
-
-const FVector2D UGridForgeBase::DirectionToOffset(const ETRDirection Direction)
-{
-	switch (Direction)
-	{
-	case ETRDirection::North :
-		return FVector2D(1, 0);
-	case ETRDirection::NorthEast :
-		return FVector2D(1, 1);
-	case ETRDirection::East :
-		return FVector2D(0, 1);
-	case ETRDirection::SouthEast :
-		return FVector2D(-1, 1);
-	case ETRDirection::South :
-		return FVector2D(-1, 0);
-	case ETRDirection::SouthWest:
-		return FVector2D(-1, -1);
-	case ETRDirection::West:
-		return FVector2D(0, -1);
-	case ETRDirection::NorthWest:
-		return FVector2D(1, -1);
-	default:
-		return FVector2D(0, 0);
-	}
 }
 
 

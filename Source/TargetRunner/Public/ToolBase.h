@@ -82,12 +82,20 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		TSubclassOf<class AToolActorBase> ToolActorClass;
 
-	// Displayed to user
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	// The internal name (or code) for this tool.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		FName Name;
+
+	// Displayed to user. Could be edited by user as well.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FText DisplayName;
 
+	// Displayed to user. Not editable.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		FText Description;
+
 	// If this is false the weapon/tool cannot be fired/used by the player.
-	// Usually set to false for "passive only" tools that only have effects on equipping.
+	// Set to false for "passive only" tools that only have effects on equipping.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, SaveGame, Category = "Player Weapons")
 		bool bAllowsActivation;
 

@@ -120,12 +120,12 @@ bool ULevelForgeBase::GenerateGridExtents(const float DifficultyTier, FLevelTemp
 	TmpExtent = (int32)FMath::RoundHalfToZero(FMath::GetMappedRangeValueClamped(FVector2D(0, MAX_TIER), FVector2D(1, MAX_EXTENT_Y), DifficultyTier));
 	LevelTemplate.MinY = -TmpExtent;
 	LevelTemplate.MaxY = TmpExtent;
-	// Cance to adjust MaxX by +/- 1
+	// Chance to adjust MaxX by +/- 1
 	if (LevelStream.FRandRange(0.0f, 1.0f) < (0.5f * NormalizedDifficulty))
 	{
 		LevelTemplate.MaxX += FMath::Clamp<int32>(LevelStream.FRandRange(0.0f, 1.0f) >= 0.5f ? 1 : -1, 1, MAX_EXTENT_X);
 	}
-	// Cance to adjust MaxY by +/- 1
+	// Chance to adjust MaxY by +/- 1
 	if (LevelStream.FRandRange(0.0f, 1.0f) < (0.5f * NormalizedDifficulty))
 	{
 		LevelTemplate.MaxY += FMath::Clamp<int32>(LevelStream.FRandRange(0.0f, 1.0f) >= 0.5f ? 1 : -1, 1, MAX_EXTENT_Y);

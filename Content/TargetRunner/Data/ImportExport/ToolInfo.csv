@@ -1,0 +1,13 @@
+Key,SourceString
+"Normal.Name","Standard"
+"Normal.Description","Slow and steady, requires no ammunition. Always there if you need it."
+"Normal_2.Name","Standard II"
+"Normal_2.Description","A step up from the standard. Can take out tier 2 materials."
+"RockDrill_1.Description","Great for quickly removing stone, but not much else."
+"RockDrill_1.Name","Rock Drill"
+"AutoFire_1.Name","Burst Fire"
+"AutoFire_1.Description","Fires a burst of projectiles while the trigger is held."
+"Magnum_1.Name","Magnum I"
+"Magnum_1.Description","Fires heavy rounds at a high velocity. Slower rate of fire. Requires ammunition."
+"Bomb_1.Name","Charge Launcher"
+"Bomb_1.Description","Fires a heavy projectile which explodes after a short delay, dealing damage in a radius."

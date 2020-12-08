@@ -171,10 +171,7 @@ protected:
 
     UFUNCTION(BlueprintCallable)
         const bool IsInGrid(const FVector2D& Coords);
-
-    UFUNCTION(BlueprintCallable)
-        const FVector2D DirectionToOffset(const ETRDirection Direction);
-
+        
     // Each grid cell can also be identified by a number. The number of a given cell depends on the extents of the grid. 
     // Cells are numbered starting at GridExtentMinX, GridExtentMinY, proceeding along the +Y axis, then up the +X axis.
     // Resulting in cell 0 being at [GridExtentMinX, GridExtentMinY] and the highest cell number at [GridExtentMaxX, GridExtentMaxY].

@@ -2,7 +2,7 @@
 	"source": "UE",
 	"applications": [
 		{
-			"app_key": "application.generated.ue.target-runner-13942748.ue4editor.exe",
+			"app_key": "application.generated.ue.target-runner-14469661.ue4editor.exe",
 			"launch_type": "url",
 			"url": "steam://launch/",
 			"action_manifest_path": "E:/dev/unreal/TargetRunner 4.25/Config/SteamVRBindings/steamvr_manifest.json",
@@ -10,7 +10,7 @@
 			{
 				"en_us":
 				{
-					"name": "Target Runner-13942748 [UE Editor]"
+					"name": "Target Runner-14469661 [UE Editor]"
 				}
 			}
 		}

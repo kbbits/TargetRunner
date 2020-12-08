@@ -4,6 +4,12 @@
 #include "ResourceFunctionLibrary.h"
 #include "..\Public\ResourceFunctionLibrary.h"
 
+
+bool UResourceFunctionLibrary::IsResourceTypeValid(const FResourceType& ResourceType)
+{
+	return ResourceType.IsValid();
+}
+
 ETRResourceMatch UResourceFunctionLibrary::ResourceFilterMatch(const FResourceType& ResourceType, const FResourceRateFilter& ResourceFilter)
 {
 	/*if (!ResourceFilter.ResourceTypeFilter.Category.IsNone() && ResourceType.Category == ResourceFilter.ResourceTypeFilter.Category)
