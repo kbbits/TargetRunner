@@ -26,6 +26,12 @@ public:
 
 public:
 
+	// [Server only]
+	// Must be implemented by sublclasses.
+	// Current base class implementation returns nullptr.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		AActor* GetCurrentTarget();
+
 	// Implementation of IGenericTeamAgentInterface
 	ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;
 

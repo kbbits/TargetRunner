@@ -11,6 +11,12 @@ ATREnemyAIController::ATREnemyAIController()
 }
 
 
+AActor* ATREnemyAIController::GetCurrentTarget_Implementation()
+{
+    return nullptr;
+}
+
+
 ETeamAttitude::Type ATREnemyAIController::GetTeamAttitudeTowards(const AActor& Other) const
 {
     if (const APawn* OtherPawn = Cast<APawn>(&Other)) 

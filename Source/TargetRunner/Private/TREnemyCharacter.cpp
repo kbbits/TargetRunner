@@ -13,6 +13,7 @@ ATREnemyCharacter::ATREnemyCharacter()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	Level = 1;
 	HealthAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("HealthAttribute"));
 	AddOwnedComponent(HealthAttribute);
 	HealthAttribute->SetIsReplicated(true);
@@ -34,6 +35,7 @@ void ATREnemyCharacter::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& 
 void ATREnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	ScaleToLevel();
 	ResetAttributesToMax();
 	OnRep_StasisState(StasisState);
 }
@@ -44,6 +46,34 @@ void ATREnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	ATREnemyAIController* AI = GetTRAIController();
+	AActor* MyTarget = nullptr;
+	float Distance;
+
+	bTargetInRange = false;
+	if (AI)
+	{
+		MyTarget = AI->GetCurrentTarget();
+		if (MyTarget)
+		{
+			Distance = GetDistanceTo(MyTarget);
+			if (GetMinAttackRange() <= Distance && Distance <= GetMaxAttackRange())
+			{
+				bTargetInRange = true;
+			}
+		}
+		else
+		{
+			bAimOnTarget = false;
+		}
+	}
+}
+
+
+
+void ATREnemyCharacter::ScaleToLevel_Implementation()
+{
+	bScaleUpApplied = true;
 }
 
 
