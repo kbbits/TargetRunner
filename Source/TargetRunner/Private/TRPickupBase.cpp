@@ -41,8 +41,13 @@ void ATRPickupBase::GetResourceGoods_Implementation(TArray<FGoodsQuantity>& Coll
 {
 	if (!bCollected)
 	{
-		CollectedGoods.Empty(PickupGoods.Num());
-		CollectedGoods.Append(PickupGoods);
+		TArray<FGoodsQuantity> PickedUpGoods;
+		for (FPickupAwardsItem CurAward : PickupAwards.PickupItems)
+		{
+			PickedUpGoods.Append(CurAward.PickupGoods);
+		}
+		CollectedGoods.Empty(PickedUpGoods.Num());
+		CollectedGoods.Append(PickedUpGoods);
 	}
 	else
 	{
@@ -55,6 +60,27 @@ void ATRPickupBase::NotifyCollected_Implementation()
 	bCollected = true;
 	Destroy();
 }
+
+
+void ATRPickupBase::GetPickupAwards_Implementation(FPickupAwards& PickupsAwarded)
+{
+	if (!bCollected)
+	{
+		PickupsAwarded.PickupItems.Empty(PickupAwards.PickupItems.Num());
+		PickupsAwarded.PickupItems.Append(PickupAwards.PickupItems);
+	}
+	else
+	{
+		PickupsAwarded.PickupItems.Empty();
+	}
+}
+
+void ATRPickupBase::NotifyPickupCollected_Implementation()
+{
+	bCollected = true;
+	Destroy();
+}
+
 
 
 FText ATRPickupBase::GetItemDisplayName_Implementation()

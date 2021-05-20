@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Components/CapsuleComponent.h"
 #include "CollectsResources.h"
+#include "PickupAwards.h"
 #include "TR_Character.generated.h"
 
 UCLASS()
@@ -54,6 +55,10 @@ public:
 	// Collector overlap end function
 	UFUNCTION(BlueprintImplementableEvent)
 		void OnCollectorOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	// Handle collecting PickupAwards. Base class does nothing.
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Pickup Collecting")
+		void OnCollectedPickupAwards(const FPickupAwards PickupAwards);
 
 	void FellOutOfWorld(const class UDamageType& DmgType);
 

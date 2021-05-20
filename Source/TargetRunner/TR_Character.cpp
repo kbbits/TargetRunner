@@ -3,6 +3,7 @@
 
 #include "TR_Character.h"
 #include "CollectableResource.h"
+#include "CollectablePickup.h"
 #include "GoodsQuantity.h"
 #include "TargetRunner.h"
 
@@ -77,6 +78,7 @@ void ATR_Character::OnCollectorOverlapBegin_Implementation(UPrimitiveComponent* 
 {
 	//UE_LOG(LogTRGame, Log, TEXT("Collector overlapped (native): %s"), *OtherActor->GetName());
 	TArray<FGoodsQuantity> CollectedGoods;
+	FPickupAwards CollectedAwards;
 	if (OtherActor && OtherActor != this)
 	{
 		// Try to Execute on C++ layer:
@@ -88,16 +90,33 @@ void ATR_Character::OnCollectorOverlapBegin_Implementation(UPrimitiveComponent* 
 		}
 		else
 		{
-			// Else, Execute Interface on Blueprint layer instead:
-			if (OtherActor->GetClass()->ImplementsInterface(UCollectableResource::StaticClass()))
+			const auto& CollectablePickup = Cast<ICollectablePickup>(OtherActor);
+			if (CollectablePickup)
 			{
-				ICollectableResource::Execute_GetResourceGoods(OtherActor, CollectedGoods);
-				ICollectableResource::Execute_NotifyCollected(OtherActor);
+				CollectablePickup->Execute_GetPickupAwards(OtherActor, CollectedAwards);
+				CollectablePickup->Execute_NotifyPickupCollected(OtherActor);
+			}
+			else 
+			{
+				// Else, Execute Interface on Blueprint layer instead:
+				if (OtherActor->GetClass()->ImplementsInterface(UCollectableResource::StaticClass()))
+				{
+					ICollectableResource::Execute_GetResourceGoods(OtherActor, CollectedGoods);
+					ICollectableResource::Execute_NotifyCollected(OtherActor);
+				} else if (OtherActor->GetClass()->ImplementsInterface(UCollectablePickup::StaticClass()))
+				{
+					ICollectablePickup::Execute_GetPickupAwards(OtherActor, CollectedAwards);
+					ICollectablePickup::Execute_NotifyPickupCollected(OtherActor);
+				}
 			}
 		}
 		if (CollectedGoods.Num() > 0)
 		{
 			Cast<ICollectsResources>(this)->Execute_CollectResourceGoods(this, CollectedGoods);
+		}
+		if (CollectedAwards.PickupItems.Num() > 0)
+		{
+			OnCollectedPickupAwards(CollectedAwards);
 		}
 	}	
 }

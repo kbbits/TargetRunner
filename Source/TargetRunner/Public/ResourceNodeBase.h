@@ -98,6 +98,11 @@ public:
 		void ServerSetCurrentHealth(const float NewCurrentHealth);
 	virtual void ServerSetCurrentHealth_Implementation(const float NewCurrentHealth);
 
+	// Use this function to add or subtract to/from current health at runtime. Calls OnRep_CurrentHealth for server too.
+	UFUNCTION(Server, Reliable, BlueprintCallable)
+		void ServerDeltaCurrentHealth(const float CurrentHealthDelta);
+	virtual void ServerDeltaCurrentHealth_Implementation(const float NewCurrentHealth);
+
 	// Delegates
 
 	// Hit minimum value event

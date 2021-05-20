@@ -60,6 +60,18 @@ void AResourceNodeBase::ServerSetCurrentHealth_Implementation(const float NewCur
 	}	
 }
 
+
+void AResourceNodeBase::ServerDeltaCurrentHealth_Implementation(const float CurrentHealthDelta)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		CurrentHealth += CurrentHealthDelta;
+		// Replication will call this on clients. This is a direct call for server.
+		OnRep_CurrentHealth();
+	}
+}
+
+
 TArray<FResourceQuantity> AResourceNodeBase::GetResourceQuantities_Implementation()
 {
 	return UResourceFunctionLibrary::AddResourceQuantities(ResourcesByDamageCurrent, ResourcesOnDestroy);

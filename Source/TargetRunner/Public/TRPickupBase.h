@@ -6,11 +6,12 @@
 #include "GameFramework/Actor.h"
 #include "UnrealNetwork.h"
 #include "CollectableResource.h"
+#include "CollectablePickup.h"
 #include "InspectableItem.h"
 #include "TRPickupBase.generated.h"
 
 UCLASS()
-class TARGETRUNNER_API ATRPickupBase : public AActor, public ICollectableResource, public IInspectableItem
+class TARGETRUNNER_API ATRPickupBase : public AActor, public ICollectablePickup, public IInspectableItem
 {
 	GENERATED_BODY()
 	
@@ -18,7 +19,11 @@ public:
 	// Sets default values for this actor's properties
 	ATRPickupBase(const FObjectInitializer& OI);
 
-	// Goods collected from this pickup
+	// All goods, energy, etc. collected from this pickup.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+		FPickupAwards PickupAwards;
+
+	// DEPRECATED - Use PickupAwards instead. Goods collected from this pickup
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
 		TArray<FGoodsQuantity> PickupGoods;
 
@@ -54,6 +59,19 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")
 		void NotifyCollected();
 	virtual void NotifyCollected_Implementation();
+
+	// ICollectablePickup interface functions
+
+	// Get the PickupAwards to collect. Default implementation: if !bCollected it returns all PickupAwards otherwise returns empty set.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Pickup Collecting")
+		void GetPickupAwards(FPickupAwards& PickupsAwarded);
+	virtual void GetPickupAwards_Implementation(FPickupAwards& PickupsAwarded);
+
+	// Call this to notify this entity that it has been collected.
+	// Default implementation sets bCollected = true then destroys self.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Pickup Collecting")
+		void NotifyPickupCollected();
+	virtual void NotifyPickupCollected_Implementation();
 
 	// IInspectableItem interface functions
 
