@@ -28,13 +28,8 @@ void ALevelExitBase::Tick(float DeltaTime)
 
 }
 
-void ALevelExitBase::SetupDoors_Implementation()
+void ALevelExitBase::SetupNodes_Implementation()
 {
-	//TArray<UResourceNodeChildActorComponent*> DoorNodeComponents = GetComponents(UResourceNodeChildActorComponent::StaticClass());
-	//AResourceNodeBase* Node;
-	//for (UResourceNodeChildActorComponent* TmpComponent : DoorNodeComponents)
-	//{
-	//	
-	//}
+	
 }
 
