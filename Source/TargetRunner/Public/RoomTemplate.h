@@ -53,4 +53,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (TitleProperty = "ResourceType"))
 		TArray<FResourceQuantity> Resources;
 		
+	// The special actors in this room
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<TSubclassOf<AActor>> SpecialActors;
 };

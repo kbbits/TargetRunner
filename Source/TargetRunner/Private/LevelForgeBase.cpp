@@ -3,6 +3,7 @@
 #include "..\Public\LevelForgeBase.h"
 #include "TextRow.h"
 #include "TieredGoodsQuantityRange.h"
+#include "RoomSpecialActorsByTier.h"
 #include "ResourceFunctionLibrary.h"
 
 ULevelForgeBase::ULevelForgeBase(const FObjectInitializer& OI)
@@ -35,6 +36,8 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	if (!GenerateGridExtents(DifficultyTier, NewLevelTemplate)) { return; }
 	NewLevelTemplate.ResourcesAvailable.Empty();
 	if (!GenerateResourcesAvailable(DifficultyTier, NewLevelTemplate.ResourcesAvailable)) { return; }
+	NewLevelTemplate.SpecialsAvailable.Empty();
+	if (!GenerateSpecialsAvailable(DifficultyTier, NewLevelTemplate.SpecialsAvailable)) { return; }
 	NewLevelTemplate.AvailableTime = FMath::Clamp<float>((FMath::Pow(DifficultyTier, AvailableTimeScaleExp) * (BaseAvailableTime / 10.0f)) * 10.0f, BaseAvailableTime, 14400.0f);
 	if (DifficultyTier > 3)
 	{
@@ -185,6 +188,60 @@ bool ULevelForgeBase::GenerateResourcesAvailable(const float DifficultyTier, TAr
 	for (FResourceQuantity dbgQuantity : ResourcesAvailable)
 	{
 		DebugLog(FString::Printf(TEXT("    %s: %d"), *dbgQuantity.ResourceType.Code.ToString(), (int32)dbgQuantity.Quantity));
+	}
+	return true;
+}
+
+
+bool ULevelForgeBase::GenerateSpecialsAvailable(const float DifficultyTier, TArray<TSubclassOf<AActor>>& SpecialsAvailable)
+{
+	DebugLog(TEXT("GenerateSpecialsAvailable"));
+	FRoomSpecialActorsByTier* PickedRow;
+	PickedRow = RoomSpecialActorsDataTable->FindRow<FRoomSpecialActorsByTier>(FName(FString::FromInt(FMath::TruncToInt(DifficultyTier))), "", false);
+	if (PickedRow == nullptr) {
+		UE_LOG(LogTRGame, Error, TEXT("%s - GenerateSpecialsAvailable - RoomSpecialActorsDataTable does not contain RoomSpecialActorsByTier rows."), *this->GetName());
+		return false;
+	}
+
+	FSpecialActorChance Item;
+	float TotalWeight = 0.0f;
+	float AccumWeight = 0.0f;
+	float pick = 0.0f;
+
+	for (FSpecialActorsChanceSet CurChanceSet : PickedRow->SpecialActorChances)
+	{
+		DebugLog(FString::Printf(TEXT("    %3.0f pct chance for special"), CurChanceSet.ChanceToSpawn * 100.0f));
+		if (LevelStream.FRandRange(0.0f, 1.0f) <= CurChanceSet.ChanceToSpawn)
+		{
+			TotalWeight = 0.0f;
+			for (auto Itr(CurChanceSet.WeightedSpecialActorChances.CreateIterator()); Itr; Itr++)
+			{
+				TotalWeight += Itr->Weight;
+			}
+			for (int i = 1; i <= CurChanceSet.NumPicks; i++)
+			{
+				DebugLog(FString::Printf(TEXT("    picking %d"), i));
+				pick = LevelStream.FRandRange(0, TotalWeight);
+				AccumWeight = 0;
+				for (auto Itr(CurChanceSet.WeightedSpecialActorChances.CreateIterator()); Itr; Itr++)
+				{
+					if (pick <= (AccumWeight + Itr->Weight))
+					{
+						Item = CurChanceSet.WeightedSpecialActorChances[Itr.GetIndex()];
+						SpecialsAvailable.Append(Item.SpecialActorClasses);
+						break;
+					}
+					else {
+						AccumWeight += Itr->Weight;
+					}
+				}
+			}
+		}
+	}
+	DebugLog(FString::Printf(TEXT("GenerateSpecialsAvailable generated:")));
+	for (TSubclassOf<AActor> CurClass : SpecialsAvailable)
+	{
+		DebugLog(FString::Printf(TEXT("    %s"), *GetNameSafe(CurClass)));
 	}
 	return true;
 }

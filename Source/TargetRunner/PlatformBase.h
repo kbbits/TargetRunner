@@ -80,6 +80,7 @@ public:
 	// If overridden in blueprints, you should call the parent function at end because this destroys self.
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, CallInEditor)
 		void DestroyPlatform();
+	virtual void DestroyPlatformImpl();
 
 	// [Call on Server]
 	// Puts all IStasisObject actors in this platform's control zone into stasis

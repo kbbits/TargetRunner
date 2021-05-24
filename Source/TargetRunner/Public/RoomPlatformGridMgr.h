@@ -33,6 +33,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		TArray<FResourceQuantity> ResourcesToDistribute;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+		TArray<TSubclassOf<AActor>> SpecialsToDistribute;
 	
 	// This is set by the GameMode during InitGridManager
 	// Can be setup manually for use in-editor.

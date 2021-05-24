@@ -98,4 +98,69 @@ void UResourceDropperBase::DistributeResources(UPARAM(ref) FRandomStream& RandSt
 	DebugLog(FString::Printf(TEXT("DistributeResources Done.")));
 }
 
+
+void UResourceDropperBase::DistributeSpecials(UPARAM(ref) FRandomStream& RandStream, const TArray<TSubclassOf<AActor>>& SpecialActorClasses, FRoomGridTemplate& TemplateGrid)
+{
+	DebugLog(FString::Printf(TEXT("DistributeSpecials start.")));
+	TArray<FVector2D> EligibleCoords;
+	FRoomTemplate* TmpRoom = nullptr;
+	TArray<FRoomTemplate*> EligibleRooms;
+	int32 RoomIndex;
+	bool bFound;
+	URoomFunctionLibrary::GetAllRoomTemplateCoords(TemplateGrid, EligibleCoords, false);
+	// URoomFunctionLibrary::GetRoomTemplateGridAsArrays(TemplateGrid, EligibleCoords, EligibleRooms, false);
+	if (EligibleCoords.Num() == 0)
+	{
+		DebugLog(FString::Printf(TEXT("ResourceDropperBase::DistributeSpecials - No eligible rooms found.")));
+		return;
+	}
+	for (FVector2D TmpCoords : EligibleCoords)
+	{
+		if (TemplateGrid.Grid.Contains(TmpCoords.X))
+		{
+			TmpRoom = TemplateGrid.Grid[TmpCoords.X].RowRooms.Find(TmpCoords.Y);
+			if (TmpRoom != nullptr)
+			{
+				EligibleRooms.Add(TmpRoom);
+			}
+		}
+	}
+	
+	// Sort rooms from furthest-off-shortest path to closest, then by distance from start.
+	EligibleRooms.Sort([](const FRoomTemplate& A, const FRoomTemplate& B) {
+		if (A.DistanceToShortestPath == B.DistanceToShortestPath)
+		{
+			return A.DistanceToStart > B.DistanceToStart;
+		}
+		else 
+		{
+			return A.DistanceToShortestPath > B.DistanceToShortestPath;
+		}
+	});
+
+	for (FRoomTemplate* TmpTemplate : EligibleRooms)
+	{
+		DebugLog(FString::Printf(TEXT("    Eligible room dist to shortest path: %d"), TmpTemplate->DistanceToShortestPath));
+	}
+	DebugLog(FString::Printf(TEXT("    Distributing %d specials among %d eligible rooms."), SpecialActorClasses.Num(), EligibleRooms.Num()));
+
+	RoomIndex = 0;
+	for (TSubclassOf<AActor> CurSpecialActor : SpecialActorClasses)
+	{
+		bFound = false;
+		while (RoomIndex < EligibleRooms.Num() && !bFound)
+		{
+			FRoomTemplate* CurRoom = EligibleRooms[RoomIndex];
+			if (CurRoom && CurRoom->DistanceToStart != 0 && CurRoom->DistanceToEnd != 0) 
+			{
+				CurRoom->SpecialActors.Add(CurSpecialActor);
+				DebugLog(FString::Printf(TEXT("    Added special to room %d, %d"), (int32)EligibleCoords[RoomIndex].X, (int32)EligibleCoords[RoomIndex].Y));
+				bFound = true;
+			}
+			RoomIndex++;
+		}
+	}
+	DebugLog(FString::Printf(TEXT("DistributeSpecials Done.")));
+}
+
 /*================ Private functions ============================*/

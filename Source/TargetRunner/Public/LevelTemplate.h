@@ -91,6 +91,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (TitleProperty = "Name"))
 		TArray<FGoodsQuantity> OtherGoodsAvailable;
 
+	// Total list of special actors that will be distributed around the rooms.
+	// One instance per class.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TArray<TSubclassOf<AActor>> SpecialsAvailable;
+
 public:
 	FORCEINLINE bool IsValid() { return (!LevelId.IsNone() && LevelSeed != 0); }
 

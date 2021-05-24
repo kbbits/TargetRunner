@@ -120,6 +120,22 @@ FTransform APlatformGridMgr::GetGridCellWorldTransform(const FVector2D& GridCoor
 }
 
 
+FTransform APlatformGridMgr::GetGridCellSubGridWorldTransform(const FVector2D& GridCoords, const FVector2D& SubGridCoords)
+{
+	float CellSize = GridCellWorldSize;
+	float GridCellHalfSize = GridCellWorldSize / 2.0f;
+	float SubCellSize = GridCellWorldSize / RoomCellSubdivision;
+	float SubCellOffset = SubCellSize / 2.0f;
+	FVector CellLocation = GetActorLocation();
+	FVector GridCellLocation = FVector(GridCoords.X * GridCellWorldSize, GridCoords.Y * GridCellWorldSize, 0.0);
+	GridCellLocation.X = (((GridCoords.X * GridCellWorldSize) - GridCellHalfSize) + SubCellOffset) + (SubGridCoords.X * SubCellSize);
+	GridCellLocation.Y = (((GridCoords.Y * GridCellWorldSize) - GridCellHalfSize) + SubCellOffset) + (SubGridCoords.Y * SubCellSize);
+	GridCellLocation.Z = 0.0f;
+	CellLocation += GridCellLocation.RotateAngleAxis(GetActorRotation().Yaw, FVector(0.0, 0.0, 1.0));
+	return FTransform(GetActorRotation(), CellLocation, FVector(1.0, 1.0, 1.0));
+}
+
+
 void APlatformGridMgr::GenerateGrid_Implementation()
 {
 	// Destroy old grid, if any

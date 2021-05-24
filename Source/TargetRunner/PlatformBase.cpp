@@ -72,6 +72,13 @@ FVector2D APlatformBase::GetGridCoordinates()
 
 void APlatformBase::DestroyPlatform_Implementation()
 {
+	// call native virtual function.
+	DestroyPlatformImpl();
+}
+
+
+void APlatformBase::DestroyPlatformImpl()
+{
 	// Destroy actors in the PlatformActorCache
 	for (TPair<FName, AActor*> ActorElem : PlatformActorCache)
 	{

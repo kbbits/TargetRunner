@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "GameFramework/Actor.h"
 #include "TargetRunner.h"
 #include "ResourceQuantity.h"
 #include "RoomGridTemplate.h"
@@ -57,6 +58,11 @@ public:
     
     // Sublcasses override this to implement different logic for resource distriution.
     virtual void DistributeResources(UPARAM(ref) FRandomStream& RandStream, const TArray<FResourceQuantity>& TotalLevelResources, FRoomGridTemplate& TemplateGrid);
+
+    // This will distribute one instance of each actor sub-class across the grid.
+    // Default implementation distributes specials across the grid, attempting to place them off of the shortest start->finish path.
+    // Sublcasses override this to implement different logic for special actor distriution.
+    virtual void DistributeSpecials(UPARAM(ref) FRandomStream& RandStream, const TArray<TSubclassOf<AActor>>& SpecialActorClasses, FRoomGridTemplate& TemplateGrid);
 
 protected:
 

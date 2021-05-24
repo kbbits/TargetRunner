@@ -114,6 +114,7 @@ bool ATR_GameMode::InitGridManager_Implementation()
 		RoomGridManager->RoomClass = GetRoomClass();
 		RoomGridManager->ResourceDropperClass = GetResourceDropperClass();
 		RoomGridManager->ResourcesToDistribute = LevelTemplate.ResourcesAvailable;
+		RoomGridManager->SpecialsToDistribute = LevelTemplate.SpecialsAvailable;
 	}
 
 	UE_LOG(LogTRGame, Log, TEXT("TRGameMode::InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)

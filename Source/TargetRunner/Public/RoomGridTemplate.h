@@ -32,6 +32,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 RoomCellSubdivision;
 
+	// For walls with doors, this indicates whether doors will be placed a the center wall section of the room (true) or
+	// doors will be placed along any of the RoomCellSubdivision wall sections. Default = true.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		bool bDoorsAtWallCenter = true;
+
 	// Grid extents indicate the overall size of the grid. That is, the minimum and maxium valid grid coordinates.
 	// Min extents are negative, max extents are positive, origin is at 0,0.
 	// GridExtentMinX must be <= 0

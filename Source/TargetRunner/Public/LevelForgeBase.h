@@ -94,6 +94,11 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         UDataTable* ResourceDataTable;
 
+    // A DataTable of FRoomSpecialActorsByTier rows. One row per tier.
+    // Must be set before LevelForge can be used;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+        UDataTable* RoomSpecialActorsDataTable;
+
     // Until we get a table of thumbnails.
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
         TAssetPtr<UTexture2D> DefaultThumbnail;
@@ -127,6 +132,8 @@ protected:
     bool GenerateGridExtents(const float DifficultyTier, FLevelTemplate&);
 
     bool GenerateResourcesAvailable(const float DifficultyTier, TArray<FResourceQuantity>& ResourcesAvailable);
+
+    bool GenerateSpecialsAvailable(const float DifficultyTier, TArray<TSubclassOf<AActor>>& SpecialsAvailable);
         
     // Debug
     #if WITH_EDITOR

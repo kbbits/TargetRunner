@@ -114,6 +114,9 @@ public:
 	UFUNCTION(BlueprintPure)
 		FTransform GetGridCellWorldTransform(const FVector2D& GridCoords);
 
+	UFUNCTION(BlueprintPure)
+		FTransform GetGridCellSubGridWorldTransform(const FVector2D& GridCoords, const FVector2D& SubGridCoords);
+
 	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 		void GenerateGrid();
 
