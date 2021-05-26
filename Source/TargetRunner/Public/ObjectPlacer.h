@@ -16,6 +16,7 @@ enum class EObjectPlacerType : uint8
 	InBox	UMETA(DisplayName = "In Box")
 };
 
+
 UENUM(BlueprintType)
 enum class EObjectPlacerAlign : uint8
 {
@@ -23,6 +24,7 @@ enum class EObjectPlacerAlign : uint8
 	HorizontalOnly	UMETA(DisplayName = "Horizontal Only"),
 	VerticalOnly	UMETA(DisplayName = "Vertical Only")
 };
+
 
 UCLASS()
 class TARGETRUNNER_API AObjectPlacer : public AActor
@@ -47,7 +49,7 @@ public:
 		EObjectPlacerAlign PlacementAllowed;
 
 	// When using In Box targeting, this is box extents (the half-size of each dimention).
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPreserveRation="True"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPreserveRatio="True"))
 		FVector BoxExtent;
 
 	// When using In Cone targeting, this is the angle of the cone in Degrees
@@ -118,6 +120,7 @@ protected:
 		int32 PlacedObjects;
 
 #if WITH_EDITOR
+	// When used in-editor, we track actors we've placed so they can be destroyed when this instance is.
 	UPROPERTY(BlueprintReadOnly)
 		TArray<AActor*> PlacedObjectRefs;
 #endif
@@ -161,3 +164,20 @@ public:
 	UFUNCTION(BlueprintPure)
 		void GetTraceLocationsInBox(UPARAM(ref) FRandomStream& RandStream, FVector& StartLocation, FVector& EndLocation);
 };
+
+
+// For placing room resource nodes/clusters.
+UCLASS()
+class TARGETRUNNER_API AObjectPlacerResource : public AObjectPlacer
+{
+	GENERATED_BODY()
+};
+
+
+// For placing room special actors.
+UCLASS()
+class TARGETRUNNER_API AObjectPlacerSpecialActor : public AObjectPlacer
+{
+	GENERATED_BODY()
+};
+

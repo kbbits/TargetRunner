@@ -12,6 +12,10 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGenerateProgress, const FProgressItem, Progress);
 
+// Sub-grid of the platform is desribed by the GridManager's RoomCellSubdivision. The room is divided in a (RoomCellSubdivisions - 1) x (RoomCellSubdivisions - 1) sub-grid.
+// Sub-grid coords are 0 based. i.e. (0, 0) is first cell in the South West corner of room. (1, 0) is one sub-grid cell north of (0, 0).
+// and last cell ((RoomCellSubdivisions - 1), (RoomCellSubdivisions - 1)) is in the North East corner.
+// As with other grids, North is + X direction of the related GridManager.
 UCLASS()
 class TARGETRUNNER_API ARoomPlatformGridMgr : public APlatformGridMgr
 {

@@ -2,6 +2,7 @@
 
 
 #include "TR_Character.h"
+#include "TRPlayerControllerBase.h"
 #include "CollectableResource.h"
 #include "CollectablePickup.h"
 #include "GoodsQuantity.h"
@@ -79,6 +80,7 @@ void ATR_Character::OnCollectorOverlapBegin_Implementation(UPrimitiveComponent* 
 	//UE_LOG(LogTRGame, Log, TEXT("Collector overlapped (native): %s"), *OtherActor->GetName());
 	TArray<FGoodsQuantity> CollectedGoods;
 	FPickupAwards CollectedAwards;
+	ATRPlayerControllerBase* TRPlayerController = GetController<ATRPlayerControllerBase>();
 	if (OtherActor && OtherActor != this)
 	{
 		// Try to Execute on C++ layer:
@@ -94,7 +96,11 @@ void ATR_Character::OnCollectorOverlapBegin_Implementation(UPrimitiveComponent* 
 			if (CollectablePickup)
 			{
 				CollectablePickup->Execute_GetPickupAwards(OtherActor, CollectedAwards);
-				CollectablePickup->Execute_NotifyPickupCollected(OtherActor);
+				if (TRPlayerController && TRPlayerController->HasCapacityForAwards(CollectedAwards))
+				{
+					CollectablePickup->Execute_NotifyPickupCollected(OtherActor);
+				}
+				else { CollectedAwards.PickupItems.Empty(); }
 			}
 			else 
 			{
@@ -106,7 +112,11 @@ void ATR_Character::OnCollectorOverlapBegin_Implementation(UPrimitiveComponent* 
 				} else if (OtherActor->GetClass()->ImplementsInterface(UCollectablePickup::StaticClass()))
 				{
 					ICollectablePickup::Execute_GetPickupAwards(OtherActor, CollectedAwards);
-					ICollectablePickup::Execute_NotifyPickupCollected(OtherActor);
+					if (TRPlayerController && TRPlayerController->HasCapacityForAwards(CollectedAwards))
+					{
+						ICollectablePickup::Execute_NotifyPickupCollected(OtherActor);
+					}
+					else { CollectedAwards.PickupItems.Empty(); }
 				}
 			}
 		}

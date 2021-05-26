@@ -1,9 +1,11 @@
 
 #include "RoomPlatformBase.h"
-#include "..\PlatformGridMgr.h"
+#include "PlatformGridMgr.h"
+#include "ObjectPlacer.h"
 #include "TrEnums.h"
 #include "Math/Vector2D.h"
 #include "UnrealNetwork.h"
+// For intellisense:
 #include "..\Public\RoomPlatformBase.h"
 
 // Sets default values
@@ -22,7 +24,6 @@ void ARoomPlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& 
 
 	DOREPLIFETIME(ARoomPlatformBase, RoomTemplate);
 	DOREPLIFETIME(ARoomPlatformBase, WallTemplate);
-	DOREPLIFETIME(ARoomPlatformBase, FloorTemplate);
 }
 
 
@@ -50,11 +51,6 @@ void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
 void ARoomPlatformBase::DestroyPlatformImpl()
 {
 	Super::DestroyPlatformImpl();
-	for (AActor* CurSpecial : SpawnedSpecialActors)
-	{
-		CurSpecial->Destroy();
-	}
-	SpawnedSpecialActors.Empty();
 }
 
 void ARoomPlatformBase::GenerateRoom_Implementation()
@@ -155,7 +151,12 @@ bool ARoomPlatformBase::SpawnContents_Implementation()
 		{
 			return false;
 		}
-		return SpawnSpecials();
+		if (!SpawnSpecials())
+		{
+			return false;
+		}
+		DestroySpecialPlacers();
+		return true;
 	}
 	else
 	{
@@ -173,61 +174,42 @@ bool ARoomPlatformBase::SpawnResources_Implementation()
 
 bool ARoomPlatformBase::SpawnSpecials_Implementation()
 {
-	GetGridManager();
-	if (!MyGridManager)
-	{
-		UE_LOG(LogTRGame, Error, TEXT("%s - SpawnSpecials found null grid manager."), *GetNameSafe(this));
-		return false;
-	}
-	if (MyGridManager->RoomCellSubdivision <= 0)
-	{
-		UE_LOG(LogTRGame, Error, TEXT("%s - SpawnSpecials RoomCellSubdivision is 0."), *GetNameSafe(this));
-		return false;
-	}
-
-	FTransform SpawnTransform;
-	TArray<int32> OpenIndexes;
-	int32 CurOpenIndex;
-	FIntPoint SubCellCoords;
-	int32 ArraySize = MyGridManager->RoomCellSubdivision * MyGridManager->RoomCellSubdivision;
-	FActorSpawnParameters SpawnParams;
+	// Don't need to do anything if there are no special actors to spawn.
+	if (RoomTemplate.SpecialActors.Num() == 0) { return true; }
+	
+	TArray<AActor*> Placers;
+	AObjectPlacer* Placer;
+	int32 Index;
+	bool bSuccess;
 	AActor* NewSpecialActor;
-	bool bHasHit;
-	FHitResult Hit;
-	FVector TraceStart;
-
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParams.Owner = this;
-
-	for (int32 i = 0; i < ArraySize; i++)
+	
+	// Find all the special actor object placers.
+	PlatformControlZone->GetOverlappingActors(Placers, AObjectPlacerSpecialActor::StaticClass());
+	if (Placers.Num() == 0)
 	{
-		if (FloorTemplate[i] == ETRFloorState::Open)
+		UE_LOG(LogTRGame, Warning, TEXT("%s - SpawnSpecials no placers found in room (%d, %d)"), *GetNameSafe(this), GridX, GridY);
+		return true;
+	}
+	// For each special actor to place, pick a placer and have it place one.
+	for (auto Itr(RoomTemplate.SpecialActors.CreateIterator()); Itr; Itr++)
+	{
+		if (Placers.Num() == 0) { break; }
+		Index = PlatformRandStream.RandRange(0, Placers.Num() - 1);
+		Placer = Cast<AObjectPlacerSpecialActor>(Placers[Index]);
+		if (Placer)
 		{
-			OpenIndexes.Add(i);
+			Placer->ClassToPlace = Itr->Get();
+			NewSpecialActor = Placer->PlaceOne(PlatformRandStream, this, bSuccess);
+			if (NewSpecialActor)
+			{
+				PlatformActorCache.Add(FName(FString::Printf(TEXT("SpecialActor_%d"), Itr.GetIndex())), NewSpecialActor);
+			}
 		}
-	}
-	if (OpenIndexes.Num() == 0)
-	{
-		UE_LOG(LogTRGame, Error, TEXT("%s - SpawnSpecials no open sub-grid cells found"), *GetNameSafe(this));
-		return false;
-	}
-	for (TSubclassOf<AActor> SpecialActorClass : RoomTemplate.SpecialActors)
-	{
-		CurOpenIndex = OpenIndexes[PlatformRandStream.RandRange(0, OpenIndexes.Num() - 1)];
-		SubCellCoords.Y = FMath::TruncToInt(CurOpenIndex / MyGridManager->RoomCellSubdivision);
-		SubCellCoords.X = CurOpenIndex % MyGridManager->RoomCellSubdivision;
-		SpawnTransform = MyGridManager->GetGridCellSubGridWorldTransform(GetGridCoordinates(), SubCellCoords);
-		SpawnTransform.SetRotation(FQuat::FindBetweenVectors(FVector(1.0f, 0.0f, 0.0f), FVector(1.0f, 0.0f, 0.0f).RotateAngleAxis(PlatformRandStream.RandRange(0, 3) * 90, FVector(0.0f, 0.0f, 1.0f))));
-
-		TraceStart = SpawnTransform.GetLocation() + FVector(0.0f, 0.0f, 10000.0f);
-		bHasHit = GetWorld()->SweepSingleByChannel(Hit, TraceStart, SpawnTransform.GetLocation(), FQuat::Identity, ECollisionChannel::ECC_Visibility, FCollisionShape::MakeBox(FVector(100, 100, 100)));
-		if (bHasHit)
+		else
 		{
-			SpawnTransform.SetLocation(FVector(SpawnTransform.GetLocation().X, SpawnTransform.GetLocation().Y, Hit.ImpactPoint.Z));
-		}		
-		NewSpecialActor = GetWorld()->SpawnActor<AActor>(SpecialActorClass, SpawnTransform, SpawnParams);
-
-		SpawnedSpecialActors.Add(NewSpecialActor);
+			UE_LOG(LogTRGame, Warning, TEXT("%s - SpawnSpecials no valid placer for %s in room (%d, %d)"), *GetNameSafe(this), *GetNameSafe(Itr->Get()), GridX, GridY);
+		}
+		Placers.RemoveAt(Index);
 	}
 	return true;
 }
@@ -261,42 +243,16 @@ ARoomPlatformBase* ARoomPlatformBase::GetConnectedNeighbor(const ETRDirection Di
 }
 
 
-ETRFloorState ARoomPlatformBase::GetSubGridFloorState(FIntPoint SubGridCoords)
+void ARoomPlatformBase::DestroySpecialPlacers()
 {
-	GetGridManager();
-	if (MyGridManager == nullptr)
+	TArray<AActor*> AllPlacers;
+	AObjectPlacerSpecialActor* Placer;
+	// Find all the special actor object placers.
+	PlatformControlZone->GetOverlappingActors(AllPlacers, AObjectPlacerSpecialActor::StaticClass());
+	for (AActor* PlacerActor : AllPlacers)
 	{
-		return ETRFloorState::Unknown;
+		Placer = Cast<AObjectPlacerSpecialActor>(PlacerActor);
+		if (Placer) { Placer->Destroy(); }
 	}
-	if (FloorTemplate.Num() < (SubGridCoords.X + 1) * (SubGridCoords.Y + 1))
-	{
-		return ETRFloorState::Unknown;
-	}
-	int32 Index = (SubGridCoords.Y * MyGridManager->RoomCellSubdivision) + SubGridCoords.X;
-	if (!FloorTemplate.IsValidIndex(Index))
-	{
-		return ETRFloorState::Unknown;
-	}
-	return FloorTemplate[Index];
 }
 
-
-ETRFloorState ARoomPlatformBase::SetSubGridFloorState(FIntPoint SubGridCoords, ETRFloorState NewState)
-{
-	ETRFloorState OldState;
-	int32 Index = (SubGridCoords.Y * MyGridManager->RoomCellSubdivision) + SubGridCoords.X;
-	GetGridManager();
-	if (MyGridManager == nullptr)
-	{
-		UE_LOG(LogTRGame, Error, TEXT("%s - SetSubGridFloorState found null grid manager"), *GetNameSafe(this));
-		return ETRFloorState::Unknown;
-	}
-	if (!FloorTemplate.IsValidIndex(Index))
-	{
-		UE_LOG(LogTRGame, Error, TEXT("%s - SetSubGridFloorState invalid index, %d"), *GetNameSafe(this), Index);
-		return ETRFloorState::Unknown;
-	}
-	OldState = FloorTemplate[Index];
-	FloorTemplate[Index] = NewState;
-	return OldState;
-}

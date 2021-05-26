@@ -75,6 +75,7 @@ void ATRPickupBase::GetPickupAwards_Implementation(FPickupAwards& PickupsAwarded
 	}
 }
 
+
 void ATRPickupBase::NotifyPickupCollected_Implementation()
 {
 	bCollected = true;
@@ -82,9 +83,29 @@ void ATRPickupBase::NotifyPickupCollected_Implementation()
 }
 
 
-
 FText ATRPickupBase::GetItemDisplayName_Implementation()
 {
+	if (PickupAwards.PickupItems.Num() > 0)
+	{
+		for (FPickupAwardsItem PickupItem : PickupAwards.PickupItems)
+		{
+			if (PickupItem.PickupGoods.Num() > 0)
+			{
+				return FText::FromString(PickupItem.PickupGoods[0].Name.ToString());
+			}
+		}
+		for (FPickupAwardsItem PickupItem : PickupAwards.PickupItems)
+		{
+			if (PickupItem.PickupEnergy > 0.0f)
+			{
+				return FText::FromString(FString::Printf(TEXT("%.0f Energy"), PickupItem.PickupEnergy));
+			}
+			if (PickupItem.PickupAnimus > 0.0f)
+			{
+				return FText::FromString(FString::Printf(TEXT("%.0f Animus"), PickupItem.PickupAnimus));
+			}
+		}
+	}
 	if (PickupGoods.Num() > 0)
 	{
 		return FText::FromString(PickupGoods[0].Name.ToString());
@@ -96,6 +117,13 @@ FInspectInfo ATRPickupBase::GetInspectInfo_Implementation()
 {
 	FInspectInfo Info;
 	Info.DisplayName = GetItemDisplayName();
+	for (FPickupAwardsItem AwardsItem : PickupAwards.PickupItems)
+	{
+		for (FGoodsQuantity Goods : AwardsItem.PickupGoods)
+		{
+			Info.DetailInfo.Add(FInspectInfoItem(FText::FromString(Goods.Name.ToString()), FText::FromString(FString::Printf(TEXT("%.0f"), Goods.Quantity))));
+		}
+	}
 	for (FGoodsQuantity Goods : PickupGoods)
 	{
 		Info.DetailInfo.Add(FInspectInfoItem(FText::FromString(Goods.Name.ToString()), FText::FromString(FString::Printf(TEXT("%.0f"), Goods.Quantity))));

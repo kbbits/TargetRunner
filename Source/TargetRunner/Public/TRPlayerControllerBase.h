@@ -149,6 +149,12 @@ public:
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void RemoveAttributeModifiers(const TArray<FAttributeModifier>& ModifiersToRemove);
 
+	// [Both]
+	// Does the player have capacity to collect the given awards?
+	// Base class just returns true.
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		bool HasCapacityForAwards(const FPickupAwards& PickupAwards);
+
 	// [Server]
 	// Call this to add a tool to player's inventory. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)

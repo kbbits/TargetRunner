@@ -16,9 +16,22 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 	bLevelTemplateReady = false;
 	GeneratorRandStream.Reset();
 	GridRandStream.Reset();
-	GoodsDropper = OI.CreateDefaultSubobject<UGoodsDropper>(this, TEXT("GoodsDropper"));
-	if (GoodsDropper != nullptr && IsValid(GoodsDropperTable)) { GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable); }
-	else { UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor Could not create GoodsDropper.")); }
+	GoodsDropper = CreateDefaultSubobject<UGoodsDropper>(TEXT("GoodsDropper"));
+	if (GoodsDropper != nullptr)
+	{
+		if (IsValid(GoodsDropperTable)) 
+		{ 
+			GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable); 
+		}
+		else 
+		{
+			UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor GoodsDropperTable was not valid."));
+		}
+	}
+	else 
+	{ 
+		UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor Could not create GoodsDropper.")); 
+	}
 }
 
 

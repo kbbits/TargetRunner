@@ -10,6 +10,7 @@
 #include "ResourceQuantity.h"
 #include "ResourceRateFilter.h"
 #include "ExtractableResource.h"
+#include "InspectableItem.h"
 #include "TargetRunner.h"
 #include "ResourceNodeBase.generated.h"
 
@@ -20,7 +21,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNodeDestroyed);
 
 // A harvestable resource. 
 UCLASS()
-class TARGETRUNNER_API AResourceNodeBase : public AActor, public IExtractableResource
+class TARGETRUNNER_API AResourceNodeBase : public AActor, public IExtractableResource, public IInspectableItem
 {
 	GENERATED_BODY()
 	
@@ -33,7 +34,7 @@ public:
 		float BaseHealth;
 
 	// The ResourceType of this node. This affects, for example, the damage done by sources that implement IDoesDamageByType interface.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, meta = (ExposeOnSpawn = "true"))
 		FResourceType NodeResourceType;
 
 	// Total resources that will be extracted as the node is damaged. 
@@ -122,5 +123,11 @@ public:
 	virtual float GetResourceQuantity_Implementation(const FResourceType ResourceType);
 
 	
-	
+	// IInspectableItem interface functions
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
+		FText GetItemDisplayName();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
+		FInspectInfo GetInspectInfo();
 };

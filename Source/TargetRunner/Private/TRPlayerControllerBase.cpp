@@ -157,6 +157,11 @@ bool ATRPlayerControllerBase::RemoveAttributeModifiers_Validate(const TArray<FAt
 }
 
 
+bool ATRPlayerControllerBase::HasCapacityForAwards_Implementation(const FPickupAwards& PickupAwards)
+{
+	return true;
+}
+
 void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(UToolBase* Tool)
 {
 	FToolData TmpToolData;

@@ -22,22 +22,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FTransform> WallSectionTransforms;
-
-	// Use the GetSubGridFloorState and SetSubGridFloorState functions.
-	// A flat array representing the (RoomCellSubdivisions - 1) x (RoomCellSubdivisions - 1) sub-grid within this room.
-	// Sub-grid coords are 0 based. i.e. (0, 0) is first cell in the South West corner of room
-	// and last cell in the North East corner.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
-		TArray<ETRFloorState> FloorTemplate;
-
+		
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_RoomTemplate)
 		FRoomTemplate RoomTemplate;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		bool bRoomTemplateSet;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-		TArray<AActor*> SpawnedSpecialActors;
 
 protected:
 	// Called when the game starts or when spawned
@@ -101,15 +91,11 @@ public:
 	UFUNCTION(BlueprintPure)
 		ARoomPlatformBase* GetConnectedNeighbor(const ETRDirection Direction);
 
-	// Get the state of the sub-grid floor at the sub-grid coords.
-	UFUNCTION(BlueprintPure)
-		ETRFloorState GetSubGridFloorState(FIntPoint SubGridCoords);
-
-	// Sets the floor state at the given sub-grid coords.
-	// Returns the previous floor state at that sub-grid coord.
-	UFUNCTION(BlueprintPure)
-		ETRFloorState SetSubGridFloorState(FIntPoint SubGridCoords, ETRFloorState NewState);
-
 	// Must include this in header since we are subclass of custom class?
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+protected:
+
+	// Helper to cleanup special actor ObjectPlacers.
+	void DestroySpecialPlacers();
 };

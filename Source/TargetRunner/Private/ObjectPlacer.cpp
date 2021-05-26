@@ -180,7 +180,7 @@ FTransform AObjectPlacer::GetPlaceTransform(FRandomStream& RandStream, bool& bFo
 			ECollisionChannel::ECC_Visibility,
 			TraceShape
 		);
-		// Don't allow hits to pile up. Try again if we hit actor of type we are placing.
+		// Don't allow placed actors to pile up. Try again if we hit actor of type we are placing.
 		if (bHitSomething && Hit.Actor->GetClass()->IsChildOf(ClassToPlace)) { bHitSomething = false; }
 		if (bHitSomething)
 		{

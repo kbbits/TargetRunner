@@ -64,6 +64,7 @@ public:
 		TMap<FName, TSubclassOf<AToolActorBase>> ToolClassMap;
 
 	// The GoodsDropper instance for this game mode.
+	// Currently only used in older platform based game mode.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UGoodsDropper* GoodsDropper;
 

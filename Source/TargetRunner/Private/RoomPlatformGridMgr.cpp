@@ -360,13 +360,6 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 				}
 			}
 		}
-		int32 FloorStateArraySize = (RoomCellSubdivision * RoomCellSubdivision);
-		// Initialize the floor state array values.
-		for (int32 i = 0; i < FloorStateArraySize; i++)
-		{
-			// Default the state to open.
-			NewRoom->FloorTemplate.Add(ETRFloorState::Open);
-		}
 		AddPlatformToGridMap(NewRoom);
 		NewRoom->GenerateRoom();
 	}

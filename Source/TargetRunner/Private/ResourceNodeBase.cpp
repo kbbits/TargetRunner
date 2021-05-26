@@ -36,6 +36,7 @@ void AResourceNodeBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& 
 
 	DOREPLIFETIME(AResourceNodeBase, CurrentHealth);
 	DOREPLIFETIME(AResourceNodeBase, ResourcesByDamageCurrent);
+	DOREPLIFETIME(AResourceNodeBase, NodeResourceType);
 }
 
 void AResourceNodeBase::OnRep_CurrentHealth_Implementation()
@@ -166,4 +167,31 @@ bool AResourceNodeBase::ExtractedResourcesOnDestroy_Implementation(const TArray<
 		}
 	}
 	return ExtractedQuantities.Num() > 0;
+}
+
+
+FText AResourceNodeBase::GetItemDisplayName_Implementation()
+{
+	if (ResourcesOnDestroy.Num() == 0 && ResourcesByDamage.Num() == 0) { return FText(); }
+	if (ResourcesOnDestroy.Num() > 0)
+	{
+		return FText::FromString(UResourceFunctionLibrary::GoodsNameForResource(ResourcesOnDestroy[0].ResourceType).ToString());
+	}
+	if (ResourcesByDamage.Num() > 0)
+	{
+		return FText::FromString(UResourceFunctionLibrary::GoodsNameForResource(ResourcesByDamage[0].ResourceType).ToString());
+	}
+	return FText();
+}
+
+FInspectInfo AResourceNodeBase::GetInspectInfo_Implementation()
+{
+	FInspectInfo Info;
+	Info.DisplayName = GetItemDisplayName();
+	TArray<FResourceQuantity> TotalResources = GetResourceQuantities();
+	for (FResourceQuantity Resource : TotalResources)
+	{
+		Info.DetailInfo.Add(FInspectInfoItem(FText::FromString(UResourceFunctionLibrary::GoodsNameForResource(Resource.ResourceType).ToString()), FText::FromString(FString::Printf(TEXT("%.0f"), Resource.Quantity))));
+	}
+	return Info;
 }
