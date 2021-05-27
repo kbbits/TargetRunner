@@ -32,6 +32,6 @@ public:
 
 	// Gets the current quanty of a resource with the given type available in this entity.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extractable Resource")
-		float GetResourceQuantity(const FResourceType ResourceType);
+		float GetResourceQuantity(const FResourceType& ResourceType);
 			
 };

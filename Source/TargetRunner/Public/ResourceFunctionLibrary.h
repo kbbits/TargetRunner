@@ -27,6 +27,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static bool IsResourceTypeValid(const FResourceType& ResourceType);
 
+	// Does the array of FResourceQuantities have any resource with a quantity >= TestQuantity?
+	// Default value of TestQuantity = 0.0 checks if the array has any quantity > 0.
+	UFUNCTION(BlueprintPure, Category = "Resource Functions")
+		static bool ContainsAnyQuantity(const TArray<FResourceQuantity>& ResourceQuantities, const float TestQuantity = 0.0f);
+
+	// Gets the current quantity contained in ResourceQuantities of a given resource type.
+	UFUNCTION(BlueprintPure, Category = "Resource Functions")
+		static float GetResourceQuantity(const TArray<FResourceQuantity>& ResourceQuantities, const FResourceType OfThisType);
+
 	// Determines how well the ResourceRateFilter matches the ResourceType
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static ETRResourceMatch ResourceFilterMatch(const FResourceType& ResourceType, const FResourceRateFilter& ResourceFilter);
@@ -48,6 +57,14 @@ public:
 	// Adds two arrays of FResourceQuantites into a single summed array with one entry for each resource type
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static TArray<FResourceQuantity> AddResourceQuantities(const TArray<FResourceQuantity>& QuantitiesOne, const TArray<FResourceQuantity>& QuantitiesTwo);
+
+	// Subtracts QuantitiesTwo from QuantitiesOne and returns the result in TotalResources.
+	// If bAllowUnderflow = true, then subtracted quantities that result in a negative quantity are allowed and the quantity will be clamped at 0 and function will return true.
+	// If bAllowUnderflow = false (Default), then any negative quantity result will be clamped at 0 and function will return false.
+	// bIncludeZeroTotals : if false (Default), any resulting quantities == 0 will be removed from the resulting TotalResources array. If true, a 0 quantity array entry will be included for these.
+	// Returns true if the subtraction was successfully performed.
+	UFUNCTION(BlueprintPure, Category = "Resource Functions")
+		static bool SubtractResourceQuantities(const TArray<FResourceQuantity>& QuantitiesOne, const TArray<FResourceQuantity>& QuantitiesTwo, TArray<FResourceQuantity>& TotalResources, const bool bAllowUnderflow = false, const bool bIncludeZeroTotals = false);
 
 	// Multiplies the Quantity of each FResourceQuantity in the array by the given multiplier.
 	// If bTruncate is true, the multplied quantities will be truncated to an integer value.

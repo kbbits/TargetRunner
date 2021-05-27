@@ -178,7 +178,7 @@ TArray<FResourceQuantity> ATREnemyCharacter::GetResourceQuantities_Implementatio
 	return ResourcesOnDestroy;
 }
 
-float ATREnemyCharacter::GetResourceQuantity_Implementation(const FResourceType ResourceType)
+float ATREnemyCharacter::GetResourceQuantity_Implementation(const FResourceType& ResourceType)
 {
 	float QuantityTotal = 0.0f;
 	//for (FResourceQuantity CurQuantity : ResourcesByDamage)

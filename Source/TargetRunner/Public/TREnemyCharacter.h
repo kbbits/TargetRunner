@@ -159,7 +159,7 @@ public:
 	virtual TArray<FResourceQuantity> GetResourceQuantities_Implementation();
 
 	// Gets the current quanty of a specific resource type available in this entity.
-	virtual float GetResourceQuantity_Implementation(const FResourceType ResourceType);
+	virtual float GetResourceQuantity_Implementation(const FResourceType& ResourceType);
 
 	// IStasisObject interface functions
 

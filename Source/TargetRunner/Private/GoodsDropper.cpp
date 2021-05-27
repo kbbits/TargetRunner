@@ -58,10 +58,15 @@ void UGoodsDropper::SeedRandomStream(const int32 NewSeed)
 TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTable(const FGoodsDropTable& GoodsTable, const float QuantityScale)
 {
 	TArray<FGoodsQuantity> AllGoods;
+	int32 TotalPicks;
 
 	if (GoodsTable.bAsWeightedList)
 	{
-		AllGoods.Append(EvaluateGoodsDropChanceWeighted(GoodsTable.GoodsOddsList, QuantityScale));
+		TotalPicks = RandStream.RandRange(GoodsTable.MinWeightedPicks, GoodsTable.MaxWeightedPicks);
+		for (int i = 1; i <= TotalPicks; i++)
+		{
+			AllGoods.Append(EvaluateGoodsDropChanceWeighted(GoodsTable.GoodsOddsList, QuantityScale));
+		}
 	}
 	else
 	{
@@ -74,7 +79,6 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTable(const FGoodsDropTab
 			}
 		}
 	}
-
 	return AllGoods;
 }
 
@@ -82,6 +86,7 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTableByName(const FName &
 {
 	TArray<FGoodsQuantity> AllGoods;
 	const FGoodsDropTable* FoundDropTable = FindDropTableInLibrary(DropTableName);
+
 	if (FoundDropTable != nullptr)
 	{
 		AllGoods = EvaluateGoodsDropTable(*FoundDropTable, QuantityScale);
@@ -107,7 +112,6 @@ const FGoodsDropTable* UGoodsDropper::FindDropTableInLibrary(const FName DropTab
 		// If we found the table, stop looking through library
 		if (FoundDropTable != nullptr) { break; }
 	}
-
 	return FoundDropTable;
 }
 
@@ -124,10 +128,10 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChanceWeighted(const TArr
 	{
 		TotalWeight += DropChance.Chance;
 	}
-
 	Pick = RandStream.FRandRange(0.0f, TotalWeight);
 	for (const FGoodsDropChance& DropChance : DropChances)
 	{
+		if (DropChance.Chance <= 0.0f) { continue; }
 		AccumWeight += DropChance.Chance;
 		if (Pick <= AccumWeight)
 		{
@@ -135,7 +139,6 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChanceWeighted(const TArr
 			break;
 		}
 	}
-
 	return AllGoods;
 }
 
@@ -144,7 +147,7 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChanceWeighted(const TArr
 TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChancePercent(const FGoodsDropChance& DropChance, const float QuantityScale)
 {
 	TArray<FGoodsQuantity> AllGoods;
-	
+	if (DropChance.Chance <= 0.0f) { return AllGoods; }
 	// Determine if this drop chance evaluates to a successful drop
 	if (RandStream.FRandRange(0.0f, 1.0f) <= DropChance.Chance)
 	{

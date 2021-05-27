@@ -37,7 +37,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, meta = (ExposeOnSpawn = "true"))
 		FResourceType NodeResourceType;
 
-	// Total resources that will be extracted as the node is damaged. 
+	// The total resources contained in the node.
+	// = ResourcesByDamage + ResourcesOnDestroy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_TotalResources, meta = (TitleProperty = "ResourceType"))
+		TArray<FResourceQuantity> TotalResources;
+
+	// If this is >= 0, then ResourcesByDamage and ResourcesOnDestroy will be calculated from TotalResources.
+	// This is usually set by calling SetResources().  Kept here so we can refer to it later.
+	// The percent (expressed 0.0 - 1.0) of TotalResources that will be allocated to ResourcesByDamge.
+	// The remaining resources will be allocated to ResourcesOnDestroy.
+	// Default = 0.0f ==  All resources allocated to ResourcesOnDestroy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float ResourcesOnDamageSplit;
+
+	// Resources that will be extracted as the node is damaged. 
 	// Amount extracted during each damage event is proportional to damage dealt as percent of node base health.
 	// ex: if a damage event does damage equal to 20% of the node's base health then 20% of the node's ResourcesByDamage will be extracted.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", TitleProperty = "ResourceType"))
@@ -50,6 +63,15 @@ public:
 	// Resources that will be extracted when the node's health reaches 0.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true", TitleProperty = "ResourceType"))
 		TArray<FResourceQuantity> ResourcesOnDestroy;
+
+	// Sound when this node is hit with damage but not destroyed.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundBase* HitSound;
+
+	// Sound when this node is destroyed by damage.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundBase* DestroyedSound;
+
 
 protected:
 	// Root scene for the node
@@ -68,39 +90,47 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Set (or initialize) the resource type and total resources for this node. Will also calculate and assign the resources by damage and resources on destroy.
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		void SetResources(const FResourceType& NewNodeResourceType, const TArray<FResourceQuantity>& NewTotalResources, const float PercentResourcesByDamage);
+
 	// Calculates the amount of resources that should be extracted for a given amount of damage and extraction rates.
 	// Makes no changes to current resource quantities.
 	// Returns true if any resources were calculated to be extracted.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		bool ExtractedResourcesForDamage(const float Damage, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
 	virtual bool ExtractedResourcesForDamage_Implementation(const float Damage, const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
 
-	// Reduces the current values in ResourcesForDamageCurrent.
-	UFUNCTION(Server, Reliable, BlueprintCallable)
-		void ServerExtractResources(const TArray<FResourceQuantity>& ExtractQuantities);
-	virtual void ServerExtractResources_Implementation(const TArray<FResourceQuantity>& ExtractQuantities);
-
 	// Calculates the amount of resources that should be extracted upon destruction with the given extraction rates.
 	// Returns true if any resources were calculated to be extracted.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		bool ExtractedResourcesOnDestroy(const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
 	virtual bool ExtractedResourcesOnDestroy_Implementation(const TArray<FResourceRateFilter>& ExtractionRates, TArray<FResourceQuantity>& ExtractedQuantities);
 
+	// Reduces the current values in ResourcesForDamageCurrent.
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
+		void ServerExtractResources(const TArray<FResourceQuantity>& ExtractQuantities);
+	virtual void ServerExtractResources_Implementation(const TArray<FResourceQuantity>& ExtractQuantities);
+
+
 	// Replication notification
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void OnRep_CurrentHealth();
 	void OnRep_CurrentHealth_Implementation();
+
+	UFUNCTION()
+		virtual void OnRep_TotalResources();
 
 	UFUNCTION()
 		virtual void OnRep_ResourcesByDamageCurrent();
 
 	// Use this function to set current health at runtime. Calls OnRep_CurrentHealth for server too.
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 		void ServerSetCurrentHealth(const float NewCurrentHealth);
 	virtual void ServerSetCurrentHealth_Implementation(const float NewCurrentHealth);
 
 	// Use this function to add or subtract to/from current health at runtime. Calls OnRep_CurrentHealth for server too.
-	UFUNCTION(Server, Reliable, BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 		void ServerDeltaCurrentHealth(const float CurrentHealthDelta);
 	virtual void ServerDeltaCurrentHealth_Implementation(const float NewCurrentHealth);
 
@@ -113,21 +143,21 @@ public:
 	// IExtractableResource interface functions
 
 	// Gets the current quanties of resources available in this entity.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extractable Resource")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Extractable Resource")
 		TArray<FResourceQuantity> GetResourceQuantities();
 	virtual TArray<FResourceQuantity> GetResourceQuantities_Implementation();
 
 	// Gets the current quanty of a resource available in this entity.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Extractable Resource")
-		float GetResourceQuantity(const FResourceType ResourceType);
-	virtual float GetResourceQuantity_Implementation(const FResourceType ResourceType);
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Extractable Resource")
+		float GetResourceQuantity(const FResourceType& ResourceType);
+	virtual float GetResourceQuantity_Implementation(const FResourceType& ResourceType);
 
 	
 	// IInspectableItem interface functions
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Inspectable Item")
 		FText GetItemDisplayName();
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Inspectable Item")
 		FInspectInfo GetInspectInfo();
 };

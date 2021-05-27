@@ -10,6 +10,38 @@ bool UResourceFunctionLibrary::IsResourceTypeValid(const FResourceType& Resource
 	return ResourceType.IsValid();
 }
 
+
+bool UResourceFunctionLibrary::ContainsAnyQuantity(const TArray<FResourceQuantity>& ResourceQuantities, const float TestQuantity)
+{
+	if (TestQuantity <= 0.0f)
+	{
+		for (FResourceQuantity TmpQuantity : ResourceQuantities)
+		{
+			if (TmpQuantity.Quantity > 0.0f) { return true; }
+		}
+	}
+	else
+	{
+		for (FResourceQuantity TmpQuantity : ResourceQuantities)
+		{
+			if (TmpQuantity.Quantity >= TestQuantity) { return true; }
+		}
+	}
+	return false;
+}
+
+
+float UResourceFunctionLibrary::GetResourceQuantity(const TArray<FResourceQuantity>& ResourceQuantities, const FResourceType OfThisType)
+{
+	float QuantityTotal = 0.0f;
+	for (FResourceQuantity CurQuantity : ResourceQuantities)
+	{
+		if (CurQuantity.ResourceType == OfThisType) { QuantityTotal += CurQuantity.Quantity; }
+	}
+	return QuantityTotal;
+}
+
+
 ETRResourceMatch UResourceFunctionLibrary::ResourceFilterMatch(const FResourceType& ResourceType, const FResourceRateFilter& ResourceFilter)
 {
 	/*if (!ResourceFilter.ResourceTypeFilter.Category.IsNone() && ResourceType.Category == ResourceFilter.ResourceTypeFilter.Category)
@@ -186,6 +218,70 @@ TArray<FResourceQuantity> UResourceFunctionLibrary::AddResourceQuantities(const 
 
 	return TotalResources;
 }
+
+
+bool UResourceFunctionLibrary::SubtractResourceQuantities(const TArray<FResourceQuantity>& QuantitiesOne, const TArray<FResourceQuantity>& QuantitiesTwo, TArray<FResourceQuantity>& TotalResources, const bool bAllowUnderflow, const bool bIncludeZeroTotals)
+{
+	bool bFound = false;
+	bool bHasNegative = false;
+	float NewQuantity;
+	TArray<FResourceQuantity> TmpTotalResources = QuantitiesOne;
+	if (QuantitiesTwo.Num() == 0 || (bAllowUnderflow && QuantitiesOne.Num() == 0))
+	{
+		return true;
+	}
+	// Subtract each entry in QuantitiesTwo 
+	for (FResourceQuantity TmpQuantity : QuantitiesTwo)
+	{
+		bFound = false;
+		for (int32 i = 0; !bFound && i < TmpTotalResources.Num(); i++)
+		{
+			// If it exists in our totals, do the subtraction
+			if (TmpQuantity.ResourceType == TmpTotalResources[i].ResourceType)
+			{
+				NewQuantity = TmpTotalResources[i].Quantity - TmpQuantity.Quantity;
+				if (NewQuantity < 0.0f)
+				{
+					TmpTotalResources[i].Quantity = 0.0f;
+					bHasNegative = true;
+				}
+				else
+				{
+					TmpTotalResources[i].Quantity = NewQuantity;
+				}
+				bFound = true;
+			}
+		}
+		if (!bFound)
+		{
+			bHasNegative = true;
+			if (bIncludeZeroTotals)
+			{
+				// Add an entry with a 0 quantity
+				TmpTotalResources.Add(FResourceQuantity(TmpQuantity.ResourceType, 0.0f));
+			}
+		}
+	}
+	TotalResources.Empty(TmpTotalResources.Num());
+	if (bIncludeZeroTotals)
+	{ 
+		TotalResources.Append(TmpTotalResources);
+	}
+	else
+	{
+		// Only include entries for non-zero quantities.
+		for (FResourceQuantity TotQuantity : TmpTotalResources)
+		{
+			if (TotQuantity.Quantity > 0.0f)
+			{
+				TotalResources.Add(TotQuantity);
+			}
+		}
+	}
+
+	return !bHasNegative || bAllowUnderflow;
+}
+
 
 void UResourceFunctionLibrary::MultiplyResourceQuantity(const TArray<FResourceQuantity>& Quantities, const float Multiplier, const bool bTruncate, TArray<FResourceQuantity>& MultipliedQuantities)
 {

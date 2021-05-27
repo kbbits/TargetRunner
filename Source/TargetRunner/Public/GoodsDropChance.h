@@ -13,6 +13,12 @@ struct FGoodsDropChance : public FTableRowBase
 	GENERATED_BODY()
 
 public:
+	FGoodsDropChance()
+		: Super()
+	{
+		Chance = 1.0f;
+	}
+
 	// See: GoodsDropTable.AsWeightedList for use.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float Chance;
