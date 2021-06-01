@@ -29,8 +29,8 @@ public:
 
 	/*
 	Determines how the list of GoodsDropChances will be evaluated.
-		False - Each item in the list will have a % chance to be evaluated during drop based on the Chance variable of the entry 0 to 1.
-		True - A number between MinWeightedPicks and MaxWeightedPicks of items in the list will be evaluated during drop. Each pick is determined by picking from the list where each entry is given a weight equal to it's Chance variable, > 0.
+		False - All items in the list will have a % chance to be evaluated during drop based on the Chance property of the entry 0.0-1.0.
+		True -  A number between MinWeightedPicks and MaxWeightedPicks of items in the list will be evaluated during drop. Each pick from the list is one GoodsDropChance, where each entry is given a weight equal to it's Chance variable, > 0.
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		bool bAsWeightedList;

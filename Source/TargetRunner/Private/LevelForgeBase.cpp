@@ -175,7 +175,11 @@ bool ULevelForgeBase::GenerateResourcesAvailable(const float DifficultyTier, TAr
 				{
 					TmpQuantity = TmpQuantity * HigherTierResourceQuantityMultiplier;
 				}
-				ResourcesAvailable.Add(FResourceQuantity(TmpResourceType, FMath::RoundHalfToZero(TmpQuantity)));
+				TmpQuantity = FMath::RoundHalfToZero(TmpQuantity);
+				if (TmpQuantity > 0.0f)
+				{
+					ResourcesAvailable.Add(FResourceQuantity(TmpResourceType, TmpQuantity));
+				}
 			}
 			else
 			{

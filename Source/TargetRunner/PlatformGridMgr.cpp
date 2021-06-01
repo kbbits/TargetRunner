@@ -153,8 +153,7 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 	else
 	{
 		DefaultGridRandStream.Reset();
-		UE_LOG(LogTRGame, Error, TEXT("%s PlatformGridManager::GenerateGrid - Could not get GameMode."), *GetNameSafe(this));
-		//return;
+		UE_LOG(LogTRGame, Warning, TEXT("%s PlatformGridManager::GenerateGrid - Could not get GameMode."), *GetNameSafe(this));
 	}
 
 	GenerateGridImpl();	
@@ -172,7 +171,7 @@ void APlatformGridMgr::DestroyGrid_Implementation()
 	DestroyGridImpl();
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		DebugLog(FString::Printf(TEXT("DestroyGrid destroying player starts:%d."), PlayerStarts.Num()));
+		DebugLog(FString::Printf(TEXT("DestroyGrid destroying spawned player starts: %d."), PlayerStarts.Num()));
 		// Destroy any player starts we spawned.
 		for (APlayerStart* tmpPlayerStart : PlayerStarts)
 		{

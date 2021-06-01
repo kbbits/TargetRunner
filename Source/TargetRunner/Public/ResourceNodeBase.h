@@ -43,7 +43,7 @@ public:
 		TArray<FResourceQuantity> TotalResources;
 
 	// If this is >= 0, then ResourcesByDamage and ResourcesOnDestroy will be calculated from TotalResources.
-	// This is usually set by calling SetResources().  Kept here so we can refer to it later.
+	// This is usually set by calling SetResources(). Kept here so we can refer to it later.
 	// The percent (expressed 0.0 - 1.0) of TotalResources that will be allocated to ResourcesByDamge.
 	// The remaining resources will be allocated to ResourcesOnDestroy.
 	// Default = 0.0f ==  All resources allocated to ResourcesOnDestroy
@@ -136,7 +136,7 @@ public:
 
 	// Delegates
 
-	// Hit minimum value event
+	// Hit minimum health value event
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnNodeDestroyed OnNodeDestroyed;
 

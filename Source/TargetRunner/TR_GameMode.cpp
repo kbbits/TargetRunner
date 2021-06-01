@@ -6,6 +6,7 @@
 #include "TRGameInstance.h"
 #include "RoomPlatformGridMgr.h"
 #include "ResourceDropperBase.h"
+#include "ResourceFunctionLibrary.h"
 #include "GridForgePrim.h"
 #include "GridForgeManual.h"
 
@@ -26,6 +27,14 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 		else 
 		{
 			UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor GoodsDropperTable was not valid."));
+		}
+		if (IsValid(ResourceDropTable))
+		{
+			GoodsDropper->AddDropTableDataToLibrary(ResourceDropTable);
+		}
+		else
+		{
+			UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor ResourceDropTable was not valid."));
 		}
 	}
 	else 
@@ -86,6 +95,7 @@ void ATR_GameMode::SetNewLevelTemplate(const FLevelTemplate& NewTemplate)
 	// Debug log
 	UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate %s ID: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
 	UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate seed: %d"), LevelTemplate.LevelSeed);
+	InitGoodsDropper();
 	ReseedAllStreams(LevelTemplate.LevelSeed);
 	bLevelTemplateReady = true;
 }
@@ -94,6 +104,121 @@ void ATR_GameMode::SetNewLevelTemplate(const FLevelTemplate& NewTemplate)
 FLevelTemplate ATR_GameMode::GetLevelTemplate()
 {
 	return LevelTemplate;
+}
+
+
+void ATR_GameMode::InitGoodsDropper_Implementation()
+{
+	if (GoodsDropper == nullptr)
+	{
+		GoodsDropper = NewObject<UGoodsDropper>(this, FName(TEXT("GoodsDropper")));
+	}
+	if (GoodsDropper)
+	{
+		if (IsValid(GoodsDropperTable))
+		{
+			GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable);
+		}
+		else
+		{
+			UE_LOG(LogTRGame, Error, TEXT("TRGameMode InitGoodsDropper GoodsDropperTable not valid."));
+		}
+		if (IsValid(ResourceDropTable))
+		{
+			GoodsDropper->AddDropTableDataToLibrary(ResourceDropTable);
+		}
+		else
+		{
+			UE_LOG(LogTRGame, Error, TEXT("TRGameMode InitGoodsDropper ResourceDropTable was not valid."));
+		}
+	}
+}
+
+
+void ATR_GameMode::GetClutterDropGoods(TArray<FGoodsQuantity>& DroppedGoods)
+{
+	// Clutter table names in format Clutter<level tier>. ex: Clutter01
+	FName DropTableName; 
+	if (bLevelTemplateReady)
+	{
+		DropTableName = FName(FString::Printf(TEXT("Clutter%02d"), static_cast<int32>(LevelTemplate.Tier)));
+	}
+	else
+	{
+		DropTableName = FName(TEXT("Clutter00"));
+	}
+	DroppedGoods.Empty();
+	if (GoodsDropper)
+	{
+		DroppedGoods.Append(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName));
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRGameMode GetClutterDropGoods - Null GoodsDropper."));
+	}
+}
+
+
+void ATR_GameMode::GetClutterDropResources(TArray<FResourceQuantity>& DroppedResources)
+{
+	// Clutter resource drop table names in format ClutterResources<level tier>. ex: ClutterResources01
+	FName DropTableName;
+	FResourceType TmpResourceType;
+	TArray<FGoodsQuantity> DroppedGoods;
+	DroppedResources.Empty();
+	if (bLevelTemplateReady)
+	{
+		DropTableName = FName(FString::Printf(TEXT("ClutterResources%02d"), static_cast<int32>(LevelTemplate.Tier)));
+	}
+	else
+	{
+		DropTableName = FName(TEXT("ClutterResources00"));
+	}	
+	if (GoodsDropper)
+	{
+		// Get resources by using goods droppper to drop resource code named goods.
+		DroppedGoods.Append(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName));
+		// Translate each of those goods to a resource quantity
+		for (FGoodsQuantity CurGoods : DroppedGoods)
+		{
+			if (CurGoods.Quantity > 0.0f)
+			{
+				UResourceFunctionLibrary::ResourceTypeForCode(CurGoods.Name, TmpResourceType);
+				if (TmpResourceType.IsValid())
+				{
+					DroppedResources.Add(FResourceQuantity(TmpResourceType, CurGoods.Quantity));
+				}
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRGameMode GetClutterDropGoods - Null GoodsDropper."));
+	}
+	/*FResourceTypeData TmpResourceTypeData;
+	ATR_GameState* TRGameState = GetGameState<ATR_GameState>();
+	FRandomStream& RandStream = GetResourceDropperStream();
+	if (bLevelTemplateReady && TRGameState)
+	{
+		for (int i = 0; i < LevelTemplate.ResourcesAvailable.Num(); i++)
+		{
+			FResourceQuantity LevelQuantity = LevelTemplate.ResourcesAvailable[i];
+			if(TRGameState->GetResourceTypeData(LevelQuantity.ResourceType, TmpResourceTypeData))
+			{
+				if (TmpResourceTypeData.Tier < LevelTemplate.Tier)
+				{
+					RandStream.FRandRange(LevelTemplate.Tier - TmpResourceTypeData.Tier, (LevelTemplate.Tier - TmpResourceTypeData.Tier) * LevelTemplate.Tier);
+				}
+				else if (TmpResourceTypeData.Tier == LevelTemplate.Tier)
+				{
+				}
+				else
+				{ // > LevelTier
+
+				}
+			}
+		}
+	} */
 }
 
 

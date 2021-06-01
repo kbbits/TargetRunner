@@ -71,6 +71,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* GoodsDropperTable;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UDataTable* ResourceDropTable;
+
 protected:
 
 	UPROPERTY(BlueprintReadOnly)
@@ -117,6 +120,23 @@ public:
 
 	UFUNCTION(BlueprintPure)
 		FLevelTemplate GetLevelTemplate();
+
+	// Creates the goods dropper if it does not exist. Then adds the GoodsDropTable data table to the GoodsDropper and applies all initial settings.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void InitGoodsDropper();
+
+	// Evaluates the drops for clutter shootables.
+	// Returns list of goods to drop. 
+	// GoodsDropTable names are in format: Clutter<level tier> ex: Clutter01 
+	UFUNCTION(BlueprintCallable)
+		void GetClutterDropGoods(TArray<FGoodsQuantity>& DroppedGoods);
+
+	// Evaluates the resource drops for clutter shootables.
+	// Returns list of resources to drop.
+	// Clutter resource drops are implemented through goods drop tables with the resource code as the goods name. And translated to resource quantities.
+	// Clutter resource drop table names are in the format: ClutterResources<level tier> ex: ClutterResources01
+	UFUNCTION(BlueprintCallable)
+		void GetClutterDropResources(TArray<FResourceQuantity>& DroppedResources);
 
 	// Sets the current grid manager and initializes it from the level template. i.e. sets up grid extents, cell size, etc.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

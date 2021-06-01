@@ -62,7 +62,9 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTable(const FGoodsDropTab
 
 	if (GoodsTable.bAsWeightedList)
 	{
+		// Make a number of picks
 		TotalPicks = RandStream.RandRange(GoodsTable.MinWeightedPicks, GoodsTable.MaxWeightedPicks);
+		// Each pick is one item from the weighted list of items.
 		for (int i = 1; i <= TotalPicks; i++)
 		{
 			AllGoods.Append(EvaluateGoodsDropChanceWeighted(GoodsTable.GoodsOddsList, QuantityScale));
@@ -126,8 +128,9 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChanceWeighted(const TArr
 
 	for (const FGoodsDropChance& DropChance : DropChances)
 	{
-		TotalWeight += DropChance.Chance;
+		TotalWeight += FMath::Abs<float>(DropChance.Chance);
 	}
+	if (TotalWeight <= 0.0f) { return AllGoods; }
 	Pick = RandStream.FRandRange(0.0f, TotalWeight);
 	for (const FGoodsDropChance& DropChance : DropChances)
 	{
@@ -163,8 +166,11 @@ TArray<FGoodsQuantity> UGoodsDropper::GoodsForDropChance(const FGoodsDropChance 
 	TArray<FGoodsQuantity> AllGoods;
 	FGoodsQuantity TmpGoods;
 
-	// Evaluate all GoodsQuantities and add them to our collection
-	AllGoods.Append(UGoodsFunctionLibrary::GoodsQuantitiesFromRanges(RandStream, DropChance.GoodsQuantities, QuantityScale));
+	if (DropChance.GoodsQuantities.Num() > 0)
+	{
+		// Evaluate all GoodsQuantities and add them to our collection
+		AllGoods.Append(UGoodsFunctionLibrary::GoodsQuantitiesFromRanges(RandStream, DropChance.GoodsQuantities, QuantityScale));
+	}
 	
 	// Evaluate any other GoodsDropTables and add them to our collection (if any)
 	for (const FName& DropTableName : DropChance.OtherGoodsDrops)
