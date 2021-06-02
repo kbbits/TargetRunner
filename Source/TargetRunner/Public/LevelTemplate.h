@@ -17,7 +17,15 @@ public:
 	FLevelTemplate()
 	{
 		LevelSeed = 0;
+		Tier = 1.f;
+		MinX = 0.f;
+		MaxX = 0.f;
+		MinY = 0.f;
+		MaxY = 0.f;
 		GridForgeType = FName(TEXT("Default"));
+		UnlockCost = 1.f;
+		AvailableTime = 300.f;
+		StartHourOfDay = 13.f;
 		Theme = FName(TEXT("Default"));
 	}
 

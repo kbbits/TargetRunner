@@ -67,13 +67,15 @@ public:
 protected:
 
     // Debug
-    #if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
         bool bEnableClassDebugLog = false;
+#endif
+#if WITH_EDITOR
     FORCEINLINE void DebugLog(const FString& LogString) { if (bEnableClassDebugLog) { UE_LOG(LogTRGame, Log, TEXT("%s"), *LogString); } };
-    #else
+#else
     FORCEINLINE void DebugLog(const FString& LogString) { };
-    #endif
+#endif
 
 
 };

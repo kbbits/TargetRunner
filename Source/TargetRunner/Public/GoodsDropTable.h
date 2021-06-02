@@ -19,6 +19,7 @@ public:
 	FGoodsDropTable()
 		: Super()
 	{
+		bAsWeightedList = false;
 		MinWeightedPicks = 1;
 		MaxWeightedPicks = 1;
 	}

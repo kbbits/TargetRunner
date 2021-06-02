@@ -11,50 +11,74 @@
 // Sets default values
 ATR_Character::ATR_Character(const FObjectInitializer& OI) : Super(OI)
 {
+	UE_LOG(LogTRGame, Log, TEXT("Constructing TR_Character"));
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	ResourceCollectionVolume = OI.CreateDefaultSubobject<UCapsuleComponent>(this, FName("Resource Collector"));
-	ResourceCollectionVolume->SetupAttachment(GetCollectorParentComponent());
-	ResourceCollectionVolume->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-	ResourceCollectionVolume->InitCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.5f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 1.2f);
-	ResourceCollectionVolume->SetCollisionProfileName(TEXT("PickupOverlap"));
-	ResourceCollectionVolume->OnComponentBeginOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapBegin);
-	ResourceCollectionVolume->OnComponentEndOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapEnd);
+	if (ResourceCollectionVolume)
+	{
+		ResourceCollectionVolume->SetupAttachment(GetRootComponent());
+		ResourceCollectionVolume->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+		ResourceCollectionVolume->InitCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.7f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 1.2f);
+		ResourceCollectionVolume->SetCollisionProfileName(TEXT("PickupOverlap"));
+		ResourceCollectionVolume->OnComponentBeginOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapBegin);
+		ResourceCollectionVolume->OnComponentEndOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapEnd);
+	}
+	else { UE_LOG(LogTRGame, Error, TEXT("TR_Character constructor failed to create ResourceCollectionVolume component")); }
+	UE_LOG(LogTRGame, Log, TEXT("TR_Character Constructed"));
 }
 
 void ATR_Character::PostInitProperties()
 {
 	Super::PostInitProperties();
+#if WITH_EDITOR
 	SetupCollectionVolume();
+#endif
 }
 
 #if WITH_EDITOR
 void ATR_Character::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {	
 	Super::PostEditChangeProperty(PropertyChangedEvent);
+	SetupCollectionVolume();
 }
 #endif
 
 void ATR_Character::SetupCollectionVolume_Implementation()
 {
-	if (ResourceCollectionVolume)
+	USceneComponent* CollectorParent = GetCollectorParentComponent();
+	if (IsValid(ResourceCollectionVolume))
 	{
-		if (ResourceCollectionVolume->GetAttachParent() != GetCollectorParentComponent())
+		if (!IsValid(CollectorParent))
+		{  
+			UE_LOG(LogTRGame, Error, TEXT("TR_Character SetupCollectionVolume: GetCollectorParentComponent is null."));
+			return;
+		}
+		if (ResourceCollectionVolume->GetAttachParent() != CollectorParent)
 		{
-			ResourceCollectionVolume->AttachToComponent(GetCollectorParentComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			ResourceCollectionVolume->AttachToComponent(CollectorParent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}
 		ResourceCollectionVolume->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-		ResourceCollectionVolume->SetCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.5f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 1.2f);
+		ResourceCollectionVolume->SetCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.7f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 1.2f);
 	}
 }
+
 
 // Called when the game starts or when spawned
 void ATR_Character::BeginPlay()
 {
+	UE_LOG(LogTRGame, Log, TEXT("TR_Character BeginPlay"));
 	Super::BeginPlay();
-	
+	SetupCollectionVolume();
 }
+
+
+USceneComponent* ATR_Character::GetCollectorParentComponent_Implementation()
+{
+	return GetRootComponent();
+}
+
 
 // Called every frame
 void ATR_Character::Tick(float DeltaTime)
@@ -63,6 +87,7 @@ void ATR_Character::Tick(float DeltaTime)
 
 }
 
+
 // Called to bind functionality to input
 void ATR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -70,10 +95,6 @@ void ATR_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 }
 
-USceneComponent* ATR_Character::GetCollectorParentComponent_Implementation()
-{
-	return GetRootComponent();
-}
 
 void ATR_Character::OnCollectorOverlapBegin_Implementation(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {

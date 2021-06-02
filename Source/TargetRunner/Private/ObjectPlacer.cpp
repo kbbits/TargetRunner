@@ -21,11 +21,14 @@ AObjectPlacer::AObjectPlacer()
 	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene"));
 	SetRootComponent(RootScene);
 	FacingArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("FacingArrow"));
-	FacingArrow->AttachToComponent(RootScene, FAttachmentTransformRules::KeepRelativeTransform);
+	//FacingArrow->AttachToComponent(RootScene, FAttachmentTransformRules::KeepRelativeTransform);
+	FacingArrow->SetupAttachment(RootScene);
 	ConeTarget = CreateDefaultSubobject<USphereComponent>(TEXT("ConeTarget"));
-	ConeTarget->AttachToComponent(FacingArrow, FAttachmentTransformRules::KeepRelativeTransform);
+	//ConeTarget->AttachToComponent(FacingArrow, FAttachmentTransformRules::KeepRelativeTransform);
+	ConeTarget->SetupAttachment(FacingArrow);
 	BoxTarget = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxTarget"));
-	BoxTarget->AttachToComponent(FacingArrow, FAttachmentTransformRules::KeepRelativeTransform);
+	//BoxTarget->AttachToComponent(FacingArrow, FAttachmentTransformRules::KeepRelativeTransform);
+	BoxTarget->SetupAttachment(FacingArrow);
 	UpdateComponents();
 }
 

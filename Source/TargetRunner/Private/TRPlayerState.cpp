@@ -10,19 +10,31 @@ ATRPlayerState::ATRPlayerState()
 	:Super()
 {
 	EnergyAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("EnergyAttribute"));
-	AddOwnedComponent(EnergyAttribute);
-	EnergyAttribute->SetIsReplicated(true); // Enable replication by default
-	EnergyAttribute->AttributeData.Name = FName(TEXT("Energy"));
+	if (EnergyAttribute)
+	{
+		AddOwnedComponent(EnergyAttribute);
+		EnergyAttribute->SetIsReplicated(true); // Enable replication by default
+		EnergyAttribute->AttributeData.Name = FName(TEXT("Energy"));
+	}
+	else { UE_LOG(LogTRGame, Error, TEXT("TRPlayerState constructor failed to create EnergyAttribute component")); }
 	
 	AnimusAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("AnimusAttribute"));
-	AddOwnedComponent(AnimusAttribute);
-	AnimusAttribute->SetIsReplicated(true); // Enable replication by default
-	AnimusAttribute->AttributeData.Name = FName(TEXT("Animus"));
+	if (AnimusAttribute)
+	{
+		AddOwnedComponent(AnimusAttribute);
+		AnimusAttribute->SetIsReplicated(true); // Enable replication by default
+		AnimusAttribute->AttributeData.Name = FName(TEXT("Animus"));
+	}
+	else { UE_LOG(LogTRGame, Error, TEXT("TRPlayerState constructor failed to create AnimusAttribute component")); }
 	
 	HealthAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("HealthAttribute"));
-	AddOwnedComponent(HealthAttribute);
-	HealthAttribute->SetIsReplicated(true); // Enable replication by default
-	HealthAttribute->AttributeData.Name = FName(TEXT("Health"));
+	if (HealthAttribute)
+	{
+		AddOwnedComponent(HealthAttribute);
+		HealthAttribute->SetIsReplicated(true); // Enable replication by default
+		HealthAttribute->AttributeData.Name = FName(TEXT("Health"));
+	}
+	else { UE_LOG(LogTRGame, Error, TEXT("TRPlayerState constructor failed to create HealthAttribute component")); }
 
 	if (ExperienceLevel <= 0) { ExperienceLevel = 1; }
 	LevelUpGoodsProgress.Name = FName(TEXT("LevelUpGoodsProgress"));

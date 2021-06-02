@@ -18,7 +18,8 @@ APlatformBase::APlatformBase()
 	PlatformScene = CreateDefaultSubobject<USceneComponent>(TEXT("PlatformScene"));
 	PlatformScene->SetupAttachment(GetRootComponent());
 	PlatformControlZone = CreateDefaultSubobject<UBoxComponent>(TEXT("PlatformControlZone"));
-	PlatformControlZone->AttachToComponent(PlatformScene, FAttachmentTransformRules::KeepRelativeTransform);
+	//PlatformControlZone->AttachToComponent(PlatformScene, FAttachmentTransformRules::KeepRelativeTransform);
+	PlatformControlZone->SetupAttachment(PlatformScene);
 
 	PrimaryActorTick.bCanEverTick = true;	
 }

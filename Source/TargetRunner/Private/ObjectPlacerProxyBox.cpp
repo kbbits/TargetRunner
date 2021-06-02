@@ -17,9 +17,11 @@ AObjectPlacerProxyBox::AObjectPlacerProxyBox()
 	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene"));
 	SetRootComponent(RootScene);
 	BoxTarget = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxTarget"));
-	BoxTarget->AttachToComponent(RootScene, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	//BoxTarget->AttachToComponent(RootScene, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	BoxTarget->SetupAttachment(RootScene);
 	FacingArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("FacingArrow"));
-	FacingArrow->AttachToComponent(BoxTarget, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	//FacingArrow->AttachToComponent(BoxTarget, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	FacingArrow->SetupAttachment(BoxTarget);
 	UpdateComponents();
 }
 

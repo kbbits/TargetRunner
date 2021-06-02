@@ -88,7 +88,7 @@ protected:
 
 	TArray<APlayerStart*> PlayerStarts;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		bool bEnableClassDebugLog = false;
 #endif

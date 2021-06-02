@@ -29,7 +29,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		bool bGenerateStartEnd;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	// Only exists in editor builds. To auto-spawn the whole grid during GenerateGrid
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		bool bSpawnRoomsAfterGenerate;

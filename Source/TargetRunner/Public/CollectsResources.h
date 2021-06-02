@@ -7,7 +7,7 @@
 #include "CollectsResources.generated.h"
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI, BlueprintType)
+UINTERFACE(MinimalAPI, BlueprintType, Blueprintable)
 class UCollectsResources : public UInterface
 {
 	GENERATED_BODY()

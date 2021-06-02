@@ -21,7 +21,8 @@ const FString UTRPersistentDataComponent::PlayerFilenameSuffix = FString(TEXT("_
 UTRPersistentDataComponent::UTRPersistentDataComponent()
 	: Super()
 {
-	SetIsReplicated(true);
+	//SetIsReplicated(true);
+	SetIsReplicatedByDefault(true);
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
@@ -236,7 +237,15 @@ TArray<FString> UTRPersistentDataComponent::GetAllSaveProfileFilenames()
 		{
 			if (!bIsDirectory)
 			{
-				UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - potential file: %s."), FilenameOrDirectory);
+				if (FilenameOrDirectory)
+				{
+					UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - potential file: %s."), FilenameOrDirectory);
+				}
+				else
+				{
+					UE_LOG(LogTRGame, Error, TEXT("TRPersistentDataComponent GetAllSaveProfileFilenames encountered null FilenameOrDirectory."));
+					return false;
+				}
 				FString FullFilePath(FilenameOrDirectory);
 				if (FPaths::GetExtension(FullFilePath) == TEXT("sav"))
 				{

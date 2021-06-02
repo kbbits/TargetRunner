@@ -50,7 +50,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 		int32 PlacedObjects;
 
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
 	// When used in-editor, we track actors we've placed so they can be destroyed when this instance is.
 	UPROPERTY(BlueprintReadOnly)
 		TArray<AActor*> PlacedObjectRefs;

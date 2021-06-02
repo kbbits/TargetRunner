@@ -20,13 +20,14 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 	GoodsDropper = CreateDefaultSubobject<UGoodsDropper>(TEXT("GoodsDropper"));
 	if (GoodsDropper != nullptr)
 	{
+		// Move this somewhere else. It throws errors during packaging, etc.
 		if (IsValid(GoodsDropperTable)) 
 		{ 
 			GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable); 
 		}
 		else 
 		{
-			UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor GoodsDropperTable was not valid."));
+			UE_LOG(LogTRGame, Warning, TEXT("TRGameMode constructor GoodsDropperTable was not valid."));
 		}
 		if (IsValid(ResourceDropTable))
 		{
@@ -34,7 +35,7 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 		}
 		else
 		{
-			UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor ResourceDropTable was not valid."));
+			UE_LOG(LogTRGame, Warning, TEXT("TRGameMode constructor ResourceDropTable was not valid."));
 		}
 	}
 	else 

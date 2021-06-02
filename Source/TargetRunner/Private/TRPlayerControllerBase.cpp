@@ -14,6 +14,7 @@
 ATRPlayerControllerBase::ATRPlayerControllerBase()
 	: Super()
 {
+	UE_LOG(LogTRGame, Log, TEXT("Constructing TRPlayerControllerBase."));
 	FactionId = FGenericTeamId(static_cast<uint8>(ETRFaction::Player));
 	MaxEquippedWeapons = 1;
 	MaxEquippedEquipment = 1;
@@ -27,27 +28,40 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 		AddOwnedComponent(PersistentDataComponent);
 		PersistentDataComponent->SetIsReplicated(true);
 	}
+	else { UE_LOG(LogTRGame, Error, TEXT("TRPlayerController constructor failed to create TRPersistentDataComponent")); }//, *UTRPersistentDataComponent::StaticClass()->GetName()) }
 
 	RunSpeedAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("RunSpeedAttribute"));
-	AddOwnedComponent(RunSpeedAttribute);
-	RunSpeedAttribute->SetIsReplicated(true);
-	RunSpeedAttribute->AttributeData.Name = FName(TEXT("RunSpeed"));
-	//RunSpeedAttribute->AttributeData.MinValue = 100;
-	//RunSpeedAttribute->AttributeData.MaxValue = 600;
-	//RunSpeedAttribute->AttributeData.CurrentValue = 600;
-	RunSpeedAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnRunSpeedChanged);
+	if (RunSpeedAttribute)
+	{
+		AddOwnedComponent(RunSpeedAttribute);
+		RunSpeedAttribute->SetIsReplicated(true);
+		RunSpeedAttribute->AttributeData.Name = FName(TEXT("RunSpeed"));
+		//RunSpeedAttribute->AttributeData.MinValue = 100;
+		//RunSpeedAttribute->AttributeData.MaxValue = 600;
+		//RunSpeedAttribute->AttributeData.CurrentValue = 600;
+		RunSpeedAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnRunSpeedChanged);
+	}
+	else { UE_LOG(LogTRGame, Error, TEXT("TRPlayerController constructor failed to create RunSpeedAttribute component")); }
 
 	JumpForceAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("JumpForceAttribute"));
-	AddOwnedComponent(JumpForceAttribute);
-	JumpForceAttribute->SetIsReplicated(true);
-	JumpForceAttribute->AttributeData.Name = FName(TEXT("JumpForce"));
-	JumpForceAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnJumpForceChanged);
+	if (JumpForceAttribute)
+	{
+		AddOwnedComponent(JumpForceAttribute);
+		JumpForceAttribute->SetIsReplicated(true);
+		JumpForceAttribute->AttributeData.Name = FName(TEXT("JumpForce"));
+		JumpForceAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnJumpForceChanged);
+	}
+	else { UE_LOG(LogTRGame, Error, TEXT("TRPlayerController constructor failed to create JumpForceAttribute component")); }
 
 	CollectionRangeAttribute = CreateDefaultSubobject<UActorAttributeComponent>(TEXT("CollectionRangeAttribute"));
-	AddOwnedComponent(CollectionRangeAttribute);
-	CollectionRangeAttribute->SetIsReplicated(true);
-	CollectionRangeAttribute->AttributeData.Name = FName(TEXT("CollectionRange"));
-	CollectionRangeAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnCollectionRangeChanged);
+	if (CollectionRangeAttribute)
+	{
+		AddOwnedComponent(CollectionRangeAttribute);
+		CollectionRangeAttribute->SetIsReplicated(true);
+		CollectionRangeAttribute->AttributeData.Name = FName(TEXT("CollectionRange"));
+		CollectionRangeAttribute->OnDeltaCurrent.AddDynamic(this, &ATRPlayerControllerBase::OnCollectionRangeChanged);
+	}
+	else { UE_LOG(LogTRGame, Error, TEXT("TRPlayerController constructor failed to create CollectionRangeAttribute component")); }
 }
 
 
@@ -76,7 +90,7 @@ void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
 	if (TmpPawn == nullptr) { return; }
 
 	UCharacterMovementComponent* MoveComp = Cast<UCharacterMovementComponent>(TmpPawn->GetMovementComponent());
-	if (MoveComp)
+	if (MoveComp && RunSpeedAttribute && JumpForceAttribute)
 	{
 		MoveComp->MaxWalkSpeed = RunSpeedAttribute->GetCurrent();
 		UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
@@ -756,10 +770,13 @@ void ATRPlayerControllerBase::SpawnAsCurrentTool_Implementation(UToolBase* NewCu
 			SpawnParams.Instigator = CurPawn;
 			SpawnTransform = CurPawn->GetTransform();
 			CurrentTool = GetWorld()->SpawnActorDeferred<AToolActorBase>(NewCurrentTool->ToolActorClass, SpawnTransform, SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
-			CurrentTool->Tool = NewCurrentTool;
-			CurrentTool->WeaponState = ETRWeaponState::Idle;
-			CurrentTool->SetOwner(CurPawn);
-			UGameplayStatics::FinishSpawningActor(CurrentTool, CurrentTool->GetTransform());
+			if (CurrentTool)
+			{
+				CurrentTool->Tool = NewCurrentTool;
+				CurrentTool->WeaponState = ETRWeaponState::Idle;
+				CurrentTool->SetOwner(CurPawn);
+				UGameplayStatics::FinishSpawningActor(CurrentTool, CurrentTool->GetTransform());
+			}
 		}
 		// Manually call rep_notify on server
 		if (GetLocalRole() == ROLE_Authority) { OnRep_CurrentTool(); }

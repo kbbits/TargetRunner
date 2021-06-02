@@ -11,6 +11,7 @@
 UTRGameInstance::UTRGameInstance()
 	: Super()
 {
+	UE_LOG(LogTRGame, Log, TEXT("Constructing TRGameInstance."));
 	// TODO:  Set this from last saved value (if any)
 	LevelRandStream.GenerateNewSeed();	
 }
@@ -42,7 +43,10 @@ void UTRGameInstance::ServerSaveAllPlayerData_Implementation()
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
 		PController = Cast<ATRPlayerControllerBase>(*Iterator);
-		PController->PersistentDataComponent->ServerSavePlayerData();
+		if (PController)
+		{
+			PController->PersistentDataComponent->ServerSavePlayerData();
+		}
 	}
 }
 

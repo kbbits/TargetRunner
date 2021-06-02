@@ -55,6 +55,7 @@ struct FRoomSpecialActorsByTier : public FTableRowBase
 public:
 	FRoomSpecialActorsByTier()
 	{
+		Tier = 1.f;
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)

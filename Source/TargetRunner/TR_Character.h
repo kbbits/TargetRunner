@@ -31,20 +31,24 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+
+	// Override this in BP and return the scene component that we want to attach the ResourceCollectionVolume to.
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		USceneComponent* GetCollectorParentComponent();
+	virtual USceneComponent* GetCollectorParentComponent_Implementation();
+
 	// To get BP values
 	void PostInitProperties() override;
+
+#if WITH_EDITOR
 	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	// Override this and return the scene component that we want to attach the ResourceCollectionVolume to.
-	UFUNCTION(BlueprintNativeEvent, BlueprintPure)
-		USceneComponent* GetCollectorParentComponent();
-	virtual USceneComponent* GetCollectorParentComponent_Implementation();
 
 	// Collector overlap begin
 	// Default implementation handles collecting ICollectablResource(s).
@@ -71,10 +75,11 @@ public:
 	// If it does have a homing target, the location is set in TargetLocation.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")
 		bool GetCollectionTargetLocation(FVector& TargetLocation);
-	virtual bool GetCollectionTargetLocation_Implementation(FVector& TargetLocation);
+	virtual bool GetCollectionTargetLocation_Implementation(FVector& TargetLocation) override;
 
 	// Give this entity resource goods to collect.
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Resource Collecting")
 		void CollectResourceGoods(const TArray<FGoodsQuantity>& CollectedGoods);
+	//virtual void CollectResourceGoods_Implementation(const TArray<FGoodsQuantity>& CollectedGoods) override;
 
 };

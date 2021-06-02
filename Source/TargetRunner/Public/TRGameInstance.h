@@ -33,7 +33,7 @@ public:
 		FName ClientLocalProfileName;
 
 	// [Client]
-	// Store the local client's profile name in the game instance so it is always available locally.
+	// Store the local client's profile guid in the game instance so it is always available locally.
 	UPROPERTY(BlueprintReadWrite)
 		FGuid ClientLocalPlayerGuid;
 

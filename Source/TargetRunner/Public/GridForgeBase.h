@@ -70,6 +70,8 @@ protected:
 #if WITH_EDITOR
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
         bool bEnableClassDebugLog;
+#else
+    bool bEnableClassDebugLog = false;
 #endif
 
     const int32 WALL_GROUP_ID = -1;
