@@ -15,6 +15,23 @@ AToolActorBase::AToolActorBase()
 	WeaponState = ETRWeaponState::Idle;
 }
 
+
+void AToolActorBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AToolActorBase, ToolData);
+}
+
+
+void AToolActorBase::OnRep_ToolData()
+{
+	if (ToolData.IsValid()) {
+		Tool = UToolBase::CreateToolFromToolData(ToolData, this);
+	}
+}
+
+
 // Called when the game starts or when spawned
 void AToolActorBase::BeginPlay()
 {
@@ -22,17 +39,39 @@ void AToolActorBase::BeginPlay()
 	
 }
 
+
 // Called every frame
 void AToolActorBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
+
+
+void AToolActorBase::InitToolObject()
+{
+	FToolData TmpToolData = ToolData;
+	if (Tool == nullptr || !Tool->IsValidLowLevel())
+	{		
+		UToolBase* TmpTool = DefaultToolClass.GetDefaultObject();
+		if (TmpTool)
+		{
+			TmpTool->ToToolData(TmpToolData);
+			Tool = UToolBase::CreateToolFromToolData(TmpToolData, this);
+		}
+	}
+	else
+	{
+		Tool->ToToolData(TmpToolData);
+	}
+	ToolData = TmpToolData;
+}
+
 
 FName AToolActorBase::GetName_Implementation()
 {
 	return Name;
 }
+
 
 FText AToolActorBase::GetDisplayName_Implementation()
 {
@@ -40,16 +79,19 @@ FText AToolActorBase::GetDisplayName_Implementation()
 	return FText();
 }
 
+
 TSubclassOf<ATRProjectileBase> AToolActorBase::GetProjectileClass_Implementation()
 {
 	if (Tool != nullptr) { return Tool->ProjectileClass; }
 	return ATRProjectileBase::StaticClass();
 }
 
+
 ETRWeaponState AToolActorBase::GetCurrentState_Implementation()
 {
 	return WeaponState;
 }
+
 
 // Base class does nothing
 void AToolActorBase::BeginFire_Implementation()
@@ -59,6 +101,7 @@ void AToolActorBase::BeginFire_Implementation()
 	//	WeaponState = ETRWeaponState::Firing;
 	//}
 }
+
 
 // Base class does nothing
 void AToolActorBase::EndFire_Implementation()
@@ -76,11 +119,13 @@ void AToolActorBase::EndFire_Implementation()
 	//}
 }
 
+
 float AToolActorBase::GetEnergyPerShot_Implementation()
 {
 	if (Tool != nullptr) { return Tool->GetEnergyPerShot(); }
 	return 0.0f;
 }
+
 
 TArray<FGoodsQuantity> AToolActorBase::GetAmmoPerShot_Implementation()
 {
@@ -88,11 +133,13 @@ TArray<FGoodsQuantity> AToolActorBase::GetAmmoPerShot_Implementation()
 	return TArray<FGoodsQuantity>();
 }
 
+
 FGoodsQuantitySet AToolActorBase::GetAmmoPerShotAsSet_Implementation()
 {
 	if (Tool != nullptr) { return Tool->AmmoPerShot.GoodsQuantitySet; }
 	return FGoodsQuantitySet();
 }
+
 
 float AToolActorBase::GetDamagePerShot_Implementation()
 {
@@ -100,32 +147,38 @@ float AToolActorBase::GetDamagePerShot_Implementation()
 	return 0.0f;
 }
 
+
 float AToolActorBase::GetActivationDelay_Implementation()
 {
 	if (Tool != nullptr) { return Tool->ActivationDelay.CurrentValue; }
 	return 0.0f;
 }
 
+
 TAssetPtr<USoundBase> AToolActorBase::GetFireSound_Implementation()
 {
 	return FireSound;
 }
+
 
 TAssetPtr<USoundBase> AToolActorBase::GetFireBusySound_Implementation()
 {
 	return FireBusySound;
 }
 
+
 TAssetPtr<USoundBase> AToolActorBase::GetReloadSound_Implementation()
 {
 	return ReloadSound;
 }
+
 
 TArray<FResourceRateFilter> AToolActorBase::GetDamageRates()
 {
 	if (Tool != nullptr) { return Tool->BaseDamageRates; }
 	return TArray<FResourceRateFilter>();
 }
+
 
 TArray<FResourceRateFilter> AToolActorBase::GetResourceExtractionRates()
 {

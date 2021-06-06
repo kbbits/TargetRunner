@@ -34,8 +34,8 @@ public:
 
 	// Class of weapon this character will use. 
 	// Will be scaled up and applied as appropriate by subclasses.
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-		TSubclassOf<class UEnemyToolWeaponBase> WeaponClass;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	//	TSubclassOf<class UEnemyToolWeaponBase> WeaponClass;
 
 	// The base health value for a Level=1 character
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)

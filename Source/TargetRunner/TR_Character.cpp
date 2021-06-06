@@ -52,7 +52,7 @@ void ATR_Character::SetupCollectionVolume_Implementation()
 	{
 		if (!IsValid(CollectorParent))
 		{  
-			UE_LOG(LogTRGame, Error, TEXT("TR_Character SetupCollectionVolume: GetCollectorParentComponent is null."));
+			UE_LOG(LogTRGame, Warning, TEXT("TR_Character SetupCollectionVolume: GetCollectorParentComponent is null."));
 			return;
 		}
 		if (ResourceCollectionVolume->GetAttachParent() != CollectorParent)

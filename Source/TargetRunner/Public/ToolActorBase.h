@@ -19,7 +19,14 @@ public:
 	// Sets default values for this actor's properties
 	AToolActorBase();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
+	// When this actor is spawned with no UTool object, this is the default to create.
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		TSubclassOf<UToolBase> DefaultToolClass;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ToolData)
+		FToolData ToolData;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
 		UToolBase* Tool;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons")
@@ -44,8 +51,18 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+
+	// [Client]
+	// Replication notification
+	UFUNCTION()
+		void OnRep_ToolData();
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	// If the underlying UTool instance is null, this will create an instance of the DefualtToolClass.
+	UFUNCTION(BlueprintCallable, Category = "Player Weapons")
+		void InitToolObject();
 
 	// IUsableTool interface functions
 

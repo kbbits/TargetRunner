@@ -27,9 +27,8 @@ public:
 
 	// [Call on Server]
 	// Subclasses should implement as needed. Base class only sets bScaleUpApplied=true.
-	// This calculates and sets the values of the attributes of this character based on it's Level.
+	// This calculates and sets the values of the attributes of this object based on it's Level.
 	// The default values of each attribute are scaled by level, then the new scaled values are set on the attribute(s).
-	// ex: HealthAttribtue, walk/run speed, attack damage, dropped resources & goods
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void ScaleToLevel();
 };

@@ -2,6 +2,7 @@
 
 #include "Engine/DataTable.h"
 #include "GoodsQuantity.h"
+#include "ToolBase.h"
 #include "PlayerLevelUpData.generated.h"
 
 // This struct represents one row of data describing requirements for a player level up.
@@ -48,6 +49,6 @@ public:
 
 	// Tools to award player when they reach this level
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TArray<TSubclassOf<class UToolBase>> ToolsAwarded;
+		TArray<TSubclassOf<UToolBase>> ToolsAwarded;
 	
 };

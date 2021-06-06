@@ -176,28 +176,27 @@ bool ATRPlayerControllerBase::HasCapacityForAwards_Implementation(const FPickupA
 	return true;
 }
 
-void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(UToolBase* Tool)
+void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(const FToolData& ToolData)
 {
-	FToolData TmpToolData;
+	FToolData TmpToolData = ToolData;
 	bool bSuccess = false;
-	if (Tool)
+	if (IsValid(ToolData.ToolClass))
 	{		
-		if (!Tool->ItemGuid.IsValid()) { Tool->ItemGuid = FGuid::NewGuid(); }
-		Tool->ToToolData(TmpToolData);
-		ToolInventory.Add(Tool->ItemGuid, TmpToolData);
+		if (!TmpToolData.AttributeData.ItemGuid.IsValid()) { TmpToolData.AttributeData.ItemGuid = FGuid::NewGuid(); }
+		ToolInventory.Add(TmpToolData.AttributeData.ItemGuid, TmpToolData);
 		OnToolInventoryAdded.Broadcast(TmpToolData);
 		bSuccess = true;
 	}
-	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory added tool guid %s."), *Tool->ItemGuid.ToString());
+	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory added tool guid %s."), *TmpToolData.AttributeData.ItemGuid.ToString());
 	if (bSuccess && !IsLocalController())
 	{
 		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory calling client."));
-		ClientAddToolToInventory(TmpToolData, Tool->ItemGuid);
+		ClientAddToolToInventory(TmpToolData, TmpToolData.AttributeData.ItemGuid);
 	}
 }
 
 
-bool ATRPlayerControllerBase::ServerAddToolToInventory_Validate(UToolBase* Tool)
+bool ATRPlayerControllerBase::ServerAddToolToInventory_Validate(const FToolData& ToolData)
 {
 	return true;
 }
@@ -717,7 +716,9 @@ void ATRPlayerControllerBase::ServerAddLevelUpGoods_Implementation(const FGoodsQ
 					{
 						UToolBase* NewTool = NewToolClass.GetDefaultObject();
 						if (NewTool) {
-							ServerAddToolToInventory(NewTool);
+							FToolData NewToolData;
+							NewTool->ToToolData(NewToolData);
+							ServerAddToolToInventory(NewToolData);
 						}
 					}
 				}
@@ -776,6 +777,7 @@ void ATRPlayerControllerBase::SpawnAsCurrentTool_Implementation(UToolBase* NewCu
 				CurrentTool->WeaponState = ETRWeaponState::Idle;
 				CurrentTool->SetOwner(CurPawn);
 				UGameplayStatics::FinishSpawningActor(CurrentTool, CurrentTool->GetTransform());
+				NewCurrentTool->ToToolData(CurrentTool->ToolData);
 			}
 		}
 		// Manually call rep_notify on server

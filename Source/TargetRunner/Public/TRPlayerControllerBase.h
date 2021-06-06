@@ -158,7 +158,7 @@ public:
 	// [Server]
 	// Call this to add a tool to player's inventory. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerAddToolToInventory(UToolBase* Tool);
+		void ServerAddToolToInventory(const FToolData& ToolData);
 
 	// [Client]
 	UFUNCTION(Client, Reliable, WithValidation)

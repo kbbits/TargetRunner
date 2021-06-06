@@ -32,4 +32,6 @@ public:
 		Modifiers.Add(FName(TEXT("EquipModifiers")), FNamedModifierSet(FName(TEXT("EquipModifiers"))));
 		Modifiers.Add(FName(TEXT("ActivateModifiers")), FNamedModifierSet(FName(TEXT("ActivateModifiers"))));
 	}
+
+	FORCEINLINE bool IsValid() const { return (ToolClass->IsValidLowLevelFast() && AttributeData.ItemGuid.IsValid()); }
 };

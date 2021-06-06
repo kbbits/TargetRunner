@@ -316,6 +316,7 @@ void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
 			{
 				UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
 			}
+			// TODO remove this debug logging
 			for (TPair<FName, float> InvElem : SaveGame->PlayerSaveData.GoodsInventory)
 			{
 				InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Key.ToString(), InvElem.Value));
