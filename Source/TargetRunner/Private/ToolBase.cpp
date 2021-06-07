@@ -4,6 +4,7 @@
 #include "ToolBase.h"
 #include "..\Public\ToolBase.h"
 #include "ResourceRateFilterSet.h"
+#include "NamedPrimitiveTypes.h"
 
 const FName UToolBase::EMIT_TYPE_NAME = FName(TEXT("EmitType"));
 const FName UToolBase::ACTIVATION_TYPE_NAME = FName(TEXT("ActivationType"));
@@ -42,7 +43,7 @@ void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 	ToolData.ToolClass = this->GetClass();
 	ToolData.AttributeData.ItemDisplayName = DisplayName;
 	ToolData.AttributeData.ItemGuid = ItemGuid;
-	ToolData.AttributeData.FloatAttributes.Add(EMIT_TYPE_NAME, static_cast<float>(static_cast<uint8>(EmitType)));
+	/*ToolData.AttributeData.FloatAttributes.Add(EMIT_TYPE_NAME, static_cast<float>(static_cast<uint8>(EmitType)));
 	ToolData.AttributeData.FloatAttributes.Add(ACTIVATION_TYPE_NAME, static_cast<float>(static_cast<uint8>(ActivationType)));
 	ToolData.AttributeData.Attributes.Add(AutoFireDelay.Name, AutoFireDelay);
 	ToolData.AttributeData.Attributes.Add(AutoFireBurstLimit.Name, AutoFireBurstLimit);
@@ -61,6 +62,26 @@ void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 	ToolData.AttributeData.BoolAttributes.Add(FName(TEXT("AllowActivate")), bAllowsActivation);
 	ToolData.Modifiers.Add(EquipModifiers.Name, EquipModifiers);
 	ToolData.Modifiers.Add(ActivateModifiers.Name, ActivateModifiers);
+	*/
+	ToolData.AttributeData.IntAttributes.Add(FTRNamedInt(EMIT_TYPE_NAME, static_cast<int32>(static_cast<uint8>(EmitType))));
+	ToolData.AttributeData.IntAttributes.Add(FTRNamedInt(ACTIVATION_TYPE_NAME, static_cast<int32>(static_cast<uint8>(ActivationType))));
+	ToolData.AttributeData.Attributes.Add(AutoFireDelay);
+	ToolData.AttributeData.Attributes.Add(AutoFireBurstLimit);
+	ToolData.AttributeData.FloatAttributes.Add(BuyValue);
+	ToolData.AttributeData.GoodsQuantitiesAttributes.Add(CostValue);
+	ToolData.AttributeData.FloatAttributes.Add(UpgradeDamageCostMultiplier);
+	ToolData.AttributeData.FloatAttributes.Add(UpgradeExtractionCostMultiplier);
+	ToolData.AttributeData.IntAttributes.Add(MaximumBounces);
+	ToolData.AttributeData.Attributes.Add(EnergyPerShot);
+	ToolData.AttributeData.GoodsQuantitiesAttributes.Add(AmmoPerShot);
+	ToolData.AttributeData.Attributes.Add(BaseDamage);
+	ToolData.AttributeData.Attributes.Add(ActivationDelay);
+	ToolData.AttributeData.Attributes.Add(ProjectileSpeed);
+	ToolData.AttributeData.ResourceRateAttributes.Add(FNamedResourceRateFilterSet(DAMAGE_RATES_NAME, BaseDamageRates));
+	ToolData.AttributeData.ResourceRateAttributes.Add(FNamedResourceRateFilterSet(EXTRACTION_RATES_NAME, BaseResourceExtractionRates));
+	ToolData.AttributeData.BoolAttributes.Add(FTRNamedBool(FName(TEXT("AllowActivate")), bAllowsActivation));
+	ToolData.Modifiers.Add(EquipModifiers);
+	ToolData.Modifiers.Add(ActivateModifiers);
 }
 
 
@@ -69,41 +90,46 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 	// Some helper lambdas  //////////////////////////
 	auto UpdateAttr = [ToolData](FAttributeData& AData)
 	{
-		if (ToolData.AttributeData.Attributes.Contains(AData.Name))
+		const FAttributeData* FoundData = FindInNamedArray<FAttributeData>(ToolData.AttributeData.Attributes, AData.Name);
+		if (FoundData)
 		{
-			AData = ToolData.AttributeData.Attributes[AData.Name];
+			AData = *FoundData;
 		}
 	};
 
 	auto UpdateFloatAttr = [ToolData](const FName& Name, float& FloatValue)
 	{
-		if (ToolData.AttributeData.FloatAttributes.Contains(Name))
+		const FTRNamedFloat* FoundFloat = FindInNamedArray<FTRNamedFloat>(ToolData.AttributeData.FloatAttributes, Name);
+		if (FoundFloat)
 		{
-			FloatValue = ToolData.AttributeData.FloatAttributes[Name];
+			FloatValue = FoundFloat->Quantity;
 		}
 	};
 
 	auto UpdateNamedFloatAttr = [ToolData](FTRNamedFloat& NamedFloat)
 	{
-		if (ToolData.AttributeData.FloatAttributes.Contains(NamedFloat.Name))
+		const FTRNamedFloat* FoundFloat = FindInNamedArray<FTRNamedFloat>(ToolData.AttributeData.FloatAttributes, NamedFloat.Name);
+		if (FoundFloat)
 		{
-			NamedFloat.Quantity = ToolData.AttributeData.FloatAttributes[NamedFloat.Name];
+			NamedFloat.Quantity = FoundFloat->Quantity;
 		}
 	};
 
 	auto UpdateNamedIntAttr = [ToolData](FTRNamedInt& NamedInt)
 	{
-		if (ToolData.AttributeData.FloatAttributes.Contains(NamedInt.Name))
+		const FTRNamedInt* FoundInt = FindInNamedArray<FTRNamedInt>(ToolData.AttributeData.IntAttributes, NamedInt.Name);
+		if (FoundInt)
 		{
-			NamedInt.Quantity = static_cast<int32>(ToolData.AttributeData.FloatAttributes[NamedInt.Name]);
+			NamedInt.Quantity = FoundInt->Quantity;
 		}
 	};
 
 	auto UpdateNamedGoodsQuantitySetAttr = [ToolData](FNamedGoodsQuantitySet& NamedGoodsQuantitySet)
 	{
-		if (ToolData.AttributeData.GoodsQuantitiesAttributes.Contains(NamedGoodsQuantitySet.Name))
+		const FNamedGoodsQuantitySet* FoundGoodsSet = FindInNamedArray<FNamedGoodsQuantitySet>(ToolData.AttributeData.GoodsQuantitiesAttributes, NamedGoodsQuantitySet.Name);
+		if (FoundGoodsSet)
 		{
-			NamedGoodsQuantitySet.GoodsQuantitySet = ToolData.AttributeData.GoodsQuantitiesAttributes[NamedGoodsQuantitySet.Name];
+			NamedGoodsQuantitySet.GoodsQuantitySet = FoundGoodsSet->GoodsQuantitySet;
 		}
 	};
 	/////////////////////////////////////////////////////////////
@@ -117,14 +143,17 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 			ItemGuid = ToolData.AttributeData.ItemGuid;
 		}
 		DisplayName = ToolData.AttributeData.ItemDisplayName;
-		if (ToolData.AttributeData.FloatAttributes.Contains(EMIT_TYPE_NAME))
+		const FTRNamedInt* TmpInt;
+		TmpInt = FindInNamedArray<FTRNamedInt>(ToolData.AttributeData.IntAttributes, EMIT_TYPE_NAME);
+		if (TmpInt)
 		{
 			// Perhaps some excessive casting here. Just being explicit.
-			EmitType = static_cast<EToolEmitType>(static_cast<uint8>(ToolData.AttributeData.FloatAttributes[EMIT_TYPE_NAME]));
+			EmitType = static_cast<EToolEmitType>(static_cast<uint8>(TmpInt->Quantity));
 		}
-		if (ToolData.AttributeData.FloatAttributes.Contains(ACTIVATION_TYPE_NAME))
+		TmpInt = FindInNamedArray<FTRNamedInt>(ToolData.AttributeData.IntAttributes, ACTIVATION_TYPE_NAME);
+		if (TmpInt)
 		{
-			ActivationType = static_cast<EToolActivationType>(static_cast<uint8>(ToolData.AttributeData.FloatAttributes[ACTIVATION_TYPE_NAME]));
+			ActivationType = static_cast<EToolActivationType>(static_cast<uint8>(TmpInt->Quantity));
 		}
 		UpdateAttr(AutoFireDelay);
 		UpdateAttr(AutoFireBurstLimit);
@@ -138,20 +167,28 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 		UpdateAttr(BaseDamage);
 		UpdateAttr(ActivationDelay);
 		UpdateAttr(ProjectileSpeed);
-		if (ToolData.AttributeData.ResourceRateAttributes.Contains(DAMAGE_RATES_NAME)) { 
-			BaseDamageRates = ToolData.AttributeData.ResourceRateAttributes[DAMAGE_RATES_NAME].Rates; 
+		const FNamedResourceRateFilterSet* TmpRateFilter;
+		TmpRateFilter = FindInNamedArray<FNamedResourceRateFilterSet>(ToolData.AttributeData.ResourceRateAttributes, DAMAGE_RATES_NAME);
+		if (TmpRateFilter) { 
+			BaseDamageRates = TmpRateFilter->RateFilterSet.Rates; 
 		}
-		if (ToolData.AttributeData.ResourceRateAttributes.Contains(EXTRACTION_RATES_NAME)) { 
-			BaseResourceExtractionRates = ToolData.AttributeData.ResourceRateAttributes[EXTRACTION_RATES_NAME].Rates; 
+		TmpRateFilter = FindInNamedArray<FNamedResourceRateFilterSet>(ToolData.AttributeData.ResourceRateAttributes, EXTRACTION_RATES_NAME);
+		if (TmpRateFilter) { 
+			BaseResourceExtractionRates = TmpRateFilter->RateFilterSet.Rates; 
 		}
-		if (ToolData.AttributeData.BoolAttributes.Contains(FName(TEXT("AllowActivate")))) {
-			bAllowsActivation = ToolData.AttributeData.BoolAttributes[FName(TEXT("AllowActivate"))];
+		const FTRNamedBool* TmpBool;
+		TmpBool = FindInNamedArray(ToolData.AttributeData.BoolAttributes, FName(TEXT("AllowActivate")));
+		if (TmpBool) {
+			bAllowsActivation = TmpBool->Value;
 		}
-		if (ToolData.Modifiers.Contains(EquipModifiers.Name)) {
-			EquipModifiers = ToolData.Modifiers[EquipModifiers.Name];
+		const FNamedModifierSet* TmpModSet;
+		TmpModSet = FindInNamedArray(ToolData.Modifiers, EquipModifiers.Name);
+		if (TmpModSet) {
+			EquipModifiers = *TmpModSet;
 		}
-		if (ToolData.Modifiers.Contains(ActivateModifiers.Name)) {
-			ActivateModifiers = ToolData.Modifiers[ActivateModifiers.Name];
+		TmpModSet = FindInNamedArray(ToolData.Modifiers, ActivateModifiers.Name);
+		if (TmpModSet) {
+			ActivateModifiers = *TmpModSet;
 		}
 	}
 }

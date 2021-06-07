@@ -38,6 +38,7 @@ ATRPlayerState::ATRPlayerState()
 
 	if (ExperienceLevel <= 0) { ExperienceLevel = 1; }
 	LevelUpGoodsProgress.Name = FName(TEXT("LevelUpGoodsProgress"));
+	UE_LOG(LogTRGame, Log, TEXT("TRPlayerState constructed"));
 }
 
 
@@ -105,10 +106,10 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 	GetComponents<UActorAttributeComponent>(AttributeComps);
 	for (UActorAttributeComponent* Attr : AttributeComps)
 	{
-		Attr->FillAttributeDataMap(SaveData.AttributeData.Attributes);
+		Attr->FillAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
 	// Goods quantities properties
-	SaveData.AttributeData.GoodsQuantitiesAttributes.Add(LevelUpGoodsProgress.Name, LevelUpGoodsProgress.GoodsQuantitySet);
+	SaveData.AttributeData.GoodsQuantitiesAttributes.Add(LevelUpGoodsProgress);
 }
 
 
@@ -127,11 +128,12 @@ void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveDa
 	GetComponents<UActorAttributeComponent>(AttributeComps);
 	for (UActorAttributeComponent* Attr : AttributeComps)
 	{
-		Attr->UpdateFromAttributeDataMap(SaveData.AttributeData.Attributes);
+		Attr->UpdateFromAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
 	// Goods quantities attributes
-	if (SaveData.AttributeData.GoodsQuantitiesAttributes.Contains(LevelUpGoodsProgress.Name))
+	const FNamedGoodsQuantitySet* TmpGoodsSet = FindInNamedArray<FNamedGoodsQuantitySet>(SaveData.AttributeData.GoodsQuantitiesAttributes, LevelUpGoodsProgress.Name);
+	if (TmpGoodsSet)
 	{
-		LevelUpGoodsProgress.GoodsQuantitySet = SaveData.AttributeData.GoodsQuantitiesAttributes[LevelUpGoodsProgress.Name];
+		LevelUpGoodsProgress.GoodsQuantitySet = TmpGoodsSet->GoodsQuantitySet;
 	}
 }

@@ -317,9 +317,9 @@ void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
 				UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
 			}
 			// TODO remove this debug logging
-			for (TPair<FName, float> InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+			for (FTRNamedFloat InvElem : SaveGame->PlayerSaveData.GoodsInventory)
 			{
-				InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Key.ToString(), InvElem.Value));
+				InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Name.ToString(), InvElem.Quantity));
 			}
 			UE_LOG(LogTRGame, Log, TEXT("    Goods Inventory   \r\n  %s"), *InvBuff);
 
@@ -370,9 +370,9 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 							{
 								UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
 							}
-							for (TPair<FName, float> InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+							for (FTRNamedFloat InvElem : SaveGame->PlayerSaveData.GoodsInventory)
 							{
-								InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Key.ToString(), InvElem.Value));
+								InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Name.ToString(), InvElem.Quantity));
 							}
 							UE_LOG(LogTRGame, Log, TEXT("    Goods Inventory   \r\n  %s"), *InvBuff);
 							// Update data on server
@@ -389,6 +389,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 							}
 							else
 							{
+								UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ServerLoadPlayerData going to echo existing to client with ClientEchoLoadPlayerData"));
 								// Call client to update data
 								ClientEchoLoadPlayerData(SaveGame->PlayerSaveData);
 							}
@@ -420,6 +421,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 					}
 					else
 					{
+						UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ServerLoadPlayerData going to echo new to client with ClientEchoLoadPlayerData"));
 						// Call client to update data
 						TRPlayerController->GetPlayerSaveData(NewSaveData);
 						ClientEchoLoadPlayerData(NewSaveData);

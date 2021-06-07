@@ -3,6 +3,7 @@
 
 #include "ToolActorBase.h"
 #include "..\Public\ToolActorBase.h"
+#include "ToolBase.h"
 #include "ResourceFunctionLibrary.h"
 
 // Sets default values

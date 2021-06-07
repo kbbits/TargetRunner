@@ -5,6 +5,8 @@
 #include "ModifiableAttributes.h"
 #include "ToolData.generated.h"
 
+class UToolBase;
+
 USTRUCT(BlueprintType)
 struct FToolData
 {
@@ -14,24 +16,19 @@ public:
 
 	// Tool class this is based on
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TSubclassOf<class UToolBase> ToolClass;
+		TSubclassOf<UToolBase> ToolClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FAttributeDataSet AttributeData;
 
 	// Modifiers
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<FName, FNamedModifierSet> Modifiers;
+		TArray<FNamedModifierSet> Modifiers;
+		//TMap<FName, FNamedModifierSet> Modifiers;
 
 public:
 
-	FToolData()
-	{
-		AttributeData.ResourceRateAttributes.Add(FName(TEXT("DamageRates")), FResourceRateFilterSet());
-		AttributeData.ResourceRateAttributes.Add(FName(TEXT("ExtractionRates")), FResourceRateFilterSet());
-		Modifiers.Add(FName(TEXT("EquipModifiers")), FNamedModifierSet(FName(TEXT("EquipModifiers"))));
-		Modifiers.Add(FName(TEXT("ActivateModifiers")), FNamedModifierSet(FName(TEXT("ActivateModifiers"))));
-	}
+	FToolData();
 
-	FORCEINLINE bool IsValid() const { return (ToolClass->IsValidLowLevelFast() && AttributeData.ItemGuid.IsValid()); }
+	bool IsValid() const;
 };

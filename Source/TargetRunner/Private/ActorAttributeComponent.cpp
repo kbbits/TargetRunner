@@ -4,6 +4,7 @@
 #include "ActorAttributeComponent.h"
 #include "..\Public\ActorAttributeComponent.h"
 #include "TargetRunner.h"
+#include "NamedPrimitiveTypes.h"
 #include "UnrealNetwork.h"
 
 // Sets default values for this component's properties
@@ -226,11 +227,31 @@ bool UActorAttributeComponent::UpdateFromAttributeDataMap(const TMap<FName, FAtt
 }
 
 
+bool UActorAttributeComponent::UpdateFromAttributeDataArray(const TArray<FAttributeData>& DataArray)
+{
+	const FAttributeData* TmpAttrData = FindInNamedArray(DataArray, AttributeData.Name);
+	if (TmpAttrData)
+	{
+		SetAttributeData(*TmpAttrData);
+		return true;
+	}
+	return false;
+}
+
+
 void UActorAttributeComponent::FillAttributeDataMap(TMap<FName, FAttributeData>& DataMap)
 {
 	if (!AttributeData.Name.IsNone())
 	{
 		DataMap.Add(AttributeData.Name, AttributeData);
+	}
+}
+
+void UActorAttributeComponent::FillAttributeDataArray(TArray<FAttributeData>& DataArray)
+{
+	if (!AttributeData.Name.IsNone())
+	{
+		DataArray.Add(AttributeData);
 	}
 }
 

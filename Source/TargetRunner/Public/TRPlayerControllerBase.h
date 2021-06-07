@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Delegates/Delegate.h"
+#include "ToolData.h"
 #include "InventoryActorComponent.h"
 #include "ActorAttributeComponent.h"
 #include "GenericTeamAgentInterface.h"
@@ -18,6 +19,8 @@
 #include "TR_Character.h"
 #include "PlayerLevelUpData.h"
 #include "TRPlayerControllerBase.generated.h"
+
+class UToolBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnToolInventoryAdded, const FToolData&, ToolDataAdded);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquippedToolsChanged);
@@ -96,7 +99,7 @@ public:
 
 	// Our faction. Should be one of ETRFaction enum
 	UPROPERTY(EditAnywhere)
-	FGenericTeamId FactionId;
+		FGenericTeamId FactionId;
 
 protected:
 

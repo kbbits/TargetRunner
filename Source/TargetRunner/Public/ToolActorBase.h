@@ -4,11 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ToolData.h"
 #include "UsableTool.h"
 #include "ResourceRateFilter.h"
 #include "AttributeDataSet.h"
-#include "ToolBase.h"
+//#include "ToolBase.h"
 #include "ToolActorBase.generated.h"
+
+class UToolBase;
 
 UCLASS()
 class TARGETRUNNER_API AToolActorBase : public AActor, public IUsableTool
@@ -27,7 +30,7 @@ public:
 		FToolData ToolData;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
-		UToolBase* Tool;
+		class UToolBase* Tool;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons")
 		ETRWeaponState WeaponState;

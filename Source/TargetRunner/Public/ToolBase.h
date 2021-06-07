@@ -5,11 +5,11 @@
 #include "ToolData.h"
 #include "AttributeData.h"
 #include "NamedPrimitiveTypes.h"
-#include "ToolData.h"
 #include "TRProjectileBase.h"
 #include "GoodsQuantity.h"
 #include "ResourceRateFilter.h"
 #include "ToolBase.generated.h"
+
 
 UENUM(BlueprintType)
 enum class EToolEmitType : uint8

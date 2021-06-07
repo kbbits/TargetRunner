@@ -6,6 +6,8 @@
 #include "ToolData.h"
 #include "PlayerSaveData.generated.h"
 
+struct FToolData;
+
 USTRUCT(BlueprintType)
 struct FPlayerSaveData : public FTableRowBase
 {
@@ -61,21 +63,18 @@ public:
 		TArray<FGuid> LastEquippedItems;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<FName, float> HitCounts;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-	//	TMap<ETRAmmoType, float> AmmoInventory;
-
+		TArray<FTRNamedFloat> HitCounts;
+		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<FName, float> GoodsInventory;
-
+		TArray<FTRNamedFloat> GoodsInventory;
+		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<FName, float> SnapshotInventory;
-
+		TArray<FTRNamedFloat> SnapshotInventory;
+		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<FName, float> TotalGoodsCollected;
-
+		TArray<FTRNamedFloat> TotalGoodsCollected;
+		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TMap<FName, float> TotalGoodsSpent;
-	
+		TArray<FTRNamedFloat> TotalGoodsSpent;
+		
 };

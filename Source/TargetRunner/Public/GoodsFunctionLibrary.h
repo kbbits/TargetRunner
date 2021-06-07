@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "NamedPrimitiveTypes.h"
 #include "GoodsQuantity.h"
 #include "GoodsQuantityRange.h"
 #include "GoodsTypeQuantity.h"
@@ -65,6 +66,18 @@ public:
 	}
 
 
+	// Create a map of Name->FGoodsQuantity from a FTRNamedFloats where each key is the named float's name.
+	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
+	static FORCEINLINE TMap<FName, FGoodsQuantity> NamedFloatArrayToGoodsQuantityMap(TArray<FTRNamedFloat> NamedFloatArray)
+	{
+		TMap<FName, FGoodsQuantity> GoodsQuantityMap;
+		for (FTRNamedFloat& NamedItem : NamedFloatArray)
+		{
+			GoodsQuantityMap.Add(NamedItem.Name, FGoodsQuantity(NamedItem.Name, NamedItem.Quantity));
+		}
+		return GoodsQuantityMap;
+	}
+
 	// Create a map of Name -> Quantity from an array of FGoodsQuantities.
 	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
 	static FORCEINLINE TMap<FName, float> GoodsQuantityArrayToNameFloatMap(TArray<FGoodsQuantity> GoodsQuantityArray)
@@ -116,50 +129,6 @@ public:
 	}
 
 
-	// Create a map from an array. Each element in the array must have a Name (FName) property. (ex: FGoodsQuantity)
-	// New map has Name as key and element as value.  Collisions of Name in array are overwritten, last one wins.
-	template<class T>
-	static FORCEINLINE TMap<FName, T> NamedItemsToMap(TArray<T> NamedItems)
-	{
-		TMap<FName, T> NamedItemMap;
-		for (T& NamedItem : NamedItems)
-		{
-			NamedItemMap.Add(NamedItem.Name, NamedItem);
-		}
-		return NamedItemMap;
-	}
-
-
-	// Create a map from an array. Each element in array must have a Name (FName) and a Quantity (int) property. (ex: FGoodsQuantity)
-	// New map will have Name as key and Quantity as value. Collisions of Name in array are overwritten, last one wins.
-	// ex: Useful for transforming an array of GoodsQuantities to a map with each key as the GoodsQuantity.Name and the Quantity as the value.
-	template<class T>
-	static FORCEINLINE TMap<FName, int32> NamedQuantitiesToCountMap(TArray<T> NamedItems)
-	{
-		TMap<FName, int32> NamedCountMap;
-		for (T& NamedItem : NamedItems)
-		{
-			NamedCountMap.Add(NamedItem.Name, static_cast<int32>(NamedItem.Quantity));
-		}
-		return NamedCountMap;
-	}
-
-
-	// Create a map from an array. Each element in array must have a Name (FName) and a Quantity (float) property. (ex: FGoodsQuantity)
-	// New map will have Name as key and Quantity as value. Collisions of Name in array are overwritten, last one wins.
-	// ex: Useful for transforming an array of GoodsQuantities to a map with each key as the GoodsQuantity.Name and the Quantity as the value.
-	template<class T>
-	static FORCEINLINE TMap<FName, float> NamedQuantitiesToFloatMap(TArray<T> NamedItems)
-	{
-		TMap<FName, float> NamedFloatMap;
-		for (T& NamedItem : NamedItems)
-		{
-			NamedFloatMap.Add(NamedItem.Name, static_cast<float>(NamedItem.Quantity));
-		}
-		return NamedFloatMap;
-	}
-
-
 	// For an array where each item has a Chance (float) property that is > 0.0, this will pick one item from the array.
 	// Item picked is a random selection in the weighted list. 
 	// Can return nullptr if list is empty or results in negative total weight.
@@ -176,7 +145,7 @@ public:
 			TotalWeightedChance = 0.0f;
 			for (T& WeightedItem : WeightedItems)
 			{
-				TotalWeightedChance += WeightedItem.Chance;
+				TotalWeightedChance += FMath::Abs(WeightedItem.Chance);
 			}
 		}
 		if (TotalWeightedChance <= 0.0f)

@@ -2,8 +2,10 @@
 
 #include "Engine/DataTable.h"
 #include "GoodsQuantity.h"
-#include "ToolBase.h"
+//#include "ToolBase.h"
 #include "PlayerLevelUpData.generated.h"
+
+class UToolBase;
 
 // This struct represents one row of data describing requirements for a player level up.
 USTRUCT(BlueprintType)

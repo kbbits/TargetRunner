@@ -105,9 +105,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		bool UpdateFromAttributeDataMap(const TMap<FName, FAttributeData>& DataMap);
 
+	// Call this to set base attribute data that matches our current AttributeData.Name. Returns true if matching attribute data was found and set.
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
+		bool UpdateFromAttributeDataArray(const TArray<FAttributeData>& DataArray);
+
 	// Fills the given attribute map with an entry for our base attribute data, uses AttributeData.Name as key.
 	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
 		void FillAttributeDataMap(UPARAM(ref)TMap<FName, FAttributeData>& DataMap);
+
+	UFUNCTION(BlueprintCallable, Category = "ItemAttributes")
+		void FillAttributeDataArray(UPARAM(ref)TArray<FAttributeData>& DataArray);
 
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include "ToolBase.h"
 #include "TRPlayerControllerBase.h"
 #include "TRPlayerState.h"
 #include "TargetRunner.h"
@@ -8,7 +9,6 @@
 #include "GoodsFunctionLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-//#include "Engine/World.h"
 #include "..\Public\TRPlayerControllerBase.h"
 
 ATRPlayerControllerBase::ATRPlayerControllerBase()
@@ -852,7 +852,7 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 	GetComponents<UActorAttributeComponent>(AttributeComps);
 	for (UActorAttributeComponent* Attr : AttributeComps)
 	{
-		Attr->FillAttributeDataMap(SaveData.AttributeData.Attributes);
+		Attr->FillAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
 	// Tools & equipped tools
 	ToolInventory.GenerateValueArray(SaveData.ToolInventory);
@@ -862,8 +862,8 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 		SaveData.LastEquippedItems.Add(TmpTool->ItemGuid);
 	}
 	// Other data
-	SaveData.AttributeData.FloatAttributes.Add(FName(TEXT("MaxEquippedWeapons")), static_cast<float>(MaxEquippedWeapons));
-	SaveData.AttributeData.FloatAttributes.Add(FName(TEXT("MaxEquippedEquipment")), static_cast<float>(MaxEquippedEquipment));
+	SaveData.AttributeData.IntAttributes.Add(FTRNamedInt(FName(TEXT("MaxEquippedWeapons")), MaxEquippedWeapons));
+	SaveData.AttributeData.IntAttributes.Add(FTRNamedInt(FName(TEXT("MaxEquippedEquipment")), MaxEquippedEquipment));
 	// Get data from PlayerState
 	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
 	if (TRPlayerState)
@@ -887,7 +887,7 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	GetComponents<UActorAttributeComponent>(AttributeComps);
 	for (UActorAttributeComponent* Attr : AttributeComps)
 	{
-		Attr->UpdateFromAttributeDataMap(SaveData.AttributeData.Attributes);
+		Attr->UpdateFromAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
 	// Tools
 	ToolInventory.Empty();
@@ -896,9 +896,16 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 		ToolInventory.Add(CurToolData.AttributeData.ItemGuid, CurToolData);
 	}
 	// Other data
-	MaxEquippedWeapons = static_cast<int32>(SaveData.AttributeData.FloatAttributes.FindRef(FName(TEXT("MaxEquippedWeapons"))));
+	const FTRNamedInt* TmpInt;
+	TmpInt = FindInNamedArray<FTRNamedInt>(SaveData.AttributeData.IntAttributes, FName(TEXT("MaxEquippedWeapons")));
+	if (TmpInt) {
+		MaxEquippedWeapons = TmpInt->Quantity;
+	}
 	MaxEquippedWeapons = MaxEquippedWeapons < 1 ? 1 : MaxEquippedWeapons;
-	MaxEquippedEquipment = static_cast<int32>(SaveData.AttributeData.FloatAttributes.FindRef(FName(TEXT("MaxEquippedEquipment"))));
+	TmpInt = FindInNamedArray<FTRNamedInt>(SaveData.AttributeData.IntAttributes, FName(TEXT("MaxEquippedEquipment")));
+	if (TmpInt) {
+		MaxEquippedEquipment = TmpInt->Quantity;
+	}
 	MaxEquippedEquipment = MaxEquippedEquipment < 0 ? 0 : MaxEquippedEquipment;
 	// Re-equip all tools
 	ServerUnequipAllTools();

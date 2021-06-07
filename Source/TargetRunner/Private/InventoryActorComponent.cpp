@@ -3,6 +3,7 @@
 
 #include "InventoryActorComponent.h"
 #include "TargetRunner.h"
+#include "NamedPrimitiveTypes.h"
 #include "GameFramework/PlayerController.h"
 
 // Sets default values for this component's properties

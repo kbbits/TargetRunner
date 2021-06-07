@@ -3,6 +3,7 @@
 #include "AttributeData.h"
 #include "GoodsQuantity.h"
 #include "ResourceRateFilterSet.h"
+#include "NamedPrimitiveTypes.h"
 #include "AttributeDataSet.generated.h"
 
 USTRUCT(BlueprintType)
@@ -21,26 +22,36 @@ public:
 
 	// Attribute Data
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
-		TMap<FName, FAttributeData> Attributes;
+		TArray<FAttributeData> Attributes;
+		//TMap<FName, FAttributeData> Attributes;
+
 
 	// Resource Rate Data
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
-		TMap<FName, FResourceRateFilterSet> ResourceRateAttributes;
+		TArray<FNamedResourceRateFilterSet> ResourceRateAttributes;
+		//TMap<FName, FResourceRateFilterSet> ResourceRateAttributes;
 
 	// Boolean Attributes
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
-		TMap<FName, bool> BoolAttributes;
+		TArray<FTRNamedBool> BoolAttributes;
+		//TMap<FName, bool> BoolAttributes;
 
 	// Float Attributes
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
-		TMap<FName, float> FloatAttributes;
+		TArray<FTRNamedFloat> FloatAttributes;
+		//TMap<FName, float> FloatAttributes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
+		TArray<FTRNamedInt> IntAttributes;
 
 	// Vector Attributes
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
-		TMap<FName, FVector> VectorAttributes;
+		TArray<FTRNamedVector> VectorAttributes;
+		//TMap<FName, FVector> VectorAttributes;
 
 	// GoodsQuantities
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
-		TMap<FName, FGoodsQuantitySet> GoodsQuantitiesAttributes;
+		TArray<FNamedGoodsQuantitySet> GoodsQuantitiesAttributes;
+		//TMap<FName, FGoodsQuantitySet> GoodsQuantitiesAttributes;
 
 };
