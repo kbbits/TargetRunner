@@ -17,14 +17,6 @@ UTRGameInstance::UTRGameInstance()
 }
 
 
-void UTRGameInstance::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(UTRGameInstance, HostProfileGuid);
-}
-
-
 FString UTRGameInstance::GetLevelTemplatesSaveFilename_Implementation()
 {
 	return FString::Printf(TEXT("%s_LT"), *HostProfileGuid.ToString(EGuidFormats::Digits));
@@ -37,7 +29,7 @@ FString UTRGameInstance::GetPlayerRecordsSaveFilename_Implementation()
 }
 
 
-void UTRGameInstance::ServerSaveAllPlayerData_Implementation()
+void UTRGameInstance::SaveAllPlayerData()
 {
 	ATRPlayerControllerBase* PController = nullptr;
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
@@ -48,11 +40,6 @@ void UTRGameInstance::ServerSaveAllPlayerData_Implementation()
 			PController->PersistentDataComponent->ServerSavePlayerData();
 		}
 	}
-}
-
-bool UTRGameInstance::ServerSaveAllPlayerData_Validate()
-{
-	return true;
 }
 
 

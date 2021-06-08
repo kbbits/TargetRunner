@@ -66,15 +66,15 @@ public:
 		TArray<FTRNamedFloat> HitCounts;
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TArray<FTRNamedFloat> GoodsInventory;
+		TArray<FGoodsQuantity> GoodsInventory;
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TArray<FTRNamedFloat> SnapshotInventory;
+		TArray<FGoodsQuantity> SnapshotInventory;
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TArray<FTRNamedFloat> TotalGoodsCollected;
+		TArray<FGoodsQuantity> TotalGoodsCollected;
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TArray<FTRNamedFloat> TotalGoodsSpent;
+		TArray<FGoodsQuantity> TotalGoodsSpent;
 		
 };

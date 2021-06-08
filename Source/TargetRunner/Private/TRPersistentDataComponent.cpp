@@ -309,7 +309,6 @@ void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
 				SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
 			}
 			TRPlayerController->GetPlayerSaveData(SaveGame->PlayerSaveData);
-			
 			UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Saving player data. Guid: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
 			FString InvBuff;
 			if (SaveGame->PlayerSaveData.GoodsInventory.Num() == 0)
@@ -317,7 +316,7 @@ void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
 				UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
 			}
 			// TODO remove this debug logging
-			for (FTRNamedFloat InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+			for (FGoodsQuantity InvElem : SaveGame->PlayerSaveData.GoodsInventory)
 			{
 				InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Name.ToString(), InvElem.Quantity));
 			}
@@ -370,7 +369,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 							{
 								UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
 							}
-							for (FTRNamedFloat InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+							for (FGoodsQuantity InvElem : SaveGame->PlayerSaveData.GoodsInventory)
 							{
 								InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Name.ToString(), InvElem.Quantity));
 							}
@@ -379,7 +378,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 							TRPlayerController->UpdateFromPlayerSaveData(SaveGame->PlayerSaveData);
 							if (TRPlayerController->IsLocalController()) 
 							{
-								// Update game instance with our local info
+								// Update game instance with host's local info
 								UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 								if (GameInst)
 								{
@@ -454,10 +453,10 @@ bool UTRPersistentDataComponent::ServerLoadPlayerData_Validate(const FGuid Optio
 void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const FPlayerSaveData PlayerSaveData)
 {
 	// Get parent PlayerController
-	// Controler UpdateFromPlayerSaveData - calls PlayerState.UpdateFromPlayerSaveData
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
 	if (TRPlayerController)
 	{
+		// Controler UpdateFromPlayerSaveData - calls PlayerState.UpdateFromPlayerSaveData
 		TRPlayerController->UpdateFromPlayerSaveData(PlayerSaveData);
 		UE_LOG(LogTRGame, Log, TEXT("ClientEchoLoadPlayerData - updated player data for: %s."), *PlayerSaveData.PlayerGuid.ToString());
 	}

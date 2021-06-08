@@ -15,7 +15,8 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelTemplatesSaved, const bool, bSuccessful);
 
 /**
- * 
+ * Note GameInstance is not replicated.
+ * Most functions are to be called on the server only.
  */
 UCLASS()
 class TARGETRUNNER_API UTRGameInstance : public UGameInstance
@@ -38,9 +39,10 @@ public:
 		FGuid ClientLocalPlayerGuid;
 
 	// [Server]
-	UPROPERTY(BlueprintReadWrite, Replicated)
+	UPROPERTY(BlueprintReadWrite)
 		FGuid HostProfileGuid;
 
+	// [Server]
 	// The LevelForge class to use.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ULevelForgeBase> DefaultLevelForgeClass;
@@ -50,12 +52,15 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 		TMap<FName, ULevelTemplateContext*> LevelTemplatesMap;
 
+	// [Server]
 	UPROPERTY(BlueprintReadWrite)
 		bool bLevelTemplatesLoaded = false;
-
+	
+	// [Server]
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FRandomStream LevelRandStream;
 
+	// [Server]
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnLevelTemplatesSaved OnLevelTemplatesSaved;
 
@@ -82,9 +87,11 @@ protected:
 
 public:
 
-	// [Server]
-	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
-		void ServerSaveAllPlayerData();
+	// [Server Only]
+	// Saves player data for all selected PlayerControllers.
+	// Saving is managed through each PlayerController's PersistentDataComponent.
+	UFUNCTION(BlueprintCallable)
+		void SaveAllPlayerData();
 
 	// [Server Only]
 	UFUNCTION(BlueprintCallable)

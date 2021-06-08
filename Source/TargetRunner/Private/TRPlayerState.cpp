@@ -68,6 +68,23 @@ void ATRPlayerState::BeginPlay()
 	}
 }
 
+
+void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
+{
+	Super::CopyProperties(NewPlayerState);
+
+	ATRPlayerState* NewTRPlayerState = Cast<ATRPlayerState>(NewPlayerState);
+	if (ensure(NewTRPlayerState))
+	{
+		if (EnergyAttribute && NewTRPlayerState->EnergyAttribute)
+		{
+			NewTRPlayerState->EnergyAttribute->AttributeData = EnergyAttribute->AttributeData;
+			NewTRPlayerState->EnergyAttribute->ModifiedAttributeData = EnergyAttribute->ModifiedAttributeData;
+		}
+	}
+}
+
+
 void ATRPlayerState::ApplyAttributeModifiers_Implementation(const TArray<FAttributeModifier>& NewModifiers)
 {
 	TArray<UActorAttributeComponent*> AttributeComps;

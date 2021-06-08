@@ -66,6 +66,19 @@ public:
 	}
 
 
+	// Create an array of GoodsQuantities from a FTRNamedFloats.
+	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
+		static FORCEINLINE TArray<FGoodsQuantity> NamedFloatArrayToGoodsQuantityArray(TArray<FTRNamedFloat> NamedFloatArray)
+	{
+		TArray<FGoodsQuantity> GoodsQuantityArray;
+		for (FTRNamedFloat& NamedItem : NamedFloatArray)
+		{
+			GoodsQuantityArray.Add(FGoodsQuantity(NamedItem.Name, NamedItem.Quantity));
+		}
+		return GoodsQuantityArray;
+	}
+
+
 	// Create a map of Name->FGoodsQuantity from a FTRNamedFloats where each key is the named float's name.
 	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
 	static FORCEINLINE TMap<FName, FGoodsQuantity> NamedFloatArrayToGoodsQuantityMap(TArray<FTRNamedFloat> NamedFloatArray)
@@ -77,6 +90,7 @@ public:
 		}
 		return GoodsQuantityMap;
 	}
+
 
 	// Create a map of Name -> Quantity from an array of FGoodsQuantities.
 	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")

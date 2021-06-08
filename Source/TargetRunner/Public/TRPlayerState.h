@@ -57,6 +57,9 @@ public:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// For seamless travel property migration to new PlayerState
+	virtual void CopyProperties(APlayerState* NewPlayerState) override;
+	
 	// This should typically be called through the TRPlayerController.ApplyAttributeModifiers(). That function handles replication.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void ApplyAttributeModifiers(const TArray<FAttributeModifier>& NewModifiers);

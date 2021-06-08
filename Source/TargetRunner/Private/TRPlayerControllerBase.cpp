@@ -854,6 +854,9 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 	{
 		Attr->FillAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
+	// Inventory
+	GoodsInventory->GetSaveableGoods(SaveData.GoodsInventory);
+	GoodsInventory->GetSnapshotGoods(SaveData.SnapshotInventory);
 	// Tools & equipped tools
 	ToolInventory.GenerateValueArray(SaveData.ToolInventory);
 	SaveData.LastEquippedItems.Empty(EquippedTools.Num());
@@ -889,6 +892,8 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	{
 		Attr->UpdateFromAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
+	// Inventory
+	GoodsInventory->ServerSetInventory(SaveData.GoodsInventory, SaveData.SnapshotInventory);
 	// Tools
 	ToolInventory.Empty();
 	for (FToolData CurToolData : SaveData.ToolInventory)

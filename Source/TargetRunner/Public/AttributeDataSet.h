@@ -25,7 +25,6 @@ public:
 		TArray<FAttributeData> Attributes;
 		//TMap<FName, FAttributeData> Attributes;
 
-
 	// Resource Rate Data
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category = "ItemAttributes")
 		TArray<FNamedResourceRateFilterSet> ResourceRateAttributes;
