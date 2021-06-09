@@ -76,10 +76,22 @@ void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
 	ATRPlayerState* NewTRPlayerState = Cast<ATRPlayerState>(NewPlayerState);
 	if (ensure(NewTRPlayerState))
 	{
-		if (EnergyAttribute && NewTRPlayerState->EnergyAttribute)
-		{
-			NewTRPlayerState->EnergyAttribute->AttributeData = EnergyAttribute->AttributeData;
-			NewTRPlayerState->EnergyAttribute->ModifiedAttributeData = EnergyAttribute->ModifiedAttributeData;
+		NewTRPlayerState->PlayerGuid = PlayerGuid;
+		NewTRPlayerState->ProfileName = ProfileName;
+		NewTRPlayerState->DisplayName = DisplayName;
+		NewTRPlayerState->ExperienceLevel = ExperienceLevel;
+		NewTRPlayerState->LevelUpGoodsProgress = LevelUpGoodsProgress;
+		NewTRPlayerState->MaxTierCompleted = MaxTierCompleted;
+		NewTRPlayerState->TotalRunsPlayed = TotalRunsPlayed;
+		NewTRPlayerState->TotalPlaytimeInRuns = TotalPlaytimeInRuns;
+		if (EnergyAttribute && NewTRPlayerState->EnergyAttribute) {
+			EnergyAttribute->CopyPropertiesToOther(NewTRPlayerState->EnergyAttribute);
+		}
+		if (AnimusAttribute && NewTRPlayerState->AnimusAttribute) {
+			AnimusAttribute->CopyPropertiesToOther(NewTRPlayerState->AnimusAttribute);
+		}
+		if (HealthAttribute && NewTRPlayerState->HealthAttribute) {
+			HealthAttribute->CopyPropertiesToOther(NewTRPlayerState->HealthAttribute);
 		}
 	}
 }

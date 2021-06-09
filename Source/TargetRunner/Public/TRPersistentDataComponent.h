@@ -136,14 +136,19 @@ public:
 		static TArray<FPlayerSaveData> GetAllSaveProfileData();
 
 	// [Server]
-	// Save the player's data
+	// Save the player's data. Asynchronus call.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerSavePlayerData();
 
 	// [Server]
-	// Load the player's data
+	// Load the player's data using the guid in PlayerState.PlayerGuid. Synchronus call.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerLoadPlayerData(const FGuid PlayerGuid);
+		void ServerLoadPlayerData();
+
+	// [Server]
+	// Load the player's data. Synchronus call.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerLoadPlayerDataByGuid(const FGuid ForcePlayerGuid);
 
 	// [Client]
 	// Echo loaded player data back to client

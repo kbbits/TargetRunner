@@ -65,6 +65,49 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 }
 
 
+void ATRPlayerControllerBase::SeamlessTravelFrom(class APlayerController* OldPC)
+{
+	Super::SeamlessTravelFrom(OldPC);
+	
+	ATRPlayerControllerBase* OldTRPlayerController = Cast<ATRPlayerControllerBase>(OldPC);
+	if (OldTRPlayerController)
+	{
+		// Inventory
+		if (OldTRPlayerController->GoodsInventory)
+		{
+			TArray<FGoodsQuantity> TmpGoods;
+			TArray<FGoodsQuantity> TmpSnapGoods;
+			OldTRPlayerController->GoodsInventory->GetAllGoods(TmpGoods);
+			OldTRPlayerController->GoodsInventory->GetSnapshotGoods(TmpSnapGoods);
+			GoodsInventory->ServerSetInventory(TmpGoods, TmpSnapGoods);
+		}
+		// Attributes
+		if (RunSpeedAttribute && OldTRPlayerController->RunSpeedAttribute) {
+			OldTRPlayerController->RunSpeedAttribute->CopyPropertiesToOther(RunSpeedAttribute);
+		}
+		if (JumpForceAttribute && OldTRPlayerController->JumpForceAttribute) {
+			OldTRPlayerController->JumpForceAttribute->CopyPropertiesToOther(JumpForceAttribute);
+		}
+		if (CollectionRangeAttribute && OldTRPlayerController->CollectionRangeAttribute) {
+			OldTRPlayerController->CollectionRangeAttribute->CopyPropertiesToOther(CollectionRangeAttribute);
+		}
+		// Tool Inventory
+		ToolInventory.Empty(OldTRPlayerController->ToolInventory.Num());
+		ToolInventory.Append(OldTRPlayerController->ToolInventory);
+		// Equipped Tools
+		for (UToolBase* Tool : OldTRPlayerController->EquippedTools)
+		{
+			if (Tool) {
+				ServerEquipTool(Tool->ItemGuid);
+			}
+		}
+		MaxEquippedWeapons = OldTRPlayerController->MaxEquippedWeapons;
+		MaxEquippedEquipment = OldTRPlayerController->MaxEquippedEquipment;
+		FactionId = OldTRPlayerController->FactionId;
+	}
+}
+
+
 void ATRPlayerControllerBase::InitPlayerState()
 {
 	APlayerController::InitPlayerState();	

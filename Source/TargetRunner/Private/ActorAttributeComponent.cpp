@@ -115,6 +115,19 @@ void UActorAttributeComponent::PostEditChangeProperty(FPropertyChangedEvent& Pro
 #endif
 
 
+void UActorAttributeComponent::CopyPropertiesToOther(UActorAttributeComponent* OtherComponent)
+{
+	if (OtherComponent)
+	{
+		// First, set the modifiers
+		OtherComponent->Modifiers.Empty(Modifiers.Num());
+		OtherComponent->Modifiers.Append(Modifiers);
+		// Call SetAttributeData to set values. It will recalculate modified values which will replicate.
+		OtherComponent->SetAttributeData(AttributeData);
+	}
+}
+
+
 void UActorAttributeComponent::OnRep_AttributeDataChanged(FAttributeData OldAttributeData)
 {
 	/*

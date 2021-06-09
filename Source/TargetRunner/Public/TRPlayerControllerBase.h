@@ -107,6 +107,15 @@ protected:
 	UPROPERTY(EditAnywhere)
 		TArray<TSubclassOf<UToolBase>> MarketToolClasses;
 
+public:
+
+	/**
+	 * Called when seamless traveling and the specified PC is being replaced by this one
+	 * copy over data that should persist
+	 * (not called if PlayerController is the same for the from and to GameModes)
+	 */
+	virtual void SeamlessTravelFrom(class APlayerController* OldPC) override;
+
 protected:
 
 	virtual void InitPlayerState() override;

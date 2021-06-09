@@ -340,7 +340,7 @@ bool UTRPersistentDataComponent::ServerSavePlayerData_Validate()
 }
 
 
-void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid PlayerGuid)
+void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation()
 {
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
 	if (TRPlayerController)
@@ -348,7 +348,37 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState)
 		{
-			TRPlayerState->PlayerGuid = PlayerGuid;
+			if (TRPlayerState->PlayerGuid.IsValid())
+			{
+				ServerLoadPlayerDataByGuid(TRPlayerState->PlayerGuid);
+			}
+			else
+			{
+				UE_LOG(LogTRGame, Error, TEXT("TRPersistentDataComponent::ServerLoadPlayerData called when PlayerState.PlayerGuid is not valid."));
+			}
+		}
+	}
+}
+
+
+bool UTRPersistentDataComponent::ServerLoadPlayerData_Validate()
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ServerLoadPlayerDataByGuid_Implementation(const FGuid ForcePlayerGuid)
+{
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (TRPlayerController)
+	{
+		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
+		if (TRPlayerState)
+		{
+			if (ForcePlayerGuid.IsValid())
+			{
+				TRPlayerState->PlayerGuid = ForcePlayerGuid;
+			}
 			FString PlayerSaveFilename = GetPlayerSaveFilename();
 			if (!PlayerSaveFilename.IsEmpty())
 			{
@@ -357,9 +387,9 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 					UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(PlayerSaveFilename, 0));
 					if (SaveGame)
 					{
-						if (PlayerGuid.IsValid() && SaveGame->PlayerSaveData.PlayerGuid.IsValid() && SaveGame->PlayerSaveData.PlayerGuid != PlayerGuid) 
+						if (ForcePlayerGuid.IsValid() && SaveGame->PlayerSaveData.PlayerGuid.IsValid() && SaveGame->PlayerSaveData.PlayerGuid != ForcePlayerGuid) 
 						{
-							UE_LOG(LogTRGame, Warning, TEXT("Player guid in file: %s does not match player guid %s."), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits), *PlayerGuid.ToString(EGuidFormats::Digits));
+							UE_LOG(LogTRGame, Warning, TEXT("Player guid in file: %s does not match player guid %s."), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits), *ForcePlayerGuid.ToString(EGuidFormats::Digits));
 						}
 						else
 						{
@@ -405,7 +435,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 					FPlayerSaveData NewSaveData;
 					if (!TRPlayerState->PlayerGuid.IsValid()) 
 					{ 
-						if (PlayerGuid.IsValid()) { TRPlayerState->PlayerGuid = PlayerGuid; }
+						if (ForcePlayerGuid.IsValid()) { TRPlayerState->PlayerGuid = ForcePlayerGuid; }
 						else { TRPlayerState->PlayerGuid = FGuid::NewGuid(); }
 					}					
 					if (TRPlayerController->IsLocalController())
@@ -444,7 +474,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerData_Implementation(const FGuid
 }
 
 
-bool UTRPersistentDataComponent::ServerLoadPlayerData_Validate(const FGuid OptionalGuid)
+bool UTRPersistentDataComponent::ServerLoadPlayerDataByGuid_Validate(const FGuid ForcePlayerGuid)
 {
 	return true;
 }

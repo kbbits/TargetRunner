@@ -4,6 +4,8 @@
 #include "TR_GameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "TRGameInstance.h"
+#include "TRPlayerControllerBase.h"
+#include "TRPlayerState.h"
 #include "RoomPlatformGridMgr.h"
 #include "ResourceDropperBase.h"
 #include "ResourceFunctionLibrary.h"
@@ -412,4 +414,73 @@ TSubclassOf<ARoomPlatformBase> ATR_GameMode::GetRoomClass_Implementation()
 		return DefaultRoomClass;
 	}
 	return DefaultRoomClass;
+}
+
+
+void ATR_GameMode::OnGameModeSeamlessTravelComplete_Implementation()
+{
+
+}
+
+
+void ATR_GameMode::OnAllPlayersTravelComplete_Implementation()
+{
+
+}
+
+
+void ATR_GameMode::PostSeamlessTravel()
+{
+	Super::PostSeamlessTravel();
+	// Call our hook
+	OnGameModeSeamlessTravelComplete();
+}
+
+
+void ATR_GameMode::GenericPlayerInitialization(AController* C)
+{
+	Super::GenericPlayerInitialization(C);
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(C);
+	if (TRPlayerController)
+	{
+		ATRPlayerState* TRPlayerState = TRPlayerController->GetPlayerState<ATRPlayerState>();
+		if (TRPlayerState)
+		{
+			if (TRPlayerState->PlayerGuid.IsValid())
+			{
+				//TRPlayerController->PersistentDataComponent->ServerLoadPlayerData();
+			}
+			else
+			{
+				UE_LOG(LogTRGame, Error, TEXT("TRGameMode::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
+			}
+		}
+	}
+
+	// Call the BP hook.
+	OnGenericPlayerInitialization(C);
+}
+
+
+void ATR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
+	if (NumTravellingPlayers == 0)
+	{
+		OnAllPlayersTravelComplete();
+	}
+}
+
+
+bool ATR_GameMode::ReadyToStartMatch_Implementation()
+{
+	// By default start when we have > 0 players
+	if (GetMatchState() == MatchState::WaitingToStart)
+	{
+		if (NumTravellingPlayers == 0 && bRoomMapReady)
+		{
+			return true;
+		}
+	}
+	return false;
 }
