@@ -73,8 +73,9 @@ void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
 {
 	Super::CopyProperties(NewPlayerState);
 
+	UE_LOG(LogTRGame, Log, TEXT("PlayerState::CopyProperties to new player state: %s"), *NewPlayerState->GetName());
 	ATRPlayerState* NewTRPlayerState = Cast<ATRPlayerState>(NewPlayerState);
-	if (ensure(NewTRPlayerState))
+	if (NewTRPlayerState)
 	{
 		NewTRPlayerState->PlayerGuid = PlayerGuid;
 		NewTRPlayerState->ProfileName = ProfileName;
@@ -85,14 +86,18 @@ void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
 		NewTRPlayerState->TotalRunsPlayed = TotalRunsPlayed;
 		NewTRPlayerState->TotalPlaytimeInRuns = TotalPlaytimeInRuns;
 		if (EnergyAttribute && NewTRPlayerState->EnergyAttribute) {
-			EnergyAttribute->CopyPropertiesToOther(NewTRPlayerState->EnergyAttribute);
+			NewTRPlayerState->EnergyAttribute->CopyPropertiesFromOther(EnergyAttribute);
 		}
 		if (AnimusAttribute && NewTRPlayerState->AnimusAttribute) {
-			AnimusAttribute->CopyPropertiesToOther(NewTRPlayerState->AnimusAttribute);
+			NewTRPlayerState->AnimusAttribute->CopyPropertiesFromOther(AnimusAttribute);
 		}
 		if (HealthAttribute && NewTRPlayerState->HealthAttribute) {
-			HealthAttribute->CopyPropertiesToOther(NewTRPlayerState->HealthAttribute);
+			NewTRPlayerState->HealthAttribute->CopyPropertiesFromOther(HealthAttribute);
 		}
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Error, TEXT("PlayerState::CopyProperties - New player state is null."));
 	}
 }
 

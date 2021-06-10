@@ -1,14 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ToolBase.h"
 #include "TRPlayerControllerBase.h"
+#include "ToolBase.h"
 #include "TRPlayerState.h"
 #include "TargetRunner.h"
 #include "TRGameModeLobby.h"
 #include "GoodsFunctionLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+// For intellisense
 #include "..\Public\TRPlayerControllerBase.h"
 
 ATRPlayerControllerBase::ATRPlayerControllerBase()
@@ -69,6 +70,11 @@ void ATRPlayerControllerBase::SeamlessTravelFrom(class APlayerController* OldPC)
 {
 	Super::SeamlessTravelFrom(OldPC);
 	
+	if (!OldPC) {
+		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase::SeamlessTravelFrom old player controller is null"));
+		return;
+	}
+	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase::SeamlessTravelFrom %s to %s"), *OldPC->GetName(), *this->GetName());
 	ATRPlayerControllerBase* OldTRPlayerController = Cast<ATRPlayerControllerBase>(OldPC);
 	if (OldTRPlayerController)
 	{
@@ -83,13 +89,13 @@ void ATRPlayerControllerBase::SeamlessTravelFrom(class APlayerController* OldPC)
 		}
 		// Attributes
 		if (RunSpeedAttribute && OldTRPlayerController->RunSpeedAttribute) {
-			OldTRPlayerController->RunSpeedAttribute->CopyPropertiesToOther(RunSpeedAttribute);
+			RunSpeedAttribute->CopyPropertiesFromOther(OldTRPlayerController->RunSpeedAttribute);
 		}
 		if (JumpForceAttribute && OldTRPlayerController->JumpForceAttribute) {
-			OldTRPlayerController->JumpForceAttribute->CopyPropertiesToOther(JumpForceAttribute);
+			JumpForceAttribute->CopyPropertiesFromOther(OldTRPlayerController->JumpForceAttribute);
 		}
 		if (CollectionRangeAttribute && OldTRPlayerController->CollectionRangeAttribute) {
-			OldTRPlayerController->CollectionRangeAttribute->CopyPropertiesToOther(CollectionRangeAttribute);
+			CollectionRangeAttribute->CopyPropertiesFromOther(OldTRPlayerController->CollectionRangeAttribute);
 		}
 		// Tool Inventory
 		ToolInventory.Empty(OldTRPlayerController->ToolInventory.Num());
@@ -105,18 +111,22 @@ void ATRPlayerControllerBase::SeamlessTravelFrom(class APlayerController* OldPC)
 		MaxEquippedEquipment = OldTRPlayerController->MaxEquippedEquipment;
 		FactionId = OldTRPlayerController->FactionId;
 	}
+	else
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase::SeamlessTravelFrom - Old PlayerController is not a valid TRPlayerController."))
+	}
 }
 
 
 void ATRPlayerControllerBase::InitPlayerState()
 {
-	APlayerController::InitPlayerState();	
+	Super::InitPlayerState();	
 }
 
 
 void ATRPlayerControllerBase::OnPossess(APawn* InPawn)
 {
-	APlayerController::OnPossess(InPawn);
+	Super::OnPossess(InPawn);
 	UpdateMovementFromAttributes();
 }
 

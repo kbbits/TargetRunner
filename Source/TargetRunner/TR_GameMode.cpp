@@ -452,7 +452,7 @@ void ATR_GameMode::GenericPlayerInitialization(AController* C)
 			}
 			else
 			{
-				UE_LOG(LogTRGame, Error, TEXT("TRGameMode::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
+				UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
 			}
 		}
 	}
@@ -465,7 +465,35 @@ void ATR_GameMode::GenericPlayerInitialization(AController* C)
 void ATR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
-	if (NumTravellingPlayers == 0)
+
+	int32 NumLoadedPlayers = 0;
+	int32 TotalPlayers = 0;
+	UE_LOG(LogTRGame, Log, TEXT("ATRGameModeLobby::HandleStartingNewPlayer - NumTravellingPlayers %d"), NumTravellingPlayers);
+	TArray<AController*> ControllerList;
+	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
+	{
+		ControllerList.Add(It->Get());
+	}
+	for (AController* Controller : ControllerList)
+	{
+		if (Controller->PlayerState)
+		{
+			APlayerController* PlayerController = Cast<APlayerController>(Controller);
+			if (PlayerController)
+			{
+				TotalPlayers++;
+			}
+			else
+			{
+				continue;
+			}
+			if (PlayerController->HasClientLoadedCurrentWorld())
+			{
+				NumLoadedPlayers++;
+			}
+		}
+	}
+	if (NumLoadedPlayers == TotalPlayers)
 	{
 		OnAllPlayersTravelComplete();
 	}

@@ -79,8 +79,8 @@ public:
 	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
-	// Helper to copy properties from this component to another. Used in PlayerState.CopyProperties.
-	void CopyPropertiesToOther(UActorAttributeComponent* OtherComponent);
+	// Helper to copy properties from another component to this one. Used in PlayerState.CopyProperties and PlayerController.SeamlessTravelFrom
+	void CopyPropertiesFromOther(UActorAttributeComponent* OtherComponent);
 
 	// [Client]
 	// Replication notification

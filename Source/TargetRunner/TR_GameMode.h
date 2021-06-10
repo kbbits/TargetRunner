@@ -76,7 +76,12 @@ public:
 
 protected:
 
-	// Indicates that the LevelTemplate has been set and iss ready to be used.
+	// Indicates if the room map generation has started.
+	// This will remain true until
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
+		bool bRoomMapGenerateStarted;
+
+	// Indicates that the LevelTemplate has been set and isready to be used.
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 		bool bLevelTemplateReady;
 
@@ -204,6 +209,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 		void OnGameModeSeamlessTravelComplete();
 
+	/** All players have completed travel. */
 	UFUNCTION(BlueprintNativeEvent)
 		void OnAllPlayersTravelComplete();
 

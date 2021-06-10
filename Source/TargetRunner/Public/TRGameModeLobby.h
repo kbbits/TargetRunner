@@ -54,4 +54,43 @@ public:
 	// Returns false if there is no higher experience level for the player. Returns true and a populated GoodsRequired if there does exist a higher xp level for player.
 	UFUNCTION(BlueprintCallable)
 		bool GetLevelUpDataForPlayer(const ATRPlayerControllerBase* PlayerController, FPlayerLevelUpData& LevelUpData);
+
+	/** GameMode's seamless travel has completed. All player controllers may not have completed travel yet. */
+	UFUNCTION(BlueprintNativeEvent)
+		void OnGameModeSeamlessTravelComplete();
+
+	/** All players have completed travel. */
+	UFUNCTION(BlueprintNativeEvent)
+		void OnAllPlayersTravelComplete();
+
+
+	/** Called when GameMode has completed seamless travel.
+	*  We override to add a hook for GameMode level actions.
+	*/
+	virtual void PostSeamlessTravel() override;
+
+	/**
+	 * Handles all player initialization that is shared between the travel methods
+	 * (i.e. called from both PostLogin() and HandleSeamlessTravelPlayer())
+	 * This (does not loads player controller and state data from save) and then
+	 * calls the BP version OnGenericPlayerInitialization.
+	 */
+	virtual void GenericPlayerInitialization(AController* C) override;
+
+	/** Handle when player controllers change during seamless travel. */
+	//virtual void SwapPlayerControllers(APlayerController* OldPC, APlayerController* NewPC) override;
+
+protected:
+
+	/** When each player is starting on the map level. */
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
+
+
+	/** Checks that there are no travelling players.  */
+	virtual bool ReadyToStartMatch_Implementation() override;
+
+protected:
+
+	UFUNCTION(BlueprintImplementableEvent, Category = Game, meta = (DisplayName = "OnGenericPlayerInitialization", ScriptName = "OnGenericPlayerInitialization"))
+		void OnGenericPlayerInitialization(AController* C);
 };
