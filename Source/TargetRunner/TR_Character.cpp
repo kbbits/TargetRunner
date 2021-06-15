@@ -29,6 +29,14 @@ ATR_Character::ATR_Character(const FObjectInitializer& OI) : Super(OI)
 	UE_LOG(LogTRGame, Log, TEXT("TR_Character Constructed"));
 }
 
+
+void ATR_Character::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	SetupCollectionVolume();
+}
+
+
 void ATR_Character::PostInitProperties()
 {
 	Super::PostInitProperties();
@@ -50,7 +58,7 @@ void ATR_Character::SetupCollectionVolume_Implementation()
 	USceneComponent* CollectorParent = GetCollectorParentComponent();
 	if (IsValid(ResourceCollectionVolume))
 	{
-		if (!IsValid(CollectorParent))
+		if (!CollectorParent)
 		{  
 			UE_LOG(LogTRGame, Warning, TEXT("TR_Character SetupCollectionVolume: GetCollectorParentComponent is null."));
 			return;

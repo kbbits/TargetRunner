@@ -41,6 +41,8 @@ UToolBase::UToolBase()
 void UToolBase::ToToolData_Implementation(FToolData& ToolData)
 {
 	ToolData.ToolClass = this->GetClass();
+	ToolData.AttributeData = FAttributeDataSet();
+	ToolData.Modifiers.Empty(2);
 	ToolData.AttributeData.ItemDisplayName = DisplayName;
 	ToolData.AttributeData.ItemGuid = ItemGuid;
 	/*ToolData.AttributeData.FloatAttributes.Add(EMIT_TYPE_NAME, static_cast<float>(static_cast<uint8>(EmitType)));
@@ -172,9 +174,15 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 		if (TmpRateFilter) { 
 			BaseDamageRates = TmpRateFilter->RateFilterSet.Rates; 
 		}
+		else {
+			UE_LOG(LogTRGame, Error, TEXT("ToolBase::UpdateFromToolData - No data found for %s"), *DAMAGE_RATES_NAME.ToString());
+		}
 		TmpRateFilter = FindInNamedArray<FNamedResourceRateFilterSet>(ToolData.AttributeData.ResourceRateAttributes, EXTRACTION_RATES_NAME);
 		if (TmpRateFilter) { 
 			BaseResourceExtractionRates = TmpRateFilter->RateFilterSet.Rates; 
+		}
+		else {
+			UE_LOG(LogTRGame, Error, TEXT("ToolBase::UpdateFromToolData - No data found for %s"), *EXTRACTION_RATES_NAME.ToString());
 		}
 		const FTRNamedBool* TmpBool;
 		TmpBool = FindInNamedArray(ToolData.AttributeData.BoolAttributes, FName(TEXT("AllowActivate")));

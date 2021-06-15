@@ -66,6 +66,12 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 }
 
 
+void ATRPlayerControllerBase::PreClientTravel(const FString& PendingURL, ETravelType TravelType, bool bIsSeamlessTravel)
+{
+	OnPreClientTravel(PendingURL, TravelType, bIsSeamlessTravel);
+}
+
+
 void ATRPlayerControllerBase::SeamlessTravelFrom(class APlayerController* OldPC)
 {
 	Super::SeamlessTravelFrom(OldPC);
@@ -194,6 +200,13 @@ void ATRPlayerControllerBase::OnRep_CurrentTool()
 
 void ATRPlayerControllerBase::ApplyAttributeModifiers_Implementation(const TArray<FAttributeModifier>& NewModifiers)
 {
+	TArray<UActorAttributeComponent*> AttributeComps;
+	GetComponents<UActorAttributeComponent>(AttributeComps);
+	for (UActorAttributeComponent* Attr : AttributeComps)
+	{
+		// AddModifiers will filter for modifiers relevant to the attribute
+		Attr->AddModifiers(NewModifiers);
+	}
 	ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
 	if (TRPlayerState)
 	{
@@ -210,6 +223,13 @@ bool ATRPlayerControllerBase::ApplyAttributeModifiers_Validate(const TArray<FAtt
 
 void ATRPlayerControllerBase::RemoveAttributeModifiers_Implementation(const TArray<FAttributeModifier>& ModifiersToRemove)
 {
+	TArray<UActorAttributeComponent*> AttributeComps;
+	GetComponents<UActorAttributeComponent>(AttributeComps);
+	for (UActorAttributeComponent* Attr : AttributeComps)
+	{
+		// RemoveModifiers will filter for modifiers relevant to the attribute
+		Attr->RemoveModifiers(ModifiersToRemove);
+	}
 	ATRPlayerState* TRPlayerState = GetPlayerState<ATRPlayerState>();
 	if (TRPlayerState)
 	{
@@ -434,17 +454,16 @@ bool ATRPlayerControllerBase::ClientUnequipTool_Validate(const FGuid ToolGuid)
 
 void ATRPlayerControllerBase::ServerUnequipAllTools_Implementation()
 {
-	UToolBase* FoundTool = nullptr;
 	bool bChanged = false;
 	for (UToolBase* TmpTool : EquippedTools)
 	{
 		if (TmpTool)
 		{
-			EquippedTools.Remove(TmpTool);
 			RemoveAttributeModifiers(TmpTool->GetEquipModifiers());
 			bChanged = true;
 		}
 	}
+	EquippedTools.Empty();
 	if (bChanged)
 	{
 		OnEquippedToolsChanged.Broadcast();
@@ -811,6 +830,11 @@ void ATRPlayerControllerBase::SpawnAsCurrentTool_Implementation(UToolBase* NewCu
 	FTransform SpawnTransform;
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	if (!IsValid(NewCurrentTool->ToolActorClass))
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("SpawnAsCurrentTool tool class is not valid."));
+		return;
+	}
 	if (NewCurrentTool && IsValid(NewCurrentTool))
 	{
 		if (CurrentTool)
@@ -937,6 +961,7 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 
 bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
+	UE_LOG(LogTRGame, Log, TEXT("PlayerControllerBase UpdateFromPlayerData started."));
 	UToolBase* TmpTool = nullptr;
 	// Attribute components
 	TArray<UActorAttributeComponent*> AttributeComps;

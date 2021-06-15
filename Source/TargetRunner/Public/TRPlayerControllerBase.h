@@ -109,6 +109,17 @@ protected:
 
 public:
 
+	/** The blueprint hook for native PreClientTravel */
+	/** Called when the local player is about to travel to a new map or IP address. */
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnPreClientTravel(const FString& PendingURL, const ETravelType TravelType, bool bIsSeamlessTravel);
+
+	/**
+	 * Called when the local player is about to travel to a new map or IP address.  
+	 * Calls our OnPreClientTravel BP hook.
+	 */
+	virtual void PreClientTravel(const FString& PendingURL, ETravelType TravelType, bool bIsSeamlessTravel) override;
+
 	/**
 	 * Called when seamless traveling and the specified PC is being replaced by this one
 	 * copy over data that should persist

@@ -17,17 +17,22 @@ public:
 	// Sets default values for this actor's properties
 	ARoomPlatformBase();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
-		TArray<ETRWallState> WallTemplate;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FTransform> WallSectionTransforms;
 		
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_RoomTemplate)
-		FRoomTemplate RoomTemplate;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		bool bRoomTemplateSet;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		bool bGenerateOnClient;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, ReplicatedUsing = OnRep_WallTemplate)
+		TArray<ETRWallState> WallTemplate;
+
+protected:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_RoomTemplate)
+		FRoomTemplate RoomTemplate;
 
 protected:
 	// Called when the game starts or when spawned
@@ -36,6 +41,17 @@ protected:
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	/** 
+	*[Server]
+	* Set this room's room template. Must do this before GenerateRoom can be called. 
+	*/
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
+		void ServerSetRoomTemplate(const FRoomTemplate& NewRoomTemplate);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void OnRep_WallTemplate();
+	void OnRep_WallTemplate_Implementation();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void OnRep_RoomTemplate();
@@ -46,9 +62,14 @@ public:
 
 	// [Server]
 	// Generates the entire room, including walls, etc.
-	// Must set the WallTemplate member var before calling.
+	// Must call SetRoomTemplate first.
 	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
-		void GenerateRoom();
+		void ServerGenerateRoom();
+
+	// [Any]
+	// Native version for implemention.
+	// Generates the entire room, including walls, etc.
+	void GenerateRoomImpl();
 
 	// [Server]
 	// Generates the outer walls for the room. Called by GenerateRoom.

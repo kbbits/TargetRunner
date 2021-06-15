@@ -120,6 +120,7 @@ AActor* AObjectPlacer::PlaceOne(FRandomStream& RandStream, const AActor* PlacedO
 	if (PlacedObjectOwner) { SpawnParams.Owner = const_cast<AActor*>(PlacedObjectOwner); }
 	SpawnTransform = GetPlaceTransform(RandStream, bPlacedSuccessfully);
 	if (!bPlacedSuccessfully) { return nullptr; }
+	UE_LOG(LogTRGame, Log, TEXT("ObjectPlacer PlaceOne %s"), *ClassToPlace->GetName());
 	TmpPlacedObject = GetWorld()->SpawnActor<AActor>(ClassToPlace, SpawnTransform, SpawnParams);
 	PlacedObjects++;
 	return TmpPlacedObject;

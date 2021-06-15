@@ -82,6 +82,8 @@ public:
 
 protected:
 
+	//virtual void HandleLeavingMap() override;
+
 	/** When each player is starting on the map level. */
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 

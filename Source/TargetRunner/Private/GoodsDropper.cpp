@@ -15,11 +15,17 @@ UGoodsDropper::UGoodsDropper()
 */
 bool UGoodsDropper::AddDropTableDataToLibrary(UDataTable* GoodsDropTableData)
 {
+	if (!GoodsDropTableData->IsValidLowLevel())
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("GoodsDropper AddDropTableToLibrary goods drop table is not valid"));
+		return false;
+	}
 	TArray<FName> RowNames = GoodsDropTableData->GetRowNames();
 	if (RowNames.Num() > 0)
 	{
 		// Check that this is a table of FGoodsDropTable rows.
 		FGoodsDropTable* FirstTable = GoodsDropTableData->FindRow<FGoodsDropTable>(RowNames[0], "", false);
+		
 		if (FirstTable == nullptr)
 		{
 			return false;

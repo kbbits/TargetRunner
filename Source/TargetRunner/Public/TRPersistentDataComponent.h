@@ -80,7 +80,8 @@ public:
 
 protected:
 
-	static const FString PlayerFilenameSuffix;
+	static const FString LocalPlayerFilenameSuffix;
+	static const FString RemotePlayerFilenameSuffix;
 
 // ##### Functions
 
@@ -88,7 +89,12 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	FString GetLocalPlayerSaveFilename(const FGuid& PlayerGuid);
+
+	FString GetRemotePlayerSaveFilename(const FGuid& PlayerGuid);
+
 public:	
+
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -103,7 +109,8 @@ public:
 	// Server will generate a new level template. Results will show up in the replicated LevelTemplatesPage property which
 	// will fire the OnNewLevelTemplatesPage delegate event.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerGenerateNewLevelTemplate(const float Tier);
+		void ServerGenerateNewLevelTemplate(const float Tier, const bool bUnlockForPlayer = false);
+
 
 	// [Server]
 	// Just calls GameInstance to save data
@@ -127,13 +134,17 @@ public:
 
 	FString GetPlayerSaveFilename(); 
 
-	// returns a list of all save game filenames in /Saved/SaveGames folder, including the .sav extension.
+	// returns a list of all save game filenames for local profiles in /Saved/SaveGames folder.
 	UFUNCTION(BlueprintPure)
 		static TArray<FString> GetAllSaveProfileFilenames();
 
-	// returns all save games in /Saved/SaveGames folder as FPlayerSaveData structs
+	// returns all save games for local profiles in /Saved/SaveGames folder as FPlayerSaveData structs
 	UFUNCTION(BlueprintCallable)
 		static TArray<FPlayerSaveData> GetAllSaveProfileData();
+
+	// Does a save file exist locally for the given remote player guid?
+	UFUNCTION(BlueprintCallable)
+		bool ProfileExistsForRemotePlayer(FGuid PlayerGuid);
 
 	// [Server]
 	// Save the player's data. Asynchronus call.

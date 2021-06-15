@@ -15,7 +15,8 @@
 #include "GameFramework/SaveGame.h"
 #include "TRGameInstance.h"
 
-const FString UTRPersistentDataComponent::PlayerFilenameSuffix = FString(TEXT("_player"));
+const FString UTRPersistentDataComponent::LocalPlayerFilenameSuffix = FString(TEXT("_player"));
+const FString UTRPersistentDataComponent::RemotePlayerFilenameSuffix = FString(TEXT("_rmtplr"));
 
 // Sets default values for this component's properties
 UTRPersistentDataComponent::UTRPersistentDataComponent()
@@ -67,17 +68,25 @@ void UTRPersistentDataComponent::OnRep_LevelTemplatesPageLoaded()
 }
 
 
-void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(const float Tier)
+void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(const float Tier, const bool bUnlockForPlayer)
 {
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst)
 	{
 		ULevelTemplateContext* NewTemplate = GameInst->GenerateNewLevelTemplate(Tier);
 		if (NewTemplate && NewTemplate->LevelTemplate.IsValid()) {
-			LevelTemplatesPage.Add(NewTemplate->ToStruct());
-			LevelTemplatesRepTrigger++;
-			// Manually call rep_notify on server
-			if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
+			if (bUnlockForPlayer)
+			{
+				// The unlock will do replication
+				ServerUnlockLevelTemplateForPlayer(NewTemplate->LevelTemplate.LevelId);
+			}
+			else
+			{			
+				LevelTemplatesPage.Add(NewTemplate->ToStruct());
+				LevelTemplatesRepTrigger++; 
+				// Manually call rep_notify on server
+				if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
+			}
 		}
 	}
 	else
@@ -86,7 +95,7 @@ void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(c
 	}
 }
 
-bool UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Validate(const float Tier)
+bool UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Validate(const float Tier, const bool bUnlockForPlayer)
 {
 	return true;
 }
@@ -205,6 +214,18 @@ bool UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Validate(const FL
 }
 
 
+FString UTRPersistentDataComponent::GetLocalPlayerSaveFilename(const FGuid& PlayerGuid)
+{
+	return PlayerGuid.ToString(EGuidFormats::Digits) + LocalPlayerFilenameSuffix;
+}
+
+
+FString UTRPersistentDataComponent::GetRemotePlayerSaveFilename(const FGuid& PlayerGuid)
+{
+	return PlayerGuid.ToString(EGuidFormats::Digits) + RemotePlayerFilenameSuffix;
+}
+
+
 FString UTRPersistentDataComponent::GetPlayerSaveFilename()
 { 
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
@@ -213,7 +234,14 @@ FString UTRPersistentDataComponent::GetPlayerSaveFilename()
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState) {
 			if (TRPlayerState->PlayerGuid.IsValid()) {
-				return TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits) + PlayerFilenameSuffix;
+				if (TRPlayerController->IsLocalController())
+				{
+					return GetLocalPlayerSaveFilename(TRPlayerState->PlayerGuid);
+				}
+				else
+				{
+					return GetRemotePlayerSaveFilename(TRPlayerState->PlayerGuid);
+				}
 			}
 			else {
 				UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveFilename - player guid is not valid."));
@@ -250,7 +278,7 @@ TArray<FString> UTRPersistentDataComponent::GetAllSaveProfileFilenames()
 				if (FPaths::GetExtension(FullFilePath) == TEXT("sav"))
 				{
 					FString CleanFilename = FPaths::GetBaseFilename(FullFilePath);
-					if (CleanFilename.EndsWith(*UTRPersistentDataComponent::PlayerFilenameSuffix))
+					if (CleanFilename.EndsWith(*UTRPersistentDataComponent::LocalPlayerFilenameSuffix))
 					{
 						//CleanFilename = CleanFilename.Replace(TEXT(".sav"), TEXT(""));
 						//CleanFilename = CleanFilename.Replace(*PLAYER_FILENAME_PREFIX, TEXT(""));
@@ -292,6 +320,17 @@ TArray<FPlayerSaveData> UTRPersistentDataComponent::GetAllSaveProfileData()
 		}
 	}
 	return AllFoundData;
+}
+
+
+bool UTRPersistentDataComponent::ProfileExistsForRemotePlayer(FGuid PlayerGuid)
+{
+	if (!PlayerGuid.IsValid())
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("PersistentDataComponent ProfileExistsForRemotePlayer invalid player guid"));
+		return false;
+	}
+	return UGameplayStatics::DoesSaveGameExist(GetRemotePlayerSaveFilename(PlayerGuid), 0);
 }
 
 
@@ -486,9 +525,9 @@ void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const F
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
 	if (TRPlayerController)
 	{
+		UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ClientEchoLoadPlayerData - update player data for: %s."), *PlayerSaveData.PlayerGuid.ToString());
 		// Controler UpdateFromPlayerSaveData - calls PlayerState.UpdateFromPlayerSaveData
-		TRPlayerController->UpdateFromPlayerSaveData(PlayerSaveData);
-		UE_LOG(LogTRGame, Log, TEXT("ClientEchoLoadPlayerData - updated player data for: %s."), *PlayerSaveData.PlayerGuid.ToString());
+		TRPlayerController->UpdateFromPlayerSaveData(PlayerSaveData);		
 	}
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst)

@@ -118,6 +118,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	virtual void PostInitializeComponents() override;
+
 	virtual void HandleMatchIsWaitingToStart() override;
 
 	// Spawn a new grid manager at the given transform.

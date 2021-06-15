@@ -1,6 +1,6 @@
 
 #include "RoomPlatformBase.h"
-#include "PlatformGridMgr.h"
+#include "RoomPlatformGridMgr.h"
 #include "ObjectPlacer.h"
 #include "TrEnums.h"
 #include "Math/Vector2D.h"
@@ -42,9 +42,44 @@ void ARoomPlatformBase::Tick(float DeltaTime)
 }
 
 
+void ARoomPlatformBase::ServerSetRoomTemplate_Implementation(const FRoomTemplate& NewRoomTemplate)
+{
+	RoomTemplate = NewRoomTemplate;
+	// Manually call OnRep here on server
+	OnRep_RoomTemplate();
+}
+
+bool ARoomPlatformBase::ServerSetRoomTemplate_Validate(const FRoomTemplate& NewRoomTemplate)
+{
+	return true;
+}
+
+
+void ARoomPlatformBase::OnRep_WallTemplate_Implementation()
+{
+	if (WallTemplate.Num() > 0 && bRoomTemplateSet)
+	{
+		if (GetLocalRole() < ROLE_Authority && bGenerateOnClient)
+		{
+			// Have clients generate the room too.
+			GenerateRoomImpl();
+		}
+	}
+}
+
+
 void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
 {
+	if (MyGridManager == nullptr)
+	{
+		GetGridManager();
+	}
 	bRoomTemplateSet = true;
+	if (GetLocalRole() < ROLE_Authority && bGenerateOnClient && WallTemplate.Num() > 0)
+	{
+		// Have clients generate the room too.
+		GenerateRoomImpl();
+	}
 }
 
 
@@ -53,7 +88,14 @@ void ARoomPlatformBase::DestroyPlatformImpl()
 	Super::DestroyPlatformImpl();
 }
 
-void ARoomPlatformBase::GenerateRoom_Implementation()
+
+void ARoomPlatformBase::ServerGenerateRoom_Implementation()
+{
+	GenerateRoomImpl();
+}
+
+
+void ARoomPlatformBase::GenerateRoomImpl()
 {
 	if (MyGridManager == nullptr)
 	{
@@ -62,7 +104,7 @@ void ARoomPlatformBase::GenerateRoom_Implementation()
 	if (CalculateWalls())
 	{
 		SpawnFloor();
-		SpawnWalls();		
+		SpawnWalls();
 		//SpawnContents(); // Calls SpawnResources
 	}
 }

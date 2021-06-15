@@ -6,6 +6,7 @@
 // Sets default values
 AResourceClusterBase::AResourceClusterBase()
 {
+	bReplicates = true;
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -26,4 +27,10 @@ void AResourceClusterBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
+
+
+//void AResourceClusterBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+//{
+//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+//}
 

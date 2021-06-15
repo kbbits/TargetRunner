@@ -23,6 +23,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn="true"))
 		TSubclassOf<AResourceNodeBase> NodeClass;
 
+	// The list of classes of Resource Node to spawn on the various resource node sites of this cluster.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+		TArray<TSubclassOf<AResourceNodeBase>> NodeClasses;
+
 	// The total resources to be divided amongst the cluster's resource nodes.
 	// Note: the ResourceType of each node will be set to the first entry in the TotalResources array.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true", TitleProperty = "ResourceType"))

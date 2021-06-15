@@ -13,11 +13,17 @@ ATRGameModeLobby::ATRGameModeLobby()
 
 int32 ATRGameModeLobby::GetMarketDataForPlayer(const ATRPlayerControllerBase* MarketPlayerController, TArray<FGoodsPurchaseItem>& MarketGoods)
 {
-	if (!IsValid(GoodsMarketTable)) { return 0; }
+	if (!IsValid(GoodsMarketTable)) { 
+		UE_LOG(LogTRGame, Warning, TEXT("TRGameModeLobby::GetMarketDataForPlayer - GoodsMarketTable is not valid"));
+		return 0; 
+	}
 	ATRPlayerState* PlayerState = MarketPlayerController->GetPlayerState<ATRPlayerState>();
 	const FGoodsPurchaseItem* PurchaseItem = nullptr;
 
-	if (PlayerState == nullptr) { return 0; }
+	if (PlayerState == nullptr) { 
+		UE_LOG(LogTRGame, Warning, TEXT("TRGameModeLobby::GetMarketDataForPlayer - PlayerState is not valid"));
+		return 0; 
+	}
 	// Type-Safety
 	check(GoodsMarketTable->GetRowStruct()->IsChildOf(FGoodsPurchaseItem::StaticStruct()));
 	for (const TPair<FName, uint8*>& RowItr : GoodsMarketTable->GetRowMap())
@@ -124,28 +130,35 @@ void ATRGameModeLobby::GenericPlayerInitialization(AController* C)
 }
 
 
+//void ATRGameModeLobby::HandleLeavingMap()
+//{
+//
+//}
+
+
 void ATRGameModeLobby::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
+	APlayerController* PlayerController;
 	int32 NumLoadedPlayers = 0;
 	int32 TotalPlayers = 0;
-	UE_LOG(LogTRGame, Log, TEXT("ATRGameModeLobby::HandleStartingNewPlayer - NumTravellingPlayers %d"), NumTravellingPlayers);
 	TArray<AController*> ControllerList;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
 	{
+		PlayerController = Cast<APlayerController>(It->Get());
+		if (PlayerController)
+		{
+			TotalPlayers++;
+		}
 		ControllerList.Add(It->Get());
 	}
 	for (AController* Controller : ControllerList)
 	{
 		if (Controller->PlayerState)
 		{
-			APlayerController* PlayerController = Cast<APlayerController>(Controller);
-			if (PlayerController)
-			{
-				TotalPlayers++;
-			}
-			else
+			PlayerController = Cast<APlayerController>(Controller);
+			if (!PlayerController)
 			{
 				continue;
 			}
@@ -155,6 +168,7 @@ void ATRGameModeLobby::HandleStartingNewPlayer_Implementation(APlayerController*
 			}
 		}
 	}
+	UE_LOG(LogTRGame, Log, TEXT("ATRGameModeLobby::HandleStartingNewPlayer - TotalPlayers %d  NumLoadedPlayers %d"), TotalPlayers, NumLoadedPlayers);
 	if (NumLoadedPlayers == TotalPlayers)
 	{
 		OnAllPlayersTravelComplete();

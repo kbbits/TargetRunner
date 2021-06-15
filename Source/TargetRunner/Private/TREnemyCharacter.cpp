@@ -45,26 +45,29 @@ void ATREnemyCharacter::BeginPlay()
 void ATREnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	ATREnemyAIController* AI = GetTRAIController();
-	AActor* MyTarget = nullptr;
-	float Distance;
-
-	bTargetInRange = false;
-	if (AI)
+	// Process AI on server
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		MyTarget = AI->GetCurrentTarget();
-		if (MyTarget)
+		ATREnemyAIController* AI = GetTRAIController();
+		AActor* MyTarget = nullptr;
+		float Distance;
+
+		bTargetInRange = false;
+		if (AI)
 		{
-			Distance = GetDistanceTo(MyTarget);
-			if (GetMinAttackRange() <= Distance && Distance <= GetMaxAttackRange())
+			MyTarget = AI->GetCurrentTarget();
+			if (MyTarget)
 			{
-				bTargetInRange = true;
+				Distance = GetDistanceTo(MyTarget);
+				if (GetMinAttackRange() <= Distance && Distance <= GetMaxAttackRange())
+				{
+					bTargetInRange = true;
+				}
 			}
-		}
-		else
-		{
-			bAimOnTarget = false;
+			else
+			{
+				bAimOnTarget = false;
+			}
 		}
 	}
 }
@@ -95,10 +98,13 @@ void ATREnemyCharacter::OnRep_StasisState_Implementation(ETRStasisState OldState
 	}
 	if (StasisState == ETRStasisState::Awake)
 	{
-		SetActorTickEnabled(true);
-		AIController->SetActorTickEnabled(true);
-		if (AIController->GetBrainComponent()) {
-			AIController->GetBrainComponent()->StartLogic();
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			SetActorTickEnabled(true);
+			AIController->SetActorTickEnabled(true);
+			if (AIController->GetBrainComponent()) {
+				AIController->GetBrainComponent()->StartLogic();
+			}
 		}
 		// Handle components?
 		UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
@@ -107,11 +113,14 @@ void ATREnemyCharacter::OnRep_StasisState_Implementation(ETRStasisState OldState
 	{
 		StopAnimMontage();
 		SetActorTickEnabled(false);
-		AIController->SetActorTickEnabled(false);
-		if (AIController->GetBrainComponent()) {
-			AIController->GetBrainComponent()->StopLogic(FString(TEXT("Stasis")));
+		if (GetLocalRole() == ROLE_Authority)
+		{
+			AIController->SetActorTickEnabled(false);
+			if (AIController->GetBrainComponent()) {
+				AIController->GetBrainComponent()->StopLogic(FString(TEXT("Stasis")));
+			}
+			AIController->StopMovement();
 		}
-		AIController->StopMovement();
 		UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Put In Stasis: %s"), *GetNameSafe(this));
 	}
 }

@@ -22,27 +22,39 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 	GoodsDropper = CreateDefaultSubobject<UGoodsDropper>(TEXT("GoodsDropper"));
 	if (GoodsDropper != nullptr)
 	{
-		// Move this somewhere else. It throws errors during packaging, etc.
-		if (IsValid(GoodsDropperTable)) 
-		{ 
-			GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable); 
-		}
-		else 
-		{
-			UE_LOG(LogTRGame, Warning, TEXT("TRGameMode constructor GoodsDropperTable was not valid."));
-		}
-		if (IsValid(ResourceDropTable))
-		{
-			GoodsDropper->AddDropTableDataToLibrary(ResourceDropTable);
-		}
-		else
-		{
-			UE_LOG(LogTRGame, Warning, TEXT("TRGameMode constructor ResourceDropTable was not valid."));
-		}
+		
 	}
 	else 
 	{ 
 		UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor Could not create GoodsDropper.")); 
+	}
+}
+
+void ATR_GameMode::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (!IsValid(GoodsDropper))
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRGameMode PostInitializeComponents GoodsDropper is null"));
+		return;
+	}
+	// Goods drops
+	if (!IsValid(GoodsDropperTable))
+	{
+		GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable);
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode GoodsDropperTable is not valid."));
+	}
+	// Resource drops
+	if (IsValid(ResourceDropTable))
+	{
+		GoodsDropper->AddDropTableDataToLibrary(ResourceDropTable);
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode ResourceDropTable is not valid."));
 	}
 }
 
@@ -466,24 +478,26 @@ void ATR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
+	APlayerController* PlayerController;
 	int32 NumLoadedPlayers = 0;
 	int32 TotalPlayers = 0;
 	UE_LOG(LogTRGame, Log, TEXT("ATRGameModeLobby::HandleStartingNewPlayer - NumTravellingPlayers %d"), NumTravellingPlayers);
 	TArray<AController*> ControllerList;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
 	{
+		PlayerController = Cast<APlayerController>(It->Get());
+		if (PlayerController)
+		{
+			TotalPlayers++;
+		}
 		ControllerList.Add(It->Get());
 	}
 	for (AController* Controller : ControllerList)
 	{
 		if (Controller->PlayerState)
 		{
-			APlayerController* PlayerController = Cast<APlayerController>(Controller);
-			if (PlayerController)
-			{
-				TotalPlayers++;
-			}
-			else
+			PlayerController = Cast<APlayerController>(Controller);
+			if (!PlayerController)
 			{
 				continue;
 			}

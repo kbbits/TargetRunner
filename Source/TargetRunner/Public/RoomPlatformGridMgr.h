@@ -35,6 +35,9 @@ public:
 		bool bSpawnRoomsAfterGenerate;
 #endif
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
+		bool bDoorsAtWallCenter;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		TArray<FResourceQuantity> ResourcesToDistribute;
 
@@ -94,12 +97,10 @@ public:
 		ARoomPlatformBase* GetRoomNeighbor(const FVector2D& RoomCoords, const ETRDirection DirectionToNeighbor);
 
 	// Spawns all rooms in the room template grid
-	//UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 	UFUNCTION(BlueprintNativeEvent, CallInEditor)
 		void SpawnRooms();
 
 	// Spanwn the room from the room template grid with the given coordinates.
-	//UFUNCTION(Server, Reliable, BlueprintCallable)
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void SpawnRoom(FVector2D GridCoords);	
 

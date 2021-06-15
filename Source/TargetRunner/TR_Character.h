@@ -23,6 +23,8 @@ public:
 	
 protected:
 
+	virtual void PostInitializeComponents() override;
+
 	// Adjusts ResourceCollectionVolume component size.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void SetupCollectionVolume();

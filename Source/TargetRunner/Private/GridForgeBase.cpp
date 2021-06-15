@@ -226,7 +226,7 @@ FRoomTemplate* UGridForgeBase::GetRoomNeighbor(FRoomGridTemplate& RoomGridTempla
 	bool bFound = false;
 	switch (Direction)
 	{
-	case ETRDirection::North:
+	case ETRDirection::North: 
 		Room = GetRoom(RoomGridTemplate, Coords + FVector2D(1.0f, 0.0f), bFound);
 		break;
 	case ETRDirection::East:

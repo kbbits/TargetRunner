@@ -433,6 +433,7 @@ float UInventoryActorComponent::GetGoodsCount(const FName GoodsName)
 
 void UInventoryActorComponent::GetAllGoods(TArray<FGoodsQuantity>& AllGoods)
 {
+	AllGoods.Empty(Inventory.Num());
 	AllGoods.Append(Inventory);
 }
 
@@ -441,11 +442,13 @@ void UInventoryActorComponent::GetSaveableGoods(TArray<FGoodsQuantity>& AllSavea
 {	
 	if (UnsaveableGoodsFilters.Num() == 0)
 	{
+		AllSaveableGoods.Empty(Inventory.Num());
 		AllSaveableGoods.Append(Inventory);
 	}
 	else
 	{
 		bool bSaveable;
+		AllSaveableGoods.Empty();
 		for (FGoodsQuantity Goods : Inventory)
 		{
 			bSaveable = true;

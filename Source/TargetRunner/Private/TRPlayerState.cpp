@@ -120,7 +120,7 @@ void ATRPlayerState::RemoveAttributeModifiers_Implementation(const TArray<FAttri
 	GetComponents<UActorAttributeComponent>(AttributeComps);
 	for (UActorAttributeComponent* Attr : AttributeComps)
 	{
-		// RemoveModifiers filters for modifiers relevant to the attribute
+		// RemoveModifiers will filter for modifiers relevant to the attribute
 		Attr->RemoveModifiers(ModifiersToRemove);
 	}
 }
@@ -149,7 +149,7 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 
 void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
-	UE_LOG(LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - new player guid: %s."), *SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
+	UE_LOG(LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - new player %s : %s."), *SaveData.ProfileName.ToString(),*SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
 	PlayerGuid = SaveData.PlayerGuid;
 	ProfileName = SaveData.ProfileName;
 	DisplayName = SaveData.DisplayName;

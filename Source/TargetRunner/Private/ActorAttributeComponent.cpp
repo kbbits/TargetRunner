@@ -2,10 +2,11 @@
 
 
 #include "ActorAttributeComponent.h"
-#include "..\Public\ActorAttributeComponent.h"
 #include "TargetRunner.h"
 #include "NamedPrimitiveTypes.h"
 #include "UnrealNetwork.h"
+// for intellisense
+#include "..\Public\ActorAttributeComponent.h"
 
 // Sets default values for this component's properties
 UActorAttributeComponent::UActorAttributeComponent()
@@ -272,24 +273,27 @@ void UActorAttributeComponent::FillAttributeDataArray(TArray<FAttributeData>& Da
 // Called every frame
 void UActorAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// Don't do anything when we're not active
-	if (!IsActive()){ return; }
-	// Don't do anything if recharge is paused
-	if (bRechargePaused || GetDeltaRate() == 0.0f) { return; }
-
-	float NewValue = ModifiedAttributeData.CurrentValue;
-	// If we recharge and we're not at one of the min/max
-	if ((GetDeltaRate() > 0.0f && GetCurrent() < GetMax()) || (GetDeltaRate() < 0.0f && GetCurrent() > GetMin()))
+	if (GetOwnerRole() == ROLE_Authority)
 	{
-		// Update the new value based on recharge
-		NewValue = FMath::Clamp((GetDeltaRate() * DeltaTime) + GetCurrent(), GetMin(), GetMax());
-	}
-	// If it's a new value, set it.
-	if (GetCurrent() != NewValue)
-	{ 
-		SetCurrent(NewValue);
+		Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+		// Don't do anything when we're not active
+		if (!IsActive()) { return; }
+		// Don't do anything if recharge is paused
+		if (bRechargePaused || GetDeltaRate() == 0.0f) { return; }
+
+		float NewValue = ModifiedAttributeData.CurrentValue;
+		// If we recharge and we're not at one of the min/max
+		if ((GetDeltaRate() > 0.0f && GetCurrent() < GetMax()) || (GetDeltaRate() < 0.0f && GetCurrent() > GetMin()))
+		{
+			// Update the new value based on recharge
+			NewValue = FMath::Clamp((GetDeltaRate() * DeltaTime) + GetCurrent(), GetMin(), GetMax());
+		}
+		// If it's a new value, set it.
+		if (GetCurrent() != NewValue)
+		{
+			SetCurrent(NewValue);
+		}
 	}
 }
 
