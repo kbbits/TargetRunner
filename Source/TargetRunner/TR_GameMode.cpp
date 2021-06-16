@@ -443,6 +443,17 @@ void ATR_GameMode::OnAllPlayersTravelComplete_Implementation()
 
 void ATR_GameMode::PostSeamlessTravel()
 {
+	APlayerController* PlayerController;
+	TotalPlayerControllersForTravel = 0;
+	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
+	{
+		PlayerController = Cast<APlayerController>(It->Get());
+		if (IsValid(PlayerController))
+		{
+			TotalPlayerControllersForTravel++;
+			UE_LOG(LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
+		}
+	}
 	Super::PostSeamlessTravel();
 	// Call our hook
 	OnGameModeSeamlessTravelComplete();
@@ -480,34 +491,28 @@ void ATR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 
 	APlayerController* PlayerController;
 	int32 NumLoadedPlayers = 0;
-	int32 TotalPlayers = 0;
-	UE_LOG(LogTRGame, Log, TEXT("ATRGameModeLobby::HandleStartingNewPlayer - NumTravellingPlayers %d"), NumTravellingPlayers);
-	TArray<AController*> ControllerList;
+	TArray<APlayerController*> ControllerList;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
 	{
 		PlayerController = Cast<APlayerController>(It->Get());
-		if (PlayerController)
+		if (IsValid(PlayerController) && PlayerController->GetClass() == NewPlayer->GetClass())
 		{
-			TotalPlayers++;
+			ControllerList.Add(PlayerController);
+			UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
-		ControllerList.Add(It->Get());
 	}
-	for (AController* Controller : ControllerList)
+	for (APlayerController* PC : ControllerList)
 	{
-		if (Controller->PlayerState)
+		if (PC->PlayerState)
 		{
-			PlayerController = Cast<APlayerController>(Controller);
-			if (!PlayerController)
-			{
-				continue;
-			}
-			if (PlayerController->HasClientLoadedCurrentWorld())
+			if (PC->HasClientLoadedCurrentWorld())
 			{
 				NumLoadedPlayers++;
 			}
 		}
 	}
-	if (NumLoadedPlayers == TotalPlayers)
+	UE_LOG(LogTRGame, Log, TEXT("TR_GameMode::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);
+	if (NumLoadedPlayers == TotalPlayerControllersForTravel)
 	{
 		OnAllPlayersTravelComplete();
 	}
@@ -519,7 +524,7 @@ bool ATR_GameMode::ReadyToStartMatch_Implementation()
 	// By default start when we have > 0 players
 	if (GetMatchState() == MatchState::WaitingToStart)
 	{
-		if (NumTravellingPlayers == 0 && bRoomMapReady)
+		if (bRoomMapReady && (NumPlayers == TotalPlayerControllersForTravel))
 		{
 			return true;
 		}

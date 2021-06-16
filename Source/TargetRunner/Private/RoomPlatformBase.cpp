@@ -23,7 +23,7 @@ void ARoomPlatformBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ARoomPlatformBase, RoomTemplate);
-	DOREPLIFETIME(ARoomPlatformBase, WallTemplate);
+	//DOREPLIFETIME(ARoomPlatformBase, WallTemplate);
 }
 
 
@@ -54,7 +54,7 @@ bool ARoomPlatformBase::ServerSetRoomTemplate_Validate(const FRoomTemplate& NewR
 	return true;
 }
 
-
+/*
 void ARoomPlatformBase::OnRep_WallTemplate_Implementation()
 {
 	if (WallTemplate.Num() > 0 && bRoomTemplateSet)
@@ -65,20 +65,81 @@ void ARoomPlatformBase::OnRep_WallTemplate_Implementation()
 			GenerateRoomImpl();
 		}
 	}
-}
+}*/
 
 
 void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
 {
+	int32 RoomCellSubdivision;
+	ARoomPlatformGridMgr* RoomGridManager;
 	if (MyGridManager == nullptr)
 	{
 		GetGridManager();
 	}
+	RoomGridManager = Cast<ARoomPlatformGridMgr>(MyGridManager);
+	if (!IsValid(RoomGridManager)) {
+		UE_LOG(LogTRGame, Error, TEXT("OnRep_RoomTemplate - could not get valid room grid manager"));
+		return;
+	}
+	if (PlatformRandStream.GetInitialSeed() != RoomTemplate.RoomRandSeed) {
+		PlatformRandStream.Initialize(RoomTemplate.RoomRandSeed);
+	}
+	RoomCellSubdivision = RoomGridManager->RoomCellSubdivision;
+
+	// Create appropriate wall state arrays representing the used wall types, sized according to RoomCellSubdivision.
+	int32 DoorSection;
+	TArray<ETRWallState> TmpWallTemplate;
+	// Put the door in the center of the wall by default
+	DoorSection = (RoomCellSubdivision / 2);
+	TArray<ETRWallState> DoorWall;
+	DoorWall.Reserve(RoomCellSubdivision);
+	for (int i = 0; i < RoomCellSubdivision; i++)
+	{
+		if (i == DoorSection) { DoorWall.Add(ETRWallState::Door); }
+		else { DoorWall.Add(ETRWallState::Blocked); }
+	}
+	TArray<ETRWallState> SolidWall;
+	SolidWall.Reserve(RoomCellSubdivision);
+	for (int i = 0; i < RoomCellSubdivision; i++)
+	{
+		SolidWall.Add(ETRWallState::Blocked);
+	}
+	TArray<ETRWallState> EmptyWall;
+	EmptyWall.Reserve(RoomCellSubdivision);
+	for (int i = 0; i < RoomCellSubdivision; i++)
+	{
+		EmptyWall.Add(ETRWallState::Empty);
+	}
+
+	// Create wall template, sized so each of the four walls gets [RoomCellSubdivision] entries.
+	TmpWallTemplate.Empty(4 * RoomCellSubdivision);
+	TArray<ETRWallState> Walls;
+	Walls.Add(RoomTemplate.NorthWall);
+	Walls.Add(RoomTemplate.EastWall);
+	Walls.Add(RoomTemplate.SouthWall);
+	Walls.Add(RoomTemplate.WestWall);
+	// Append wall segments for each wall. 
+	for (ETRWallState WallState : Walls)
+	{
+		if (WallState == ETRWallState::Door && !RoomGridManager->bDoorsAtWallCenter)
+		{
+			// Put the door in a random wall section
+			DoorSection = PlatformRandStream.RandRange(0, RoomCellSubdivision - 1);
+			for (int i = 0; i < RoomCellSubdivision; i++)
+			{
+				if (i == DoorSection) { DoorWall[i] = ETRWallState::Door; }
+				else { DoorWall[i] = ETRWallState::Blocked; }
+			}
+		}
+		TmpWallTemplate.Append(WallState == ETRWallState::Blocked ? SolidWall : (WallState == ETRWallState::Door ? DoorWall : EmptyWall));
+	}
+	WallTemplate = TmpWallTemplate;
 	bRoomTemplateSet = true;
-	if (GetLocalRole() < ROLE_Authority && bGenerateOnClient && WallTemplate.Num() > 0)
+	if (GetLocalRole() < ROLE_Authority && bGenerateOnClient)
 	{
 		// Have clients generate the room too.
 		GenerateRoomImpl();
+		SpawnContents();
 	}
 }
 
@@ -202,6 +263,7 @@ bool ARoomPlatformBase::SpawnContents_Implementation()
 	}
 	else
 	{
+		DestroySpecialPlacers();
 		return true;
 	}
 }

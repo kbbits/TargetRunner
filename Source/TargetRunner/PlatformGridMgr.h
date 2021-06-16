@@ -84,6 +84,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 StasisWakeRange;
 
+	// This object, if valid, will be used as the world referece when spawning prefabs.
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
+		UObject* SpawnOwner;
+
 protected:
 
 	TArray<APlayerStart*> PlayerStarts;

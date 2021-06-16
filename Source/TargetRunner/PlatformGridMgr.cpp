@@ -22,14 +22,23 @@ void APlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& O
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridCellWorldSize, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMinX, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMinY, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMaxX, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMaxY, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(APlatformGridMgr, StartGridCoords, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(APlatformGridMgr, ExitGridCoords, COND_InitialOnly);
-	DOREPLIFETIME_CONDITION(APlatformGridMgr, RoomCellSubdivision, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(APlatformGridMgr, GridCellWorldSize, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMinX, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMinY, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMaxX, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(APlatformGridMgr, GridExtentMaxY, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(APlatformGridMgr, StartGridCoords, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(APlatformGridMgr, ExitGridCoords, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(APlatformGridMgr, RoomCellSubdivision, COND_InitialOnly);
+
+	DOREPLIFETIME(APlatformGridMgr, GridCellWorldSize);
+	DOREPLIFETIME(APlatformGridMgr, GridExtentMinX);
+	DOREPLIFETIME(APlatformGridMgr, GridExtentMinY);
+	DOREPLIFETIME(APlatformGridMgr, GridExtentMaxX);
+	DOREPLIFETIME(APlatformGridMgr, GridExtentMaxY);
+	DOREPLIFETIME(APlatformGridMgr, StartGridCoords);
+	DOREPLIFETIME(APlatformGridMgr, ExitGridCoords);
+	DOREPLIFETIME(APlatformGridMgr, RoomCellSubdivision);
 }
 
 

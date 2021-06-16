@@ -31,6 +31,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* LevelUpTable;
 
+protected:
+
+	int32 TotalPlayerControllersForTravel;
+
 public:
 	
 	// [Any]

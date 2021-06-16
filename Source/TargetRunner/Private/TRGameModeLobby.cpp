@@ -99,6 +99,17 @@ void ATRGameModeLobby::OnAllPlayersTravelComplete_Implementation()
 
 void ATRGameModeLobby::PostSeamlessTravel()
 {
+	APlayerController* PlayerController;
+	TotalPlayerControllersForTravel = 0;
+	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
+	{
+		PlayerController = Cast<APlayerController>(It->Get());
+		if (IsValid(PlayerController))
+		{
+			TotalPlayerControllersForTravel++;
+			UE_LOG(LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
+		}
+	}
 	Super::PostSeamlessTravel();
 	// Call our hook
 	OnGameModeSeamlessTravelComplete();
@@ -120,7 +131,7 @@ void ATRGameModeLobby::GenericPlayerInitialization(AController* C)
 			}
 			else
 			{
-				UE_LOG(LogTRGame, Error, TEXT("TRGameMode::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
+				UE_LOG(LogTRGame, Error, TEXT("TRGameModeLobby::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
 			}
 		}
 	}
@@ -142,34 +153,28 @@ void ATRGameModeLobby::HandleStartingNewPlayer_Implementation(APlayerController*
 
 	APlayerController* PlayerController;
 	int32 NumLoadedPlayers = 0;
-	int32 TotalPlayers = 0;
-	TArray<AController*> ControllerList;
+	TArray<APlayerController*> ControllerList;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
 	{
 		PlayerController = Cast<APlayerController>(It->Get());
-		if (PlayerController)
+		if (IsValid(PlayerController) && PlayerController->GetClass() == NewPlayer->GetClass())
 		{
-			TotalPlayers++;
+			ControllerList.Add(PlayerController);
+			UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
-		ControllerList.Add(It->Get());
 	}
-	for (AController* Controller : ControllerList)
+	for (APlayerController* PC : ControllerList)
 	{
-		if (Controller->PlayerState)
+		if (PC->PlayerState)
 		{
-			PlayerController = Cast<APlayerController>(Controller);
-			if (!PlayerController)
-			{
-				continue;
-			}
-			if (PlayerController->HasClientLoadedCurrentWorld())
+			if (PC->HasClientLoadedCurrentWorld())
 			{
 				NumLoadedPlayers++;
 			}
 		}
 	}
-	UE_LOG(LogTRGame, Log, TEXT("ATRGameModeLobby::HandleStartingNewPlayer - TotalPlayers %d  NumLoadedPlayers %d"), TotalPlayers, NumLoadedPlayers);
-	if (NumLoadedPlayers == TotalPlayers)
+	UE_LOG(LogTRGame, Log, TEXT("TRGameModeLobby::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);
+	if (NumLoadedPlayers == TotalPlayerControllersForTravel)
 	{
 		OnAllPlayersTravelComplete();
 	}

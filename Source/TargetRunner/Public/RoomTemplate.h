@@ -56,4 +56,8 @@ public:
 	// The special actors in this room
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<TSubclassOf<AActor>> SpecialActors;
+
+	// Seed to use when initializing the RandStream for this room.
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
+		int32 RoomRandSeed;
 };

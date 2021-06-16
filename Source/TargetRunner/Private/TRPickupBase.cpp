@@ -30,6 +30,7 @@ void ATRPickupBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ATRPickupBase, bCollected);
+	DOREPLIFETIME_CONDITION(ATRPickupBase, PickupAwards, COND_InitialOnly);
 }
 
 void ATRPickupBase::OnRep_Collected()

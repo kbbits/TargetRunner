@@ -22,7 +22,8 @@ void ARoomPlatformGridMgr::GetLifetimeReplicatedProps(TArray< FLifetimeProperty 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);	
 
-	DOREPLIFETIME_CONDITION(ARoomPlatformGridMgr, bDoorsAtWallCenter, COND_InitialOnly);
+	//DOREPLIFETIME_CONDITION(ARoomPlatformGridMgr, bDoorsAtWallCenter, COND_InitialOnly);
+	DOREPLIFETIME(ARoomPlatformGridMgr, bDoorsAtWallCenter);
 }
 
 
@@ -269,7 +270,7 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	ARoomPlatformBase* NewRoom;
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	//SpawnParams.Owner = this;
+	SpawnParams.Owner = this;
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
 
 	DebugLog(FString::Printf(TEXT("%s SpawnRoom - Spanwing room actor for X:%d Y:%d."), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y));
@@ -279,32 +280,6 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	FRoomTemplate* RoomTemplate = GridRow->RowRooms.Find(GridCoords.Y);
 	if (RoomTemplate == nullptr) { UE_LOG(LogTRGame, Error, TEXT("%s - Could not find room template at X:%d Y:%d"), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y); }
 
-	// Create appropriate wall state arrays representing the used wall types, sized according to RoomCellSubdivision.
-	int32 DoorSection;
-	TArray<ETRWallState> TmpWallTemplate;
-	// Put the door in the center of the wall by default
-	DoorSection = (RoomCellSubdivision / 2);
-	TArray<ETRWallState> DoorWall;
-	DoorWall.Reserve(RoomCellSubdivision);
-	for (int i = 0; i < RoomCellSubdivision; i++)
-	{
-		if (i == DoorSection) { DoorWall.Add(ETRWallState::Door); }
-		else { DoorWall.Add(ETRWallState::Blocked); }
-	}
-	TArray<ETRWallState> SolidWall;
-	SolidWall.Reserve(RoomCellSubdivision);
-	for (int i = 0; i < RoomCellSubdivision; i++)
-	{
-		SolidWall.Add(ETRWallState::Blocked);
-	}
-	TArray<ETRWallState> EmptyWall;
-	EmptyWall.Reserve(RoomCellSubdivision);
-	for (int i = 0; i < RoomCellSubdivision; i++)
-	{
-		EmptyWall.Add(ETRWallState::Empty);
-	}
-	
-
 	NewRoom = GetWorld()->SpawnActor<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(GridCoords), SpawnParams);
 	if (NewRoom != nullptr)
 	{
@@ -312,41 +287,20 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 		if (IsValid(GameMode))
 		{
 			// Get our random stream from game mode
-			NewRoom->PlatformRandStream.Initialize(GameMode->GetGridStream().RandRange(1, INT_MAX -1));
+			//NewRoom->PlatformRandStream.Initialize(GameMode->GetGridStream().RandRange(1, INT_MAX - 1));
+			RoomTemplate->RoomRandSeed = GameMode->GetGridStream().RandRange(1, INT_MAX - 1);
 		}
 		else
 		{
 			// Use our default streams
-			NewRoom->PlatformRandStream.Initialize(DefaultGridRandStream.RandRange(1, INT_MAX - 1));
+			//NewRoom->PlatformRandStream.Initialize(DefaultGridRandStream.RandRange(1, INT_MAX - 1));
+			RoomTemplate->RoomRandSeed = DefaultGridRandStream.RandRange(1, INT_MAX - 1);
 		}
 		NewRoom->GridX = GridCoords.X;
 		NewRoom->GridY = GridCoords.Y;
-		// Create wall template, sized so each of the four walls gets [RoomCellSubdivision] entries.
-		//NewRoom->WallTemplate.Empty(4 * RoomCellSubdivision);
-		TmpWallTemplate.Empty(4 * RoomCellSubdivision);
-		TArray<ETRWallState> Walls;
-		Walls.Add(RoomTemplate->NorthWall);
-		Walls.Add(RoomTemplate->EastWall);
-		Walls.Add(RoomTemplate->SouthWall);
-		Walls.Add(RoomTemplate->WestWall);
-		// Append wall segments for each wall. 
-		for (ETRWallState WallState : Walls)
-		{
-			if (WallState == ETRWallState::Door && !bDoorsAtWallCenter)
-			{
-				// Put the door in a random wall section
-				DoorSection = NewRoom->PlatformRandStream.RandRange(0, RoomCellSubdivision - 1);
-				for (int i = 0; i < RoomCellSubdivision; i++)
-				{
-					if (i == DoorSection) { DoorWall[i] = ETRWallState::Door; }
-					else { DoorWall[i] = ETRWallState::Blocked; }
-				}
-			}
-			TmpWallTemplate.Append(WallState == ETRWallState::Blocked ? SolidWall : (WallState == ETRWallState::Door ? DoorWall : EmptyWall));
-		}
-		NewRoom->WallTemplate = TmpWallTemplate;
-		NewRoom->ServerSetRoomTemplate(*RoomTemplate);
 		AddPlatformToGridMap(NewRoom);
+		// Setting room template will trigger replication to clients. Clients will handle generation via the OnRep hooks.
+		NewRoom->ServerSetRoomTemplate(*RoomTemplate);		
 		NewRoom->ServerGenerateRoom();
 	}
 }

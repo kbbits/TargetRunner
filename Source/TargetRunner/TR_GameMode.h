@@ -111,6 +111,12 @@ private:
 	UPROPERTY(BlueprintGetter = GetResourceDropperStream)
 		FRandomStream ResourceDropperRandStream;
 
+protected:
+
+	int32 TotalPlayerControllersForTravel;
+
+private:
+
 	// Our Grid Manager. Set by InitGridManager.
 	APlatformGridMgr* GridManager;
 

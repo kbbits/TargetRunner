@@ -26,7 +26,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		bool bGenerateOnClient;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, ReplicatedUsing = OnRep_WallTemplate)
+	//UPROPERTY(EditInstanceOnly, BlueprintReadOnly, ReplicatedUsing = OnRep_WallTemplate)
+	/**  */
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 		TArray<ETRWallState> WallTemplate;
 
 protected:
@@ -49,9 +51,9 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
 		void ServerSetRoomTemplate(const FRoomTemplate& NewRoomTemplate);
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		void OnRep_WallTemplate();
-	void OnRep_WallTemplate_Implementation();
+	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	//	void OnRep_WallTemplate();
+	//void OnRep_WallTemplate_Implementation();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void OnRep_RoomTemplate();

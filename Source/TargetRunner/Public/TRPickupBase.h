@@ -20,7 +20,7 @@ public:
 	ATRPickupBase(const FObjectInitializer& OI);
 
 	// All goods, energy, etc. collected from this pickup.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, meta = (ExposeOnSpawn = "true"))
 		FPickupAwards PickupAwards;
 
 	// DEPRECATED - Use PickupAwards instead. Goods collected from this pickup
