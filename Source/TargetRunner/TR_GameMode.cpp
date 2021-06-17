@@ -20,11 +20,7 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 	GeneratorRandStream.Reset();
 	GridRandStream.Reset();
 	GoodsDropper = CreateDefaultSubobject<UGoodsDropper>(TEXT("GoodsDropper"));
-	if (GoodsDropper != nullptr)
-	{
-		
-	}
-	else 
+	if (GoodsDropper == nullptr)
 	{ 
 		UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor Could not create GoodsDropper.")); 
 	}
@@ -33,29 +29,6 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 void ATR_GameMode::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	if (!IsValid(GoodsDropper))
-	{
-		UE_LOG(LogTRGame, Error, TEXT("TRGameMode PostInitializeComponents GoodsDropper is null"));
-		return;
-	}
-	// Goods drops
-	if (!IsValid(GoodsDropperTable))
-	{
-		GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable);
-	}
-	else
-	{
-		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode GoodsDropperTable is not valid."));
-	}
-	// Resource drops
-	if (IsValid(ResourceDropTable))
-	{
-		GoodsDropper->AddDropTableDataToLibrary(ResourceDropTable);
-	}
-	else
-	{
-		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode ResourceDropTable is not valid."));
-	}
 }
 
 
@@ -443,6 +416,7 @@ void ATR_GameMode::OnAllPlayersTravelComplete_Implementation()
 
 void ATR_GameMode::PostSeamlessTravel()
 {
+	// Count all current player controllers
 	APlayerController* PlayerController;
 	TotalPlayerControllersForTravel = 0;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
@@ -475,7 +449,7 @@ void ATR_GameMode::GenericPlayerInitialization(AController* C)
 			}
 			else
 			{
-				UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
+				//UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
 			}
 		}
 	}
@@ -491,24 +465,17 @@ void ATR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 
 	APlayerController* PlayerController;
 	int32 NumLoadedPlayers = 0;
-	TArray<APlayerController*> ControllerList;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
 	{
 		PlayerController = Cast<APlayerController>(It->Get());
+		// Starting players will all have the same controller class.
 		if (IsValid(PlayerController) && PlayerController->GetClass() == NewPlayer->GetClass())
 		{
-			ControllerList.Add(PlayerController);
-			UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
-		}
-	}
-	for (APlayerController* PC : ControllerList)
-	{
-		if (PC->PlayerState)
-		{
-			if (PC->HasClientLoadedCurrentWorld())
+			if (PlayerController->PlayerState && PlayerController->HasClientLoadedCurrentWorld())
 			{
 				NumLoadedPlayers++;
 			}
+			UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
 	UE_LOG(LogTRGame, Log, TEXT("TR_GameMode::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);

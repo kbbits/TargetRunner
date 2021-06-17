@@ -20,12 +20,12 @@ public:
 	ATRPickupBase(const FObjectInitializer& OI);
 
 	// All goods, energy, etc. collected from this pickup.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_PickupAwards, meta = (ExposeOnSpawn = "true"))
 		FPickupAwards PickupAwards;
 
 	// DEPRECATED - Use PickupAwards instead. Goods collected from this pickup
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
-		TArray<FGoodsQuantity> PickupGoods;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+	//	TArray<FGoodsQuantity> PickupGoods;
 
 	// If this pickup has already been collected - but still exists for some reason.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_Collected)
@@ -45,30 +45,28 @@ public:
 
 	// Replication notification of collected state
 	UFUNCTION()
-	virtual void OnRep_Collected();
+		virtual void OnRep_Collected();
 
-	// ICollectableResource interface functions
-
-	// Get the resource goods to collect. Default implementation: if !bCollected it returns all PickupGoods otherwise returns empty array.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")
-		void GetResourceGoods(TArray<FGoodsQuantity>& CollectedGoods);
-	virtual void GetResourceGoods_Implementation(TArray<FGoodsQuantity>& CollectedGoods);
-
-	// Call this to notify this entity that it has been collected.
-	// Default implementation sets bCollected = true then destroys self.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")
-		void NotifyCollected();
-	virtual void NotifyCollected_Implementation();
+	UFUNCTION(BlueprintNativeEvent)
+		void OnRep_PickupAwards();
+	void OnRep_PickupAwards_Implementation();
 
 	// ICollectablePickup interface functions
 
-	// Get the PickupAwards to collect. Default implementation: if !bCollected it returns all PickupAwards otherwise returns empty set.
+	/** Get the PickupAwards to collect. 
+	 *  Default implementation : if !bCollected it returns all PickupAwards otherwise returns empty set. */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Pickup Collecting")
 		void GetPickupAwards(FPickupAwards& PickupsAwarded);
 	virtual void GetPickupAwards_Implementation(FPickupAwards& PickupsAwarded);
 
-	// Call this to notify this entity that it has been collected.
-	// Default implementation sets bCollected = true then destroys self.
+	/** Get the goods portion of the PickupAwards. 
+	 *  Default implementation: if !bCollected it returns all PickupAwards.PickupGoods, otherwise returns an empty array. */
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Pickup Collecting")
+		void GetPickupGoods(TArray<FGoodsQuantity>& PickupGoods);
+	virtual void GetPickupGoods_Implementation(TArray<FGoodsQuantity>& PickupGoods);
+
+	/** Call this to notify this entity that it has been collected.
+	 *  Default implementation sets bCollected = true then destroys self. */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Pickup Collecting")
 		void NotifyPickupCollected();
 	virtual void NotifyPickupCollected_Implementation();
@@ -80,4 +78,17 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
 		FInspectInfo GetInspectInfo();
+
+	// ICollectableResource interface functions
+
+	// Get the resource goods to collect. Default implementation: if !bCollected it returns all PickupAwards.PickupGoods otherwise returns empty array.
+	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")
+	//	void GetResourceGoods(TArray<FGoodsQuantity>& CollectedGoods);
+	//virtual void GetResourceGoods_Implementation(TArray<FGoodsQuantity>& CollectedGoods);
+
+	// Call this to notify this entity that it has been collected.
+	// Default implementation sets bCollected = true then destroys self.
+	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")
+	//	void NotifyCollected();
+	//virtual void NotifyCollected_Implementation();
 };

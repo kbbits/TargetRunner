@@ -24,9 +24,13 @@ class TARGETRUNNER_API ICollectablePickup
 
 public:
 
-	// Get the pickups to collect.
+	// Get the full PickupAwards to collect from this pickup.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Pickup Collecting")
 		void GetPickupAwards(FPickupAwards& PickupAwards);
+
+	// Get the goods portion of the PickupAwards to collect.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Pickup Collecting")
+		void GetPickupGoods(TArray<FGoodsQuantity>& PickupGoods);
 
 	// Call this to notify this entity that it has been collected.
 	// Generally this entity will then destroy itself.

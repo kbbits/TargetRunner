@@ -66,6 +66,7 @@ void ATR_Character::SetupCollectionVolume_Implementation()
 		if (ResourceCollectionVolume->GetAttachParent() != CollectorParent)
 		{
 			ResourceCollectionVolume->AttachToComponent(CollectorParent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			UE_LOG(LogTRGame, Log, TEXT("TR_Character SetupCollectionVolume collector volume attached to %s"), *CollectorParent->GetName());
 		}
 		ResourceCollectionVolume->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 		ResourceCollectionVolume->SetCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.7f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 1.2f);

@@ -1,4 +1,4 @@
-#include "TRPickupBase.h"
+#include "TRPickupBase.h"	
 
 // Constructor for defaults
 ATRPickupBase::ATRPickupBase(const FObjectInitializer& OI) : Super(OI)
@@ -11,19 +11,20 @@ ATRPickupBase::ATRPickupBase(const FObjectInitializer& OI) : Super(OI)
 	//SetRootComponent(RootScene);
 }
 
+
 // Called when the game starts or when spawned
 void ATRPickupBase::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
+
 
 // Called every frame
 void ATRPickupBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
+
 
 void ATRPickupBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
@@ -33,33 +34,16 @@ void ATRPickupBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutL
 	DOREPLIFETIME_CONDITION(ATRPickupBase, PickupAwards, COND_InitialOnly);
 }
 
+
 void ATRPickupBase::OnRep_Collected()
 {
 
 }
 
-void ATRPickupBase::GetResourceGoods_Implementation(TArray<FGoodsQuantity>& CollectedGoods)
-{
-	if (!bCollected)
-	{
-		TArray<FGoodsQuantity> PickedUpGoods;
-		for (FPickupAwardsItem CurAward : PickupAwards.PickupItems)
-		{
-			PickedUpGoods.Append(CurAward.PickupGoods);
-		}
-		CollectedGoods.Empty(PickedUpGoods.Num());
-		CollectedGoods.Append(PickedUpGoods);
-	}
-	else
-	{
-		CollectedGoods.Empty();
-	}
-}
 
-void ATRPickupBase::NotifyCollected_Implementation()
+void ATRPickupBase::OnRep_PickupAwards_Implementation()
 {
-	bCollected = true;
-	Destroy();
+
 }
 
 
@@ -73,6 +57,25 @@ void ATRPickupBase::GetPickupAwards_Implementation(FPickupAwards& PickupsAwarded
 	else
 	{
 		PickupsAwarded.PickupItems.Empty();
+	}
+}
+
+
+void ATRPickupBase::GetPickupGoods_Implementation(TArray<FGoodsQuantity>& PickupGoods)
+{
+	if (!bCollected)
+	{
+		TArray<FGoodsQuantity> PickedUpGoods;
+		for (FPickupAwardsItem CurAward : PickupAwards.PickupItems)
+		{
+			PickedUpGoods.Append(CurAward.PickupGoods);
+		}
+		PickupGoods.Empty(PickedUpGoods.Num());
+		PickupGoods.Append(PickedUpGoods);
+	}
+	else
+	{
+		PickupGoods.Empty();
 	}
 }
 
@@ -107,12 +110,9 @@ FText ATRPickupBase::GetItemDisplayName_Implementation()
 			}
 		}
 	}
-	if (PickupGoods.Num() > 0)
-	{
-		return FText::FromString(PickupGoods[0].Name.ToString());
-	}
 	return FText();
 }
+
 
 FInspectInfo ATRPickupBase::GetInspectInfo_Implementation()
 {
@@ -125,9 +125,18 @@ FInspectInfo ATRPickupBase::GetInspectInfo_Implementation()
 			Info.DetailInfo.Add(FInspectInfoItem(FText::FromString(Goods.Name.ToString()), FText::FromString(FString::Printf(TEXT("%.0f"), Goods.Quantity))));
 		}
 	}
-	for (FGoodsQuantity Goods : PickupGoods)
-	{
-		Info.DetailInfo.Add(FInspectInfoItem(FText::FromString(Goods.Name.ToString()), FText::FromString(FString::Printf(TEXT("%.0f"), Goods.Quantity))));
-	}
 	return Info;
 }
+
+
+//void ATRPickupBase::GetResourceGoods_Implementation(TArray<FGoodsQuantity>& CollectedGoods)
+//{
+//	GetPickupGoods(CollectedGoods);
+//}
+
+
+//void ATRPickupBase::NotifyCollected_Implementation()
+//{
+//	bCollected = true;
+//	Destroy();
+//}

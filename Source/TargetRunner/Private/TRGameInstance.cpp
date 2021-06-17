@@ -20,12 +20,14 @@ UTRGameInstance::UTRGameInstance()
 FString UTRGameInstance::GetLevelTemplatesSaveFilename_Implementation()
 {
 	return FString::Printf(TEXT("%s_LT"), *HostProfileGuid.ToString(EGuidFormats::Digits));
+	//return FString::Printf(TEXT("GlobalLevelTemplates_LT"));
 }
 
 
 FString UTRGameInstance::GetPlayerRecordsSaveFilename_Implementation()
 {
-	return FString::Printf(TEXT("%s_PLR"), *HostProfileGuid.ToString(EGuidFormats::Digits));
+	//return FString::Printf(TEXT("%s_PLR"), *HostProfileGuid.ToString(EGuidFormats::Digits));
+	return FString::Printf(TEXT("GlobalPLRs"));
 }
 
 
@@ -83,7 +85,7 @@ FLevelTemplate& UTRGameInstance::GetSelectedLevelTemplate()
 
 void UTRGameInstance::SaveLevelTemplatesData_Implementation()
 {
-	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save level templates: %d"), LevelTemplatesMap.Num());
+	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save level templates"));
 	ULevelTemplatesSave* SaveGame = Cast<ULevelTemplatesSave>(UGameplayStatics::CreateSaveGameObject(ULevelTemplatesSave::StaticClass()));
 	TArray<FLevelTemplate> AllTemplates;
 	for (TPair<FName, ULevelTemplateContext*> LtcElem : LevelTemplatesMap)
@@ -100,18 +102,54 @@ void UTRGameInstance::SaveLevelTemplatesData_Implementation()
 void UTRGameInstance::SavePlayerRecordsData_Implementation()
 {
 	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save player level records"));
-	UPlayerLevelRecordsSave* SaveGame = Cast<UPlayerLevelRecordsSave>(UGameplayStatics::CreateSaveGameObject(UPlayerLevelRecordsSave::StaticClass()));
+	UPlayerLevelRecordsSave* SaveGame = nullptr;
+	// First get the existing player records. We only have records for level templates used by the host profile now.
+	// But PLRs are stored globally. So, the save file will have data we don't have loaded. We don't want to overwrite it.
+	if (UGameplayStatics::DoesSaveGameExist(GetPlayerRecordsSaveFilename(), 0))
+	{
+		SaveGame = Cast<UPlayerLevelRecordsSave>(UGameplayStatics::LoadGameFromSlot(GetPlayerRecordsSaveFilename(), 0));		
+	}
+	if (!SaveGame)
+	{
+		SaveGame = Cast<UPlayerLevelRecordsSave>(UGameplayStatics::CreateSaveGameObject(UPlayerLevelRecordsSave::StaticClass()));
+	}
 	FAsyncSaveGameToSlotDelegate Callback = FAsyncSaveGameToSlotDelegate::CreateUObject(this, &UTRGameInstance::OnPlayerRecordsSaveComplete);
 	// Put all player records in single array.
 	TArray<FPlayerLevelRecord> AllPLRs;
 	TArray<FPlayerLevelRecord> TmpPLRs;
+	int32 SavePLRIndex = INDEX_NONE;
+	int32 RecordsUpdated = 0;
+	int32 RecordsAdded = 0;
 	for (TPair<FName, ULevelTemplateContext*> LtcElem : LevelTemplatesMap)
 	{
 		LtcElem.Value->PlayerRecords.GenerateValueArray(TmpPLRs);
 		AllPLRs.Append(TmpPLRs);
 	}
-	SaveGame->PlayerRecords = AllPLRs;
-	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Saving %d player level records"), AllPLRs.Num());
+	if (SaveGame->PlayerRecords.Num() > 0)
+	{
+		// Find existing records in save file and update it or add one if not found.
+		for (FPlayerLevelRecord CurPLR : AllPLRs)
+		{
+			SavePLRIndex = SaveGame->PlayerRecords.IndexOfByKey<FPlayerLevelRecord>(CurPLR);
+			if (SavePLRIndex == INDEX_NONE)
+			{
+				SaveGame->PlayerRecords.Add(CurPLR);
+				RecordsAdded++;
+			}
+			else
+			{
+				SaveGame->PlayerRecords[SavePLRIndex] = CurPLR;
+				RecordsUpdated++;
+			}
+		}
+	}
+	else
+	{
+		// Just add all the PLRs to empty save file
+		SaveGame->PlayerRecords = AllPLRs;
+		RecordsAdded = AllPLRs.Num();
+	}
+	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Saving player level records: Added %d  Updated %d  Total from game %d  Total in file %d"), RecordsAdded, RecordsUpdated, AllPLRs.Num(), SaveGame->PlayerRecords.Num());
 	UGameplayStatics::AsyncSaveGameToSlot(SaveGame, GetPlayerRecordsSaveFilename(), 0, Callback);
 }
 
@@ -161,7 +199,8 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 					}
 					else
 					{
-						UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - LoadLevelTemplates - No level template with id: %s"), *TmpPlayerRecord.LevelId.ToString());
+						// May find player level records for levels we don't have. This is expected.
+						//UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - LoadLevelTemplates - No level template with id: %s"), *TmpPlayerRecord.LevelId.ToString());
 					}
 				}
 				UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Load level templates loaded %d player records"), PlayerRecordsLoaded);

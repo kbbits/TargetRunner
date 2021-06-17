@@ -125,6 +125,7 @@ void ATRGameModeLobby::GenericPlayerInitialization(AController* C)
 		ATRPlayerState* TRPlayerState = TRPlayerController->GetPlayerState<ATRPlayerState>();
 		if (TRPlayerState)
 		{
+			UE_LOG(LogTRGame, Log, TEXT("GenericPlayerInit player id: %d"), TRPlayerState->GetPlayerId());
 			if (TRPlayerState->PlayerGuid.IsValid())
 			{
 				//TRPlayerController->PersistentDataComponent->ServerLoadPlayerData();
@@ -151,26 +152,25 @@ void ATRGameModeLobby::HandleStartingNewPlayer_Implementation(APlayerController*
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
+	if (NewPlayer->PlayerState) {
+		UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer player id %d"), NewPlayer->PlayerState->GetPlayerId());
+	}
+	else {
+		UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer no player state"));
+	}
 	APlayerController* PlayerController;
 	int32 NumLoadedPlayers = 0;
-	TArray<APlayerController*> ControllerList;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
 	{
 		PlayerController = Cast<APlayerController>(It->Get());
+		// Starting players will all have the same controller class.
 		if (IsValid(PlayerController) && PlayerController->GetClass() == NewPlayer->GetClass())
 		{
-			ControllerList.Add(PlayerController);
-			UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
-		}
-	}
-	for (APlayerController* PC : ControllerList)
-	{
-		if (PC->PlayerState)
-		{
-			if (PC->HasClientLoadedCurrentWorld())
+			if (PlayerController->PlayerState && PlayerController->HasClientLoadedCurrentWorld())
 			{
 				NumLoadedPlayers++;
 			}
+			UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
 	UE_LOG(LogTRGame, Log, TEXT("TRGameModeLobby::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);

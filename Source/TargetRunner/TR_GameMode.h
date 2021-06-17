@@ -121,7 +121,9 @@ private:
 	APlatformGridMgr* GridManager;
 
 protected:
+
 	// Called when the game starts or when spawned
+	// This will attempt to grab the level template from the game instance.
 	virtual void BeginPlay() override;
 
 	virtual void PostInitializeComponents() override;
