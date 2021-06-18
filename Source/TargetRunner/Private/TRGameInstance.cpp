@@ -37,7 +37,7 @@ void UTRGameInstance::SaveAllPlayerData()
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
 		PController = Cast<ATRPlayerControllerBase>(*Iterator);
-		if (PController)
+		if (IsValid(PController))
 		{
 			PController->PersistentDataComponent->ServerSavePlayerData();
 		}
@@ -120,8 +120,10 @@ void UTRGameInstance::SavePlayerRecordsData_Implementation()
 	int32 SavePLRIndex = INDEX_NONE;
 	int32 RecordsUpdated = 0;
 	int32 RecordsAdded = 0;
+	// Each LevelTemplatesMap value is a sub-map of player guids to a PlayerLevelRecord.
 	for (TPair<FName, ULevelTemplateContext*> LtcElem : LevelTemplatesMap)
 	{
+		// Get each level's PlayerLevelRecords from the map and add it to our array.
 		LtcElem.Value->PlayerRecords.GenerateValueArray(TmpPLRs);
 		AllPLRs.Append(TmpPLRs);
 	}
@@ -130,6 +132,7 @@ void UTRGameInstance::SavePlayerRecordsData_Implementation()
 		// Find existing records in save file and update it or add one if not found.
 		for (FPlayerLevelRecord CurPLR : AllPLRs)
 		{
+			// FPlayerLevelRecords implement the == comparison operator. So we can use IndexOfByKey.
 			SavePLRIndex = SaveGame->PlayerRecords.IndexOfByKey<FPlayerLevelRecord>(CurPLR);
 			if (SavePLRIndex == INDEX_NONE)
 			{
@@ -145,7 +148,7 @@ void UTRGameInstance::SavePlayerRecordsData_Implementation()
 	}
 	else
 	{
-		// Just add all the PLRs to empty save file
+		// Just add all the PLRs to an empty save file
 		SaveGame->PlayerRecords = AllPLRs;
 		RecordsAdded = AllPLRs.Num();
 	}
@@ -165,6 +168,7 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 		ULevelTemplatesSave* SaveGame = Cast<ULevelTemplatesSave>(UGameplayStatics::LoadGameFromSlot(GetLevelTemplatesSaveFilename(), 0));
 		if (SaveGame)
 		{
+			// Add each level template from the save into our LevelTemplatesMap
 			ULevelTemplateContext* NewLTC = nullptr;
 			for (FLevelTemplate TmpTemplate : SaveGame->LevelTemplates)
 			{
@@ -182,18 +186,22 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 	}
 	if (bLevelTemplatesLoaded)
 	{
+		// Load the player records
 		if (UGameplayStatics::DoesSaveGameExist(GetPlayerRecordsSaveFilename(), 0))
 		{
 			int32 PlayerRecordsLoaded = 0;
 			UPlayerLevelRecordsSave* PlayerSaveGame = Cast<UPlayerLevelRecordsSave>(UGameplayStatics::LoadGameFromSlot(GetPlayerRecordsSaveFilename(), 0));
 			if (PlayerSaveGame)
 			{
+				// Load the "global" player level records from the save and add them to the sub-map for each level in our LevelTemplatesMap
 				ULevelTemplateContext* TmpLTC = nullptr;
 				for (FPlayerLevelRecord TmpPlayerRecord : PlayerSaveGame->PlayerRecords)
 				{
+					// Find the Level in our LevelTemplatesMap
 					TmpLTC = LevelTemplatesMap.FindRef(TmpPlayerRecord.LevelId);
 					if (TmpLTC)
 					{
+						// Add (or update) the player level record in the found level template's player records sub-map.
 						TmpLTC->PlayerRecords.Add(TmpPlayerRecord.PlayerGuid, TmpPlayerRecord);
 						PlayerRecordsLoaded++;
 					}
@@ -217,6 +225,7 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 void UTRGameInstance::OnLevelTemplatesSaveComplete(const FString& SlotName, const int32 UserIndex, bool bSuccessful)
 {
 	if (bSuccessful) { 
+		// After successful save of template data, save the associated player level records
 		UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save level templates successful"));
 		SavePlayerRecordsData(); 
 	}
@@ -239,22 +248,27 @@ ULevelTemplateContext* UTRGameInstance::UnlockLevelTemplateForPlayer(const FName
 {
 	ULevelTemplateContext* TargetTemplate = nullptr;
 	LoadLevelTemplatesData();
+	// Find the level in the LevelTemplatesMap
 	TargetTemplate = LevelTemplatesMap.FindRef(LevelId);
 	if (TargetTemplate)
 	{
+		// If the level already has a player record for this player guid:
 		if (TargetTemplate->PlayerRecords.Contains(PlayerGuid))
 		{
+			// Then update the player level record
 			UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - UnlockLevelTemplateForPlayer updating for player: %s"), *PlayerGuid.ToString(EGuidFormats::Digits));
 			TargetTemplate->PlayerRecords[PlayerGuid].Unlocked = true;
 			TargetTemplate->PlayerRecords[PlayerGuid].UnlockedAt = FDateTime::Now();
 		}
 		else
 		{
+			// Otherwise create a new player level record for the player guid
 			FPlayerLevelRecord NewLevelRecord;
 			NewLevelRecord.PlayerGuid = PlayerGuid;
 			NewLevelRecord.LevelId = LevelId;
 			NewLevelRecord.Unlocked = true;
 			NewLevelRecord.UnlockedAt = FDateTime::Now();
+			// And add the PLR to the level's player record sub-map
 			TargetTemplate->PlayerRecords.Add(PlayerGuid, NewLevelRecord);
 			UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - UnlockLevelTemplateForPlayer new record for player: %s"), *PlayerGuid.ToString(EGuidFormats::Digits));
 		}
@@ -292,6 +306,7 @@ FPlayerLevelRecord UTRGameInstance::GetLevelTemplatePlayerRecord(const FName Lev
 	}
 	return FPlayerLevelRecord();
 }
+
 
 void UTRGameInstance::UpdateLevelTemplatePlayerRecord(const FPlayerLevelRecord& PlayerRecord)
 {

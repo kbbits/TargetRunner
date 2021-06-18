@@ -342,27 +342,40 @@ void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState)
 		{
-			UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(GetPlayerSaveFilename(), 0));
-			if (SaveGame == nullptr || !SaveGame->PlayerSaveData.PlayerGuid.IsValid())
-			{
-				SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
-			}
+			// Try to load existing save
+			//UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(GetPlayerSaveFilename(), 0));
+			//if (SaveGame == nullptr || !SaveGame->PlayerSaveData.PlayerGuid.IsValid())
+			//{
+			//	// Create a new one if existing not found
+			//	SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
+			//}
+			// Create a new save each time
+			UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
+			// Get the data from our owning controller.
 			TRPlayerController->GetPlayerSaveData(SaveGame->PlayerSaveData);
 			UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Saving player data. Guid: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
-			FString InvBuff;
+			/** TODO remove this debug logging */
 			if (SaveGame->PlayerSaveData.GoodsInventory.Num() == 0)
 			{
 				UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
 			}
-			// TODO remove this debug logging
-			for (FGoodsQuantity InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+			else
 			{
-				InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Name.ToString(), InvElem.Quantity));
+				UE_LOG(LogTRGame, Log, TEXT("    Goods Inventory: "));
+				for (FGoodsQuantity InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+				{
+					UE_LOG(LogTRGame, Log, TEXT("     %s: %f"), *InvElem.Name.ToString(), InvElem.Quantity);
+				}
 			}
-			UE_LOG(LogTRGame, Log, TEXT("    Goods Inventory   \r\n  %s"), *InvBuff);
-
-			UGameplayStatics::SaveGameToSlot(SaveGame, GetPlayerSaveFilename(), 0);
-			UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Player data saved to: %s"), *GetPlayerSaveFilename());
+			/** End debug inventory logging */
+			if (UGameplayStatics::SaveGameToSlot(SaveGame, GetPlayerSaveFilename(), 0))
+			{
+				UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Player data saved to: %s"), *GetPlayerSaveFilename());
+			}
+			else
+			{
+				UE_LOG(LogTRGame, Error, TEXT("PersistentDataComponent ServerSavePlayerData : Error saving player data: %s"), *GetPlayerSaveFilename());
+			}
 		}
 		else {
 			UE_LOG(LogTRGame, Error, TEXT("ServerSavePlayerData - Could not get player state."));
@@ -433,16 +446,19 @@ void UTRPersistentDataComponent::ServerLoadPlayerDataByGuid_Implementation(const
 						else
 						{
 							UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent - Loading player data. Guid: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
-							FString InvBuff;
+							// TODO remove this debug logging
 							if (SaveGame->PlayerSaveData.GoodsInventory.Num() == 0)
 							{
 								UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
 							}
-							for (FGoodsQuantity InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+							else
 							{
-								InvBuff.Append(FString::Printf(TEXT("    %s: %f    \r\n"), *InvElem.Name.ToString(), InvElem.Quantity));
-							}
-							UE_LOG(LogTRGame, Log, TEXT("    Goods Inventory   \r\n  %s"), *InvBuff);
+								UE_LOG(LogTRGame, Log, TEXT("    Goods Inventory:"));
+								for (FGoodsQuantity InvElem : SaveGame->PlayerSaveData.GoodsInventory)
+								{
+									UE_LOG(LogTRGame, Log, TEXT("    %s: %f"), *InvElem.Name.ToString(), InvElem.Quantity);
+								}
+							}							
 							// Update data on server
 							TRPlayerController->UpdateFromPlayerSaveData(SaveGame->PlayerSaveData);
 							if (TRPlayerController->IsLocalController()) 

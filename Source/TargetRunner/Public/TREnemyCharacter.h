@@ -37,10 +37,6 @@ public:
 	//UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	//	TSubclassOf<class UEnemyToolWeaponBase> WeaponClass;
 
-	// The base health value for a Level=1 character
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-	//	float BaseHealth;
-
 	// The base walk speed for a Level=1 character
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 	//	float BaseWalkSpeed;
@@ -140,10 +136,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure)
 		float GetMaxAttackRange();
 
-	// Base class implementation returns true if current health > 0, false otherwise.
+	// Base class implementation returns true if current health <= 0, false otherwise.
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure)
 		bool IsDead();
 
+	// [Only valid on Server]
 	// Helper to get controller cast to TREnemyAIController
 	UFUNCTION(BlueprintPure)
 		ATREnemyAIController* GetTRAIController();

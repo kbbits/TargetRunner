@@ -924,6 +924,8 @@ void ATRPlayerControllerBase::ClientUpdateRoomGridTemplate_Implementation(const 
 
 bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 {
+	// Copy empty default struct in first in case this save already has data.
+	SaveData = FPlayerSaveData();
 	// Attribute components
 	TArray<UActorAttributeComponent*> AttributeComps;
 	GetComponents<UActorAttributeComponent>(AttributeComps);

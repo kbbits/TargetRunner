@@ -73,7 +73,6 @@ void ATREnemyCharacter::Tick(float DeltaTime)
 }
 
 
-
 void ATREnemyCharacter::ScaleToLevel_Implementation()
 {
 	bScaleUpApplied = true;
@@ -84,44 +83,57 @@ void ATREnemyCharacter::ScaleToLevel_Implementation()
 void ATREnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 
 void ATREnemyCharacter::OnRep_StasisState_Implementation(ETRStasisState OldState)
 {
-	ATREnemyAIController* AIController = GetTRAIController();
-	if (AIController == nullptr)
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		UE_LOG(LogTRGame, Error, TEXT("TREnemyCharacter - no AI Controller found"));
-		return;
-	}
-	if (StasisState == ETRStasisState::Awake)
-	{
-		if (GetLocalRole() == ROLE_Authority)
+		// Server updates
+		ATREnemyAIController* AIController;
+		AIController = GetTRAIController();
+		if (AIController == nullptr)
+		{
+			UE_LOG(LogTRGame, Error, TEXT("TREnemyCharacter - no AI Controller found"));
+			return;
+		}
+		if (StasisState == ETRStasisState::Awake)
 		{
 			SetActorTickEnabled(true);
 			AIController->SetActorTickEnabled(true);
 			if (AIController->GetBrainComponent()) {
 				AIController->GetBrainComponent()->StartLogic();
 			}
+			// Handle components?
+			UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
 		}
-		// Handle components?
-		UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
-	}
-	else if (StasisState == ETRStasisState::InStasis)
-	{
-		StopAnimMontage();
-		SetActorTickEnabled(false);
-		if (GetLocalRole() == ROLE_Authority)
+		else if (StasisState == ETRStasisState::InStasis)
 		{
+			StopAnimMontage();
+			SetActorTickEnabled(false);
 			AIController->SetActorTickEnabled(false);
 			if (AIController->GetBrainComponent()) {
 				AIController->GetBrainComponent()->StopLogic(FString(TEXT("Stasis")));
 			}
 			AIController->StopMovement();
+			UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Put In Stasis: %s"), *GetNameSafe(this));
 		}
-		UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Put In Stasis: %s"), *GetNameSafe(this));
+	}
+	else
+	{
+		// Client side updates
+		if (StasisState == ETRStasisState::Awake)
+		{
+			// Handle components?
+			UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
+		}
+		else if (StasisState == ETRStasisState::InStasis)
+		{
+			StopAnimMontage();
+			SetActorTickEnabled(false);
+			UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Put In Stasis: %s"), *GetNameSafe(this));
+		}
 	}
 }
 
@@ -163,10 +175,13 @@ bool ATREnemyCharacter::IsDead_Implementation()
 
 ATREnemyAIController* ATREnemyCharacter::GetTRAIController()
 {
-	if (TRAIController == nullptr)
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		TRAIController = Cast<ATREnemyAIController>(GetController());
-	}	
+		if (!IsValid(TRAIController))
+		{
+			TRAIController = Cast<ATREnemyAIController>(GetController());
+		}
+	}
 	return TRAIController;
 }
 
@@ -180,7 +195,6 @@ bool ATREnemyCharacter::GetExtractedResourcesOnDestroy_Implementation(const TArr
 
 TArray<FResourceQuantity> ATREnemyCharacter::GetResourceQuantities_Implementation()
 {
-	//return UResourceFunctionLibrary::AddResourceQuantities(ResourcesByDamageCurrent, ResourcesOnDestroy);
 	if (IsDead()) { 
 		return TArray<FResourceQuantity>(); 
 	}
@@ -190,10 +204,6 @@ TArray<FResourceQuantity> ATREnemyCharacter::GetResourceQuantities_Implementatio
 float ATREnemyCharacter::GetResourceQuantity_Implementation(const FResourceType& ResourceType)
 {
 	float QuantityTotal = 0.0f;
-	//for (FResourceQuantity CurQuantity : ResourcesByDamage)
-	//{
-	//	if (CurQuantity.ResourceType == ResourceType) { QuantityTotal += CurQuantity.Quantity; }
-	//}
 	for (FResourceQuantity CurQuantity : ResourcesOnDestroy)
 	{
 		if (CurQuantity.ResourceType == ResourceType) { QuantityTotal += CurQuantity.Quantity; }
