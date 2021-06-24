@@ -34,3 +34,28 @@ FIntPoint UTRMath::DirectionToOffset(const ETRDirection Direction)
 {
 	return DirectionToOffsetVector(Direction).IntPoint();
 }
+
+
+ETRDirection UTRMath::OppositeDirection(const ETRDirection Direction)
+{
+	switch (Direction)
+	{
+	case ETRDirection::North :
+		return ETRDirection::South;
+	case ETRDirection::NorthEast :
+		return ETRDirection::SouthWest;
+	case ETRDirection::East:
+		return ETRDirection::West;
+	case ETRDirection::SouthEast:
+		return ETRDirection::NorthWest;
+	case ETRDirection::South:
+		return ETRDirection::North;
+	case ETRDirection::SouthWest:
+		return ETRDirection::NorthEast;
+	case ETRDirection::West:
+		return ETRDirection::East;
+	case ETRDirection::NorthWest:
+		return ETRDirection::SouthEast;
+	}
+	return ETRDirection::North;
+}

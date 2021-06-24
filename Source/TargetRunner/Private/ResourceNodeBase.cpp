@@ -182,7 +182,12 @@ void AResourceNodeBase::OnRep_ResourcesByDamageCurrent()
 }
 
 
-void AResourceNodeBase::OnRep_TotalResources()
+void AResourceNodeBase::OnRep_NodeResourceType_Implementation()
+{
+}
+
+
+void AResourceNodeBase::OnRep_TotalResources_Implementation()
 {
 }
 

@@ -197,7 +197,7 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 	//}
 	//PlatformGridMap.Empty();
 
-	APlatformGridMgr::DestroyGridImpl();
+	Super::DestroyGridImpl();
 	TArray<int32> RowNums;
 	RowNums.Empty(RoomGridTemplate.Grid.Num());
 	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);

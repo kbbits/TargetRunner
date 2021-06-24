@@ -129,10 +129,10 @@ protected:
 
     // Adds a placeholder blocked cell for neighbors outside grid extents.
     UFUNCTION(BlueprintCallable)
-        void GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
+        void GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells, const bool bIncludeDiagonal = true);
 
     // Adds a placeholder blocked cell for neighbors outside grid extents.
-    void GetCellNeighbors(const UGridTemplateCell& Cell, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
+    void GetCellNeighbors(const UGridTemplateCell& Cell, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells, const bool bIncludeDiagonal = true);
 
     // Only include entries in map for neighbors that exist and are blocked.
     UFUNCTION(BlueprintCallable)

@@ -22,4 +22,7 @@ public:
 
     UFUNCTION(BlueprintPure)
         static FIntPoint DirectionToOffset(const ETRDirection Direction);
+
+    UFUNCTION(BlueprintPure)
+        static ETRDirection OppositeDirection(const ETRDirection Direction);
 };

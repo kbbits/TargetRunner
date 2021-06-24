@@ -34,7 +34,7 @@ public:
 		float BaseHealth;
 
 	// The ResourceType of this node. This affects, for example, the damage done by sources that implement IDoesDamageByType interface.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, meta = (ExposeOnSpawn = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_NodeResourceType, meta = (ExposeOnSpawn = "true"))
 		FResourceType NodeResourceType;
 
 	// The total resources contained in the node.
@@ -118,8 +118,13 @@ public:
 		void OnRep_CurrentHealth();
 	void OnRep_CurrentHealth_Implementation();
 
-	UFUNCTION()
-		virtual void OnRep_TotalResources();
+	UFUNCTION(BlueprintNativeEvent)
+		void OnRep_NodeResourceType();
+	virtual void OnRep_NodeResourceType_Implementation();
+
+	UFUNCTION(BlueprintNativeEvent)
+		void OnRep_TotalResources();
+	virtual void OnRep_TotalResources_Implementation();
 
 	UFUNCTION()
 		virtual void OnRep_ResourcesByDamageCurrent();

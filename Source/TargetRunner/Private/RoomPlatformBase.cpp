@@ -166,7 +166,7 @@ void ARoomPlatformBase::GenerateRoomImpl()
 	{
 		SpawnFloor();
 		SpawnWalls();
-		//SpawnContents(); // Calls SpawnResources
+		SpawnCeiling();
 	}
 }
 
@@ -245,6 +245,12 @@ bool ARoomPlatformBase::SpawnFloor_Implementation()
 	return true;
 }
 
+
+bool ARoomPlatformBase::SpawnCeiling_Implementation()
+{
+	// Override and implement in BP.
+	return true;
+}
 
 bool ARoomPlatformBase::SpawnContents_Implementation()
 {

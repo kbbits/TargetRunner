@@ -78,17 +78,16 @@ public:
 	UFUNCTION(BlueprintCallable, CallInEditor)
 		bool CalculateWalls();
 	
-	// [Server]
 	// Spawns the walls.
-	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void SpawnWalls();
 
-	// [Server]
 	// Spawns the floor.
-	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		bool SpawnFloor();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		bool SpawnCeiling();
 
 	// [Server]
 	// Spawns room contents. By default this calls SpawnResources and SpawnSpecials.

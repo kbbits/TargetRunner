@@ -89,6 +89,23 @@ enum class ETRFloorState : uint8
 };
 
 UENUM(BlueprintType)
+enum class ETRRoomExitLayout : uint8
+{
+	// Room has no exits
+	None		UMETA(DisplayName = "None"),
+	// Room has one exit. At default orientation exit is on north wall.
+	One			UMETA(DisplayName = "OneExit"),
+	// Room has two exits on adjacent walls. At default orientation exits are on north and east walls.
+	TwoAdjacent	UMETA(DisplayName = "TwoAdjacent"),
+	// Room has two exits on opposite walls. At defalt orientation exits are on north and south walls.
+	TwoOpposite	UMETA(DisplayName = "TwoOpposite"),
+	// Room has three exits. At default orientation exits are on west, north and east walls.
+	Three		UMETA(DisplayName = "Three"),
+	// Room has four exits -- one on each wall.
+	Four		UMETA(DisplayName = "Four")
+};
+
+UENUM(BlueprintType)
 enum class ETRGridCellState : uint8
 {
 	Blocked		UMETA(DisplayName = "Blocked"),
