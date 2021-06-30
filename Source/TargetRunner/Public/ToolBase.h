@@ -191,9 +191,15 @@ protected:
 
 public:
 
+	// Minimum time in seconds between when an activation ends and the next activations can begin. 
+	// (i.e. between shots fired for single-fire tools and between bursts/beams for auto-fire tools). 
+	// For single-fire tools, shots per second = (1 / FireDelay) + 1
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE float GetActivationDelay() { return ActivationDelay.CurrentValue; }
 
+	// The delay between tool activations for a tool with ActivationType = EToolActivationType::Auto.
+	// That is, the amount of time in seconds, between each auto-fire activation.
+	// Shots per second = (1 / FireDelay) + 1
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE float GetAutoFireDelay() { return AutoFireDelay.CurrentValue; }
 

@@ -80,6 +80,11 @@ void AResourceNodeBase::SetResources_Implementation(const FResourceType& NewNode
 		}
 	}
 	ResourcesByDamageCurrent = ResourcesByDamage;
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		OnRep_NodeResourceType();
+		OnRep_TotalResources();
+	}
 }
 
 
