@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "TREnums.h"
 #include "StasisObject.generated.h"
 
 // This class does not need to be modified.

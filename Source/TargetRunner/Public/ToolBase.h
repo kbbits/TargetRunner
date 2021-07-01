@@ -183,9 +183,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Player Weapons")
 		FTRNamedInt MaximumBounces;
 
+	// Modifiers applied by this tool when it is equipped.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Weapons")
 		FNamedModifierSet EquipModifiers;
 
+	// Modifiers applied by this tool when it is activated.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Weapons")
 		FNamedModifierSet ActivateModifiers;
 
@@ -239,9 +241,11 @@ public:
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE float GetBaseDamage() { return BaseDamage.CurrentValue; }
 
+	// Modifiers applied by this tool when it is equipped.
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE TArray<FAttributeModifier> GetEquipModifiers() { return EquipModifiers.Modifiers; }
 
+	// Modifiers applied by this tool when it is activated.
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE TArray<FAttributeModifier> GetActivateModifiers() { return ActivateModifiers.Modifiers; }
 

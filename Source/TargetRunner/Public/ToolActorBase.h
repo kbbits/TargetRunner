@@ -32,7 +32,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Player Weapons", meta = (ExposeOnSpawn = "true"))
 		class UToolBase* Tool;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Weapons")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_WeaponState, Category = "Player Weapons")
 		ETRWeaponState WeaponState;
 
 protected:
@@ -59,6 +59,9 @@ public:
 	// Replication notification
 	UFUNCTION()
 		void OnRep_ToolData();
+
+	UFUNCTION(BlueprintNativeEvent)
+		void OnRep_WeaponState();
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

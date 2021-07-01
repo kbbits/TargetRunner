@@ -5,6 +5,7 @@
 #include "UObject/Interface.h"
 #include "Sound/SoundBase.h"
 #include "TargetRunner.h"
+#include "TREnums.h"
 #include "GoodsQuantity.h"
 #include "TRProjectileBase.h"
 #include "UsableTool.generated.h"

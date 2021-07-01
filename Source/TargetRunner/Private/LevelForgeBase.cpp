@@ -10,18 +10,22 @@ ULevelForgeBase::ULevelForgeBase(const FObjectInitializer& OI)
 	: Super(OI)
 {
 	MAX_TIER = 10;
+	MAX_LEVEL = 20;
 	MAX_EXTENT_X = 5;
 	MAX_EXTENT_Y = 5;
 	BaseResourceQuantityRange = FFloatRange(5000.0f, 6000.0f);
 	ResourceQuantityTierScalingExp = 0.5f;
 	HigherTierResourceQuantityMultiplier = 0.2f;
+	ResourceQuantityLevelScalingExp = 0.25f;
 	BaseUnlockCost = 1000.0f;
 	UnlockCostScalingExp = 1.75f;
+	UnlockCostLevelScalingExp = 0.25f;
 	BaseAvailableTime = 300.0f;
 	AvailableTimeScaleExp = 0.75f;
+	AvailableTimeLevelScaleExp = 0.25f;
 }
 
-void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float DifficultyTier, FLevelTemplate& NewLevelTemplate, bool& Successful)
+void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float Tier, const float DifficultyLevel, FLevelTemplate& NewLevelTemplate, bool& Successful)
 {
 	DebugLog(FString::Printf(TEXT("GenerateNewLevelTemplate Start. NewSeed: %d"), NewSeed));
 	Successful = false;
@@ -29,19 +33,20 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	LevelStream.Initialize(NewSeed);
 	LevelStream.Reset();
 	
-	NewLevelTemplate.Tier = DifficultyTier;
+	NewLevelTemplate.Tier = Tier;
+	NewLevelTemplate.DifficultyLevel = DifficultyLevel;
 	NewLevelTemplate.GridForgeType = FName(TEXT("Default"));
 	if (!GenerateDisplayName(NewLevelTemplate.DisplayName)) { return; }
 	if (!GenerateThumbnail(NewLevelTemplate.Thumbnail)) { return; }
-	if (!GenerateGridExtents(DifficultyTier, NewLevelTemplate)) { return; }
+	if (!GenerateGridExtents(Tier, DifficultyLevel, NewLevelTemplate)) { return; }
 	NewLevelTemplate.ResourcesAvailable.Empty();
-	if (!GenerateResourcesAvailable(DifficultyTier, NewLevelTemplate.ResourcesAvailable)) { return; }
+	if (!GenerateResourcesAvailable(Tier, DifficultyLevel, NewLevelTemplate.ResourcesAvailable)) { return; }
 	NewLevelTemplate.SpecialsAvailable.Empty();
-	if (!GenerateSpecialsAvailable(DifficultyTier, NewLevelTemplate.SpecialsAvailable)) { return; }
-	NewLevelTemplate.AvailableTime = FMath::Clamp<float>((FMath::Pow(DifficultyTier, AvailableTimeScaleExp) * (BaseAvailableTime / 10.0f)) * 10.0f, BaseAvailableTime, 14400.0f);
-	if (DifficultyTier > 3)
+	if (!GenerateSpecialsAvailable(Tier, DifficultyLevel, NewLevelTemplate.SpecialsAvailable)) { return; }
+	NewLevelTemplate.AvailableTime = FMath::Clamp<float>((FMath::Pow(Tier, AvailableTimeScaleExp) * ((BaseAvailableTime * (FMath::Pow(DifficultyLevel, AvailableTimeLevelScaleExp))) / 10.0f)) * 10.0f, BaseAvailableTime, 14400.0f);
+	if (Tier > 3 || (Tier > 0 && DifficultyLevel > 9))
 	{
-		NewLevelTemplate.StartHourOfDay = 9.0f + (12.0f + FMath::Clamp(LevelStream.FRandRange(DifficultyTier * -1.5f, DifficultyTier * 1.5f), -12.0f, 12.0f));
+		NewLevelTemplate.StartHourOfDay = 9.0f + (12.0f + FMath::Clamp(LevelStream.FRandRange(Tier * -1.5f, Tier * 1.5f), -12.0f, 12.0f));
 	}
 	else
 	{
@@ -50,8 +55,8 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	// Unlock cost
 	TArray<FGoodsQuantityRange> CostFactors;
 	float GoodsCostFactor = 0.0f;
-	NewLevelTemplate.UnlockCost = FMath::RoundFromZero(FMath::Pow(DifficultyTier, UnlockCostScalingExp) * (BaseUnlockCost / 10.0f)) * 10.f;
-	UnlockGoodsCostFactorForTier((int32)DifficultyTier, CostFactors);
+	NewLevelTemplate.UnlockCost = FMath::RoundFromZero(FMath::Pow(Tier, UnlockCostScalingExp) * ((BaseUnlockCost * (FMath::Pow(DifficultyLevel, UnlockCostLevelScalingExp))) / 10.0f)) * 10.f;
+	UnlockGoodsCostFactorForTier((int32)Tier, CostFactors);
 	for (FGoodsQuantityRange TmpRange : CostFactors)
 	{
 		GoodsCostFactor = LevelStream.FRandRange(0.0f, TmpRange.QuantityMax - TmpRange.QuantityMin) + TmpRange.QuantityMin;
@@ -61,7 +66,7 @@ void ULevelForgeBase::GenerateNewLevelTemplate(const int32 NewSeed, const float 
 	// TODO: Theme, ThemeTags, OtherResourcesAvailable
 
 	// Set the ID as compound key
-	NewLevelTemplate.LevelId = FName(FString::Printf(TEXT("%d:%d:%s:%s"), (int32)NewLevelTemplate.Tier, NewLevelTemplate.LevelSeed, *NewLevelTemplate.GridForgeType.ToString(), *NewLevelTemplate.Theme.ToString()));
+	NewLevelTemplate.LevelId = FName(FString::Printf(TEXT("%d:%d:%d:%s:%s"), (int32)NewLevelTemplate.Tier, NewLevelTemplate.DifficultyLevel, NewLevelTemplate.LevelSeed, *NewLevelTemplate.GridForgeType.ToString(), *NewLevelTemplate.Theme.ToString()));
 
 	DebugLog(FString::Printf(TEXT("GenerateNewLevelTemplate Successful.")));
 	Successful = true;
@@ -112,24 +117,25 @@ bool ULevelForgeBase::GenerateThumbnail(TAssetPtr<UTexture2D> Thumbnail)
 }
 
 
-bool ULevelForgeBase::GenerateGridExtents(const float DifficultyTier, FLevelTemplate& LevelTemplate)
+bool ULevelForgeBase::GenerateGridExtents(const float Tier, const int32 DifficultyLevel, FLevelTemplate& LevelTemplate)
 {
 	DebugLog(TEXT("GenerateGridExtents"));
-	float NormalizedDifficulty = MAX_TIER > 0 ? (DifficultyTier / static_cast<float>(MAX_TIER)) : 1.0f;
+	//MAX_TIER > 0 ? (Tier / static_cast<float>(MAX_TIER)) : 1.0f;
+	float NormalizedDifficulty = MAX_LEVEL > 0 ? (static_cast<float>(DifficultyLevel) / static_cast<float>(MAX_LEVEL)) : 1.f; 
 	int32 TmpExtent;
-	TmpExtent = (int32)FMath::RoundHalfToZero(FMath::GetMappedRangeValueClamped(FVector2D(0, MAX_TIER), FVector2D(1, MAX_EXTENT_X), DifficultyTier));
+	TmpExtent = (int32)FMath::RoundHalfToZero(FMath::GetMappedRangeValueClamped(FVector2D(1, MAX_LEVEL), FVector2D(1, MAX_EXTENT_X), DifficultyLevel));
 	LevelTemplate.MinX = -TmpExtent;
 	LevelTemplate.MaxX = TmpExtent;
-	TmpExtent = (int32)FMath::RoundHalfToZero(FMath::GetMappedRangeValueClamped(FVector2D(0, MAX_TIER), FVector2D(1, MAX_EXTENT_Y), DifficultyTier));
+	TmpExtent = (int32)FMath::RoundHalfToZero(FMath::GetMappedRangeValueClamped(FVector2D(1, MAX_LEVEL), FVector2D(1, MAX_EXTENT_Y), DifficultyLevel));
 	LevelTemplate.MinY = -TmpExtent;
 	LevelTemplate.MaxY = TmpExtent;
 	// Chance to adjust MaxX by +/- 1
-	if (LevelStream.FRandRange(0.0f, 1.0f) < (0.5f * NormalizedDifficulty))
+	if (LevelStream.FRandRange(0.0f, 1.0f) < (NormalizedDifficulty + (Tier * 0.05f)))
 	{
 		LevelTemplate.MaxX += FMath::Clamp<int32>(LevelStream.FRandRange(0.0f, 1.0f) >= 0.5f ? 1 : -1, 1, MAX_EXTENT_X);
 	}
 	// Chance to adjust MaxY by +/- 1
-	if (LevelStream.FRandRange(0.0f, 1.0f) < (0.5f * NormalizedDifficulty))
+	if (LevelStream.FRandRange(0.0f, 1.0f) < (NormalizedDifficulty + (Tier * 0.05f)))
 	{
 		LevelTemplate.MaxY += FMath::Clamp<int32>(LevelStream.FRandRange(0.0f, 1.0f) >= 0.5f ? 1 : -1, 1, MAX_EXTENT_Y);
 	}
@@ -138,13 +144,13 @@ bool ULevelForgeBase::GenerateGridExtents(const float DifficultyTier, FLevelTemp
 }
 
 
-bool ULevelForgeBase::GenerateResourcesAvailable(const float DifficultyTier, TArray<FResourceQuantity>& ResourcesAvailable)
+bool ULevelForgeBase::GenerateResourcesAvailable(const float Tier, const int32 DifficultyLevel, TArray<FResourceQuantity>& ResourcesAvailable)
 {
 	DebugLog(TEXT("GenerateResourcesAvailable"));
 	TMap<int32, FResourceTypeDataCollection> TierResources;
-	if (UResourceFunctionLibrary::ResourceDataByTier(ResourceDataTable, 0.0f, DifficultyTier+1, TierResources) == 0) 
+	if (UResourceFunctionLibrary::ResourceDataByTier(ResourceDataTable, 0.0f, Tier + 1, TierResources) == 0) 
 	{ 
-		UE_LOG(LogTRGame, Warning, TEXT("%s - GenerateResourcesAvailable - No resoures available in tiers 0-%d"), *this->GetName(), (int32)DifficultyTier + 1);
+		UE_LOG(LogTRGame, Warning, TEXT("%s - GenerateResourcesAvailable - No resoures available in tiers 0-%d"), *this->GetName(), (int32)Tier + 1);
 		return true;
 	}
 	if (BaseResourceQuantityRange.IsEmpty())
@@ -157,12 +163,13 @@ bool ULevelForgeBase::GenerateResourcesAvailable(const float DifficultyTier, TAr
 	FResourceTypeDataCollection* TmpTierResourceData;
 	FResourceType TmpResourceType;
 	float TmpQuantity;
-	float DifficultyDeltaMultiplier;
+	float TierDeltaMultiplier;
+	float LevelDeltaMultiplier = ResourceQuantityLevelScalingExp > 0 ? FMath::Pow(DifficultyLevel, ResourceQuantityLevelScalingExp) : 1.f;
 
 	TierResources.GetKeys(TiersAvailable);
 	for (int32 TmpTier : TiersAvailable)
 	{
-		DifficultyDeltaMultiplier = 1.0f / FMath::Pow(FMath::Abs(DifficultyTier - TmpTier) + 1.0f, ResourceQuantityTierScalingExp);
+		TierDeltaMultiplier = 1.0f / FMath::Pow(FMath::Abs(Tier - TmpTier) + 1.0f, ResourceQuantityTierScalingExp);
 		TmpTierResourceData = TierResources.Find(TmpTier);
 		for (FResourceTypeData TmpResourceData : TmpTierResourceData->Data)
 		{
@@ -170,15 +177,15 @@ bool ULevelForgeBase::GenerateResourcesAvailable(const float DifficultyTier, TAr
 			if (TmpResourceType.IsValid())
 			{
 				DebugLog(FString::Printf(TEXT("    generating: %s"), *TmpResourceType.Code.ToString()));
-				TmpQuantity = (LevelStream.FRandRange(0.0f, BaseResourceQuantityRange.GetUpperBoundValue() - BaseResourceQuantityRange.GetLowerBoundValue()) + BaseResourceQuantityRange.GetLowerBoundValue()) * DifficultyDeltaMultiplier;
-				if (TmpTier > DifficultyTier)
+				TmpQuantity = (LevelStream.FRandRange(0.0f, BaseResourceQuantityRange.GetUpperBoundValue() - BaseResourceQuantityRange.GetLowerBoundValue()) + BaseResourceQuantityRange.GetLowerBoundValue()) * TierDeltaMultiplier;
+				if (TmpTier > Tier)
 				{
 					TmpQuantity = TmpQuantity * HigherTierResourceQuantityMultiplier;
 				}
 				TmpQuantity = FMath::RoundHalfToZero(TmpQuantity);
 				if (TmpQuantity > 0.0f)
 				{
-					ResourcesAvailable.Add(FResourceQuantity(TmpResourceType, TmpQuantity));
+					ResourcesAvailable.Add(FResourceQuantity(TmpResourceType, TmpQuantity * LevelDeltaMultiplier));
 				}
 			}
 			else
@@ -197,11 +204,11 @@ bool ULevelForgeBase::GenerateResourcesAvailable(const float DifficultyTier, TAr
 }
 
 
-bool ULevelForgeBase::GenerateSpecialsAvailable(const float DifficultyTier, TArray<TSubclassOf<AActor>>& SpecialsAvailable)
+bool ULevelForgeBase::GenerateSpecialsAvailable(const float Tier, const int32 DifficultyLevel, TArray<TSubclassOf<AActor>>& SpecialsAvailable)
 {
 	DebugLog(TEXT("GenerateSpecialsAvailable"));
 	FRoomSpecialActorsByTier* PickedRow;
-	PickedRow = RoomSpecialActorsDataTable->FindRow<FRoomSpecialActorsByTier>(FName(FString::FromInt(FMath::TruncToInt(DifficultyTier))), "", false);
+	PickedRow = RoomSpecialActorsDataTable->FindRow<FRoomSpecialActorsByTier>(FName(FString::FromInt(FMath::TruncToInt(Tier))), "", false);
 	if (PickedRow == nullptr) {
 		UE_LOG(LogTRGame, Error, TEXT("%s - GenerateSpecialsAvailable - RoomSpecialActorsDataTable does not contain RoomSpecialActorsByTier rows."), *this->GetName());
 		return false;

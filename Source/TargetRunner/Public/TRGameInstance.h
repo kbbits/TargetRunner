@@ -95,7 +95,7 @@ public:
 
 	// [Server Only]
 	UFUNCTION(BlueprintCallable)
-		ULevelTemplateContext* GenerateNewLevelTemplate(const float Tier);
+		ULevelTemplateContext* GenerateNewLevelTemplate(const float Tier, const int32 DifficultyLevel);
 
 	// [Server only]
 	UFUNCTION(BlueprintCallable)

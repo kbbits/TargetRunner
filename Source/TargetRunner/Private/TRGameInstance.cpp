@@ -45,7 +45,7 @@ void UTRGameInstance::SaveAllPlayerData()
 }
 
 
-ULevelTemplateContext* UTRGameInstance::GenerateNewLevelTemplate(const float Tier)
+ULevelTemplateContext* UTRGameInstance::GenerateNewLevelTemplate(const float Tier, const int32 DifficultyLevel)
 {
 	bool bSuccessful = false;
 	ULevelForgeBase* LevelForge = NewObject<ULevelForgeBase>(this, DefaultLevelForgeClass);
@@ -56,7 +56,7 @@ ULevelTemplateContext* UTRGameInstance::GenerateNewLevelTemplate(const float Tie
 	ULevelTemplateContext* NewLTC = NewObject<ULevelTemplateContext>(this);
 	int32 NewSeed = LevelRandStream.RandRange(1, INT_MAX - 1);
 	UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - generating new level template for seed: %d. (stream seed: %d)"), NewSeed, LevelRandStream.GetCurrentSeed());
-	LevelForge->GenerateNewLevelTemplate(NewSeed, Tier, NewLTC->LevelTemplate, bSuccessful);
+	LevelForge->GenerateNewLevelTemplate(NewSeed, Tier, DifficultyLevel, NewLTC->LevelTemplate, bSuccessful);
 	if (bSuccessful)
 	{
 		LevelTemplatesMap.Add(NewLTC->LevelTemplate.LevelId, NewLTC);

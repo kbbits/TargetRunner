@@ -68,12 +68,12 @@ void UTRPersistentDataComponent::OnRep_LevelTemplatesPageLoaded()
 }
 
 
-void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(const float Tier, const bool bUnlockForPlayer)
+void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(const float Tier, const int32 DifficultyLevel, const bool bUnlockForPlayer)
 {
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst)
 	{
-		ULevelTemplateContext* NewTemplate = GameInst->GenerateNewLevelTemplate(Tier);
+		ULevelTemplateContext* NewTemplate = GameInst->GenerateNewLevelTemplate(Tier, DifficultyLevel);
 		if (NewTemplate && NewTemplate->LevelTemplate.IsValid()) {
 			if (bUnlockForPlayer)
 			{
@@ -95,7 +95,7 @@ void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(c
 	}
 }
 
-bool UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Validate(const float Tier, const bool bUnlockForPlayer)
+bool UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Validate(const float Tier, const int32 DifficultyLevel, const bool bUnlockForPlayer)
 {
 	return true;
 }

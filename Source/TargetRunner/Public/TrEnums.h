@@ -11,6 +11,7 @@ static FORCEINLINE FString GetEnumValueAsString(/*const FString& Name,*/ TEnum V
 	return EnumClass->GetNameByValue((int64)Value).ToString();;
 }
 
+
 UENUM(BlueprintType)
 enum class ETRFaction : uint8
 {
@@ -20,12 +21,14 @@ enum class ETRFaction : uint8
 	AllNeutral = 255	UMETA(DisplayName = "AllNeutral")
 };
 
+
 UENUM(BlueprintType)
 enum class ETRStasisState : uint8
 {
 	Awake		UMETA(DispalyName = "Awake"),
 	InStasis	UMETA(DispalyName = "InStasis")
 };
+
 
 UENUM(BlueprintType)
 enum class ETRDirection : uint8
@@ -39,6 +42,7 @@ enum class ETRDirection : uint8
 	West		UMETA(DisplayName = "West"),
 	NorthWest	UMETA(DispalyName = "NorthWest")
 };
+
 
 UENUM(BlueprintType)
 enum class ETRAmmoType : uint8
@@ -62,12 +66,14 @@ enum class ETRWeaponState : uint8
 	OutOfAmmo	UMETA(DisplayName = "OutOfAmmo")
 };
 
+
 UENUM(BlueprintType)
 enum class ETRToolUpgrade : uint8
 {
 	DamageRate		UMETA(DisplayName = "Damage Rate"),
 	ExtractionRate	UMETA(DisplayName = "Extraction Rate")
 };
+
 
 UENUM(BlueprintType)
 enum class ETRWallState : uint8
@@ -80,6 +86,7 @@ enum class ETRWallState : uint8
 	Random		UMETA(DisplayName = "Random")
 };
 
+
 UENUM(BlueprintType)
 enum class ETRFloorState : uint8
 {
@@ -87,6 +94,7 @@ enum class ETRFloorState : uint8
 	Open		UMETA(DisplayName = "Open"),
 	Blocked		UMETA(DisplayName = "Blocked")
 };
+
 
 UENUM(BlueprintType)
 enum class ETRRoomExitLayout : uint8
@@ -105,12 +113,14 @@ enum class ETRRoomExitLayout : uint8
 	Four		UMETA(DisplayName = "Four")
 };
 
+
 UENUM(BlueprintType)
 enum class ETRGridCellState : uint8
 {
 	Blocked		UMETA(DisplayName = "Blocked"),
 	Open		UMETA(DisplayName = "Open")
 };
+
 
 UENUM(BlueprintType)
 enum class ETRResourceMatch : uint8
@@ -121,6 +131,7 @@ enum class ETRResourceMatch : uint8
 	SubType	= 4		UMETA(DisplayName = "SubType"),
 	Exact = 255		UMETA(DisplayName = "Exact Match")
 };
+
 
 //UENUM(BlueprintType)
 //enum class ETRResourceCategory : uint8

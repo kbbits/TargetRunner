@@ -23,9 +23,13 @@ public:
         
 public:
 
-    // The maximum difficulty tier
+    // The maximum tier
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
         int32 MAX_TIER;
+
+    // The maximum difficulty level
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
+        int32 MAX_LEVEL;
 
     // Maximum absolute value of X grid extents both + and -
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
@@ -47,10 +51,18 @@ public:
         float HigherTierResourceQuantityMultiplier;
 
     // When resources quantities are scaled by relative tier.
+    // Must be > 0.0
     // Formula when resource tier != level tier: Quantity for resource tier X = Base quantity * ( 1 / ( (abs(Level Tier - X)+1) ^ ResourceQuantityTierScalingExp )
     // Default = 0.5 = inverse square falloff
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
         float ResourceQuantityTierScalingExp;
+
+    // Scales quantity of resources available. This is applied after tier based quantities are determined.
+    // Must be > 0.0
+    // Formula: ResourcesDeterminedByTier * (Level ^ ResourceQuantityLevelScalingExp);
+    // Default = 0.25
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
+        float ResourceQuantityLevelScalingExp;
 
     // The cost to unlock levels - scaled by tier. See UnlockCostScalingExp
     // Default = 1000
@@ -58,10 +70,16 @@ public:
         float BaseUnlockCost;
 
     // Level template unlock costs scale by tier.
-    // Formula for unlock cost = ((level tier ^ UnlockCostScalingExp) * (BaseUnlockCost / 10)) * 10
+    // Formula for unlock cost = ((tier ^ UnlockCostScalingExp) * ((BaseUnlockCost * (difficulty level ^ UnlockCostLevelScalingExp)) / 10)) * 10
     // Default = 1.75
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
         float UnlockCostScalingExp;
+
+    // Level template unlock costs scale by tier.
+    // Formula for unlock cost = ((tier ^ UnlockCostScalingExp) * ((BaseUnlockCost * (difficulty level ^ UnlockCostLevelScalingExp)) / 10)) * 10
+    // Default = 0.25
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
+        float UnlockCostLevelScalingExp;
 
     // Base amount of time per level tier, in seconds.
     // Default = 300
@@ -69,10 +87,16 @@ public:
         float BaseAvailableTime;
 
     // Scales the time available in level by tier.
-    // Formula: (level tier ^ AvailableTimeScaleExp) * BaseAvailableTime. Final value is in increments of 10 and clamped to a range of BaseAvailableTime to 14400.
+    // Formula: (level tier ^ AvailableTimeScaleExp) * (BaseAvailableTime * (difficulty level ^ AvailableTimeLevelScaleExp)). Final value is in increments of 10 and clamped to a range of BaseAvailableTime to 14400.
     // Default = 0.75;
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
         float AvailableTimeScaleExp;
+
+    // Scales the time available in level by difficulty level.
+    // Formula: (level tier ^ AvailableTimeScaleExp) * (BaseAvailableTime * (difficulty level ^ AvailableTimeLevelScaleExp)). Final value is in increments of 10 and clamped to a range of BaseAvailableTime to 14400.
+    // Default = 0.25;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
+        float AvailableTimeLevelScaleExp;
 
     // One row per tier. Each row (a FTieredGoodsQuantityRange) indicates a multiplier of goods quantities required for unlocking a level template of the given tier.
     // Must be set before LevelForge can be used;
@@ -113,10 +137,10 @@ protected:
 
 public:
 
-    // Generate a new LevelTemplate with the given seed.
+    // Generate a new LevelTemplate with the given seed and of the given tier and difficulty level.
     // Subclasses override this to provide different implementations. (if ever needed)
     UFUNCTION(BlueprintCallable)
-        virtual void GenerateNewLevelTemplate(const int32 NewSeed, const float DifficultyTier, FLevelTemplate& NewLevelTemplate, bool& Successful);
+        virtual void GenerateNewLevelTemplate(const int32 NewSeed, const float Tier, const float DifficultyLevel, FLevelTemplate& NewLevelTemplate, bool& Successful);
 
     UFUNCTION(BlueprintCallable)
         void UnlockGoodsCostFactorForTier(const int32 Tier, TArray<FGoodsQuantityRange>& CostFactors);
@@ -129,11 +153,11 @@ protected:
 
     bool GenerateThumbnail(TAssetPtr<UTexture2D> Thumbnail);
 
-    bool GenerateGridExtents(const float DifficultyTier, FLevelTemplate&);
+    bool GenerateGridExtents(const float Tier, const int32 DifficultyLevel, FLevelTemplate& LevelTemplate);
 
-    bool GenerateResourcesAvailable(const float DifficultyTier, TArray<FResourceQuantity>& ResourcesAvailable);
+    bool GenerateResourcesAvailable(const float Tier, const int32 DifficultyLevel, TArray<FResourceQuantity>& ResourcesAvailable);
 
-    bool GenerateSpecialsAvailable(const float DifficultyTier, TArray<TSubclassOf<AActor>>& SpecialsAvailable);
+    bool GenerateSpecialsAvailable(const float Tier, const int32 DifficultyLevel, TArray<TSubclassOf<AActor>>& SpecialsAvailable);
         
     // Debug
 #if WITH_EDITORONLY_DATA

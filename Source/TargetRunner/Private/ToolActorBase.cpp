@@ -2,9 +2,10 @@
 
 
 #include "ToolActorBase.h"
-#include "..\Public\ToolActorBase.h"
 #include "ToolBase.h"
 #include "ResourceFunctionLibrary.h"
+// intellisense
+#include "..\Public\ToolActorBase.h"
 
 // Sets default values
 AToolActorBase::AToolActorBase()
@@ -22,14 +23,24 @@ void AToolActorBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AToolActorBase, ToolData);
+	DOREPLIFETIME(AToolActorBase, WeaponState)
 }
 
 
 void AToolActorBase::OnRep_ToolData()
 {
-	if (ToolData.IsValid()) {
-		Tool = UToolBase::CreateToolFromToolData(ToolData, this);
+	if (GetLocalRole() < ROLE_Authority)
+	{
+		if (ToolData.IsValid()) {
+			Tool = UToolBase::CreateToolFromToolData(ToolData, this);
+		}
 	}
+}
+
+
+void AToolActorBase::OnRep_WeaponState_Implementation()
+{
+
 }
 
 

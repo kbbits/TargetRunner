@@ -24,7 +24,7 @@ public:
 
 	// Determines the scaled difficulty of the enemy
 	// Affects the starting health, speed (set on movement component) and other attributes of the enemy.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, meta = (ExposeOnSpawn = "true"))
 		int32 Level;
 
 	// Has this character had it's attribute values adjusted (scaled) by level?

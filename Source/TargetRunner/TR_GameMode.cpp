@@ -9,14 +9,17 @@
 #include "RoomPlatformGridMgr.h"
 #include "ResourceDropperBase.h"
 #include "ResourceFunctionLibrary.h"
+#include "GoodsFunctionLibrary.h"
 #include "GridForgePrim.h"
 #include "GridForgeManual.h"
+#include "EnemyCharacterClassSet.h"
 
 // Initializes rand streams and creates the GoodsDropper.
 ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI) 
 	: Super(OI)
 {
 	bLevelTemplateReady = false;
+	ClutterGoodsLevelScaleExp = 0.25f;
 	GeneratorRandStream.Reset();
 	GridRandStream.Reset();
 	GoodsDropper = CreateDefaultSubobject<UGoodsDropper>(TEXT("GoodsDropper"));
@@ -126,19 +129,29 @@ void ATR_GameMode::InitGoodsDropper_Implementation()
 void ATR_GameMode::GetClutterDropGoods(TArray<FGoodsQuantity>& DroppedGoods)
 {
 	// Clutter table names in format Clutter<level tier>. ex: Clutter01
-	FName DropTableName; 
+	FName DropTableName;
+	int32 DifficultyLevel;
 	if (bLevelTemplateReady)
 	{
 		DropTableName = FName(FString::Printf(TEXT("Clutter%02d"), static_cast<int32>(LevelTemplate.Tier)));
+		DifficultyLevel = LevelTemplate.DifficultyLevel;
 	}
 	else
 	{
 		DropTableName = FName(TEXT("Clutter00"));
+		DifficultyLevel = 1;
 	}
 	DroppedGoods.Empty();
 	if (GoodsDropper)
 	{
-		DroppedGoods.Append(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName));
+		if (DifficultyLevel > 1 && ClutterGoodsLevelScaleExp > 0.f)
+		{
+			DroppedGoods.Append(UGoodsFunctionLibrary::MultiplyGoodsQuantities(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName), FMath::Pow(static_cast<float>(DifficultyLevel), ClutterGoodsLevelScaleExp)));
+		}
+		else 
+		{
+			DroppedGoods.Append(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName));
+		}
 	}
 	else
 	{
@@ -151,16 +164,19 @@ void ATR_GameMode::GetClutterDropResources(TArray<FResourceQuantity>& DroppedRes
 {
 	// Clutter resource drop table names in format ClutterResources<level tier>. ex: ClutterResources01
 	FName DropTableName;
+	float DifficultyLevel;
 	FResourceType TmpResourceType;
 	TArray<FGoodsQuantity> DroppedGoods;
 	DroppedResources.Empty();
 	if (bLevelTemplateReady)
 	{
 		DropTableName = FName(FString::Printf(TEXT("ClutterResources%02d"), static_cast<int32>(LevelTemplate.Tier)));
+		DifficultyLevel = static_cast<float>(LevelTemplate.DifficultyLevel);
 	}
 	else
 	{
 		DropTableName = FName(TEXT("ClutterResources00"));
+		DifficultyLevel = 1.f;
 	}	
 	if (GoodsDropper)
 	{
@@ -174,7 +190,7 @@ void ATR_GameMode::GetClutterDropResources(TArray<FResourceQuantity>& DroppedRes
 				UResourceFunctionLibrary::ResourceTypeForCode(CurGoods.Name, TmpResourceType);
 				if (TmpResourceType.IsValid())
 				{
-					DroppedResources.Add(FResourceQuantity(TmpResourceType, CurGoods.Quantity));
+					DroppedResources.Add(FResourceQuantity(TmpResourceType, CurGoods.Quantity * (FMath::Pow(DifficultyLevel, ClutterResourceLevelScaleExp))));
 				}
 			}
 		}
@@ -207,6 +223,29 @@ void ATR_GameMode::GetClutterDropResources(TArray<FResourceQuantity>& DroppedRes
 			}
 		}
 	} */
+}
+
+
+void ATR_GameMode::GetEnemyMobsForTier(const int32 Tier, TArray<TSubclassOf<ATREnemyCharacter>>& EnemyClasses)
+{
+	if (IsValid(EnemyMobsByTierTable))
+	{
+		FName RowName = FName(FString::FromInt(Tier));
+		FEnemyCharacterClassSet* Row = EnemyMobsByTierTable->FindRow<FEnemyCharacterClassSet>(RowName, FString("GetEnemyMobsForTier"), false);
+		if (Row)
+		{
+			EnemyClasses.Empty(Row->EnemyClasses.Num());
+			EnemyClasses.Append(Row->EnemyClasses);
+		}
+		else
+		{
+			UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::GetEnemyMobsForTier no row for tier %d found in table"), Tier);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::GetEnemyMobsForTier EnemyMobsByTierTable is invalid"));
+	}
 }
 
 

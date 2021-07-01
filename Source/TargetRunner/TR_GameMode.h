@@ -8,6 +8,7 @@
 #include "LevelForgeBase.h"
 #include "ResourceDropperBase.h"
 #include "GoodsDropper.h"
+#include "TREnemyCharacter.h"
 #include "PlatformGridMgr.h"
 #include "ToolBase.h"
 #include "ToolActorBase.h"
@@ -56,10 +57,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ARoomPlatformBase> DefaultRoomClass;
 
-	// The difficulty rating for the current level.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float LevelDifficulty;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FName, TSubclassOf<AToolActorBase>> ToolClassMap;
 
@@ -73,6 +70,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* ResourceDropTable;
+
+	// Rows are FEnemyCharacterClassSet.
+	// Row names must be set to the Tier the row represents.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UDataTable* EnemyMobsByTierTable;
 
 protected:
 
@@ -92,6 +94,16 @@ protected:
 	// Indicates that the level map of rooms has been spawned.
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		bool bRoomMapReady;
+
+	// Clutter goods drops quantities multiplied by DifficultyLevel ^ ClutterGoodsLevelScaleExp
+	// Default is 0.25
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		float ClutterGoodsLevelScaleExp;
+
+	// Clutter resource drops quantities multiplied by DifficultyLevel ^ ClutterResourceLevelScaleExp
+	// Default is 0.25
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+		float ClutterResourceLevelScaleExp;
 	
 private:
 
@@ -161,6 +173,9 @@ public:
 	// Clutter resource drop table names are in the format: ClutterResources<level tier> ex: ClutterResources01
 	UFUNCTION(BlueprintCallable)
 		void GetClutterDropResources(TArray<FResourceQuantity>& DroppedResources);
+
+	UFUNCTION(BlueprintCallable)
+		void GetEnemyMobsForTier(const int32 Tier, TArray<TSubclassOf<ATREnemyCharacter>>& EnemyClasses);
 
 	// Sets the current grid manager and initializes it from the level template. i.e. sets up grid extents, cell size, etc.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

@@ -18,6 +18,7 @@ public:
 	{
 		LevelSeed = 0;
 		Tier = 1.f;
+		DifficultyLevel = 1;
 		MinX = 0.f;
 		MaxX = 0.f;
 		MinY = 0.f;
@@ -38,9 +39,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 LevelSeed;
 
-	// Relates to difficulty
+	// Relates to type of resources and enemies available
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float Tier;
+
+	// Relates to difficulty
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 DifficultyLevel;
 
 	// The human-readable name for this level
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)

@@ -109,7 +109,7 @@ public:
 	// Server will generate a new level template. Results will show up in the replicated LevelTemplatesPage property which
 	// will fire the OnNewLevelTemplatesPage delegate event.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerGenerateNewLevelTemplate(const float Tier, const bool bUnlockForPlayer = false);
+		void ServerGenerateNewLevelTemplate(const float Tier, const int32 DifficultyLevel, const bool bUnlockForPlayer = false);
 
 
 	// [Server]
