@@ -76,6 +76,15 @@ enum class ETRToolUpgrade : uint8
 
 
 UENUM(BlueprintType)
+enum class ETRRoomComponentType : uint8
+{
+	Floor		UMETA(DisplayName = "Floor"),
+	Ceiling		UMETA(DisplayName = "Ceiling"),
+	Wall		UMETA(DisplayName = "Wall")
+};
+
+
+UENUM(BlueprintType)
 enum class ETRWallState : uint8
 {
 	Unknown		UMETA(DisplayName = "Unknown"),

@@ -12,6 +12,7 @@
 #include "PlatformGridMgr.h"
 #include "ToolBase.h"
 #include "ToolActorBase.h"
+#include "RoomComponentSpec.h"
 #include "TR_GameMode.generated.h"
 
 /**
@@ -76,6 +77,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* EnemyMobsByTierTable;
 
+	// Room components data to use. Describes floors and ceiling room actors to use when spawning rooms.
+	// Using different data tables allows, for example, different themes.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UDataTable* RoomComponentsTable;
+
 protected:
 
 	// Indicates if the room map generation has started.
@@ -132,6 +138,11 @@ private:
 	// Our Grid Manager. Set by InitGridManager.
 	APlatformGridMgr* GridManager;
 
+	// Our cache of floor room components info loaded from data table and kept as a map for use.
+	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>> RoomFloorComponentMap;
+	// Our cache of ceiling room components info loaded from data table and kept as a map for use.
+	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>> RoomCeilingComponentMap;
+
 protected:
 
 	// Called when the game starts or when spawned
@@ -147,6 +158,9 @@ protected:
 	//UFUNCTION(BlueprintCallable)
 	//	APlatformGridMgr* SpawnNewGridManager(const TSubclassOf<APlatformGridMgr> GridManagerClass, const FTransform Transform);
 
+	// Load room component info from data table into our map.
+	void InitRoomComponentMaps(const bool bForceReload = false);
+
 public:
 	/*---------- Level Template and Grid -------------*/
 
@@ -160,6 +174,9 @@ public:
 	// Creates the goods dropper if it does not exist. Then adds the GoodsDropTable data table to the GoodsDropper and applies all initial settings.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void InitGoodsDropper();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		TSoftObjectPtr<UPrefabricatorAssetInterface> GetRoomComponentPrefab(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound);
 
 	// Evaluates the drops for clutter shootables.
 	// Returns list of goods to drop. 
@@ -248,8 +265,7 @@ public:
 	/**
 	 * Handles all player initialization that is shared between the travel methods
 	 * (i.e. called from both PostLogin() and HandleSeamlessTravelPlayer())
-	 * This (does not loads player controller and state data from save) and then 
-	 * calls the BP version OnGenericPlayerInitialization.
+	 * This calls the BP version OnGenericPlayerInitialization.
 	 */
 	virtual void GenericPlayerInitialization(AController* C) override;
 
@@ -262,7 +278,7 @@ protected:
 	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 
 
-	/** Checks that there are no travelling players and that the room map has been  */
+	/** Checks that there are no travelling players and that the room map has been spawned */
 	virtual bool ReadyToStartMatch_Implementation() override;
 
 protected:

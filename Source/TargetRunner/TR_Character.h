@@ -35,7 +35,7 @@ protected:
 public:	
 
 	// Override this in BP and return the scene component that we want to attach the ResourceCollectionVolume to.
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		USceneComponent* GetCollectorParentComponent();
 	virtual USceneComponent* GetCollectorParentComponent_Implementation();
 

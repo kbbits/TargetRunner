@@ -45,7 +45,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Room Template Functions")
 		static FRoomExitInfo GetRoomExitInfo(const FRoomGridTemplate& RoomGridTemplate, const FIntPoint& RoomCoords);
 
-	// Returns the DirectionWallState of the room. ex: Direction == North, gets the North wall state.
+	// Returns the WallState of the room for the wall in the given direction. ex: Direction == North, gets the North wall state.
 	// Direction must be one of the four orthogonal directions.
 	UFUNCTION(BlueprintPure, Category = "Room Template Functions")
 		static ETRWallState GetWallState(const FRoomTemplate& Room, const ETRDirection Direction);

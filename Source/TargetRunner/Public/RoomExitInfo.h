@@ -15,7 +15,7 @@ public:
 		ETRRoomExitLayout ExitLayout;
 
 	/**
-	* Orientation of the exit layout. Ex: Orientation = East means the layout should be rotated 90 degrees.
+	* Orientation of the exit layout. Ex: Orientation = East means a default (north oriented) layout should be rotated 90 degrees when spawned.
 	* Must be one of the four cardinal directions (N,S,E,W).
 	* Default orientation is North.
 	*/

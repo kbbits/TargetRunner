@@ -51,7 +51,7 @@ void APlatformGridMgr::BeginPlay()
 
 void APlatformGridMgr::MovePlayerStarts()
 {
-	FVector Offset(150.0, -200, 50.0);
+	FVector Offset(150.0, -200, 100.0);
 	int32 MaxPlayerStarts = 4;
 	APlayerStart* PlayerStart;
 	FTransform SpawnTransform;
@@ -79,7 +79,7 @@ void APlatformGridMgr::MovePlayerStarts()
 			PlayerStarts.Add(PlayerStart);
 			if (CurStart % 3 == 0)
 			{
-				Offset.Set(150.0 - ((CurStart / 3) * 150.0), -200, 50.0);
+				Offset.Set(150.0 - ((CurStart / 3) * 150.0), -200, 100.0);
 			}
 			else
 			{
@@ -198,8 +198,16 @@ void APlatformGridMgr::DestroyGridImpl()
 {
 	TArray<int32> RowNums;
 	TArray<int32> PlatformNums;
-	PlatformGridMap.GenerateKeyArray(RowNums);
+	TInlineComponentArray<UInstancedStaticMeshComponent*> ISMComps;
+	GetComponents(ISMComps, false);
+	for (UInstancedStaticMeshComponent* ISMComp : ISMComps)
+	{
+		ISMComp->ClearInstances();
+		ISMComp->UnregisterComponent();
+		if (IsValid(ISMComp)) { ISMComp->DestroyComponent(); }
+	}
 
+	PlatformGridMap.GenerateKeyArray(RowNums);
 	DebugLog(FString::Printf(TEXT("Destroying %d rows."), RowNums.Num()));
 	for (int32 Row : RowNums)
 	{
@@ -393,4 +401,61 @@ void APlatformGridMgr::WakeNeighborsImpl(const FVector2D AroundGridCoords)
 	//	}
 	//	AroundPlatform->bStasisWokeNeighbors = true;
 	//}
+}
+
+
+int32 APlatformGridMgr::SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, UPARAM(ref) UMaterialInterface* Material, const FTransform& SpawnTransform)
+{
+	if (!Material->CheckMaterialUsage_Concurrent(EMaterialUsage::MATUSAGE_InstancedStaticMeshes))
+	{
+		UE_LOG(LogTRGame, Error, TEXT("PlatformGridMgr SpawnISM called with a material not set for use with ISM: %s"), *Material->GetPathName());
+		return -1;
+	}
+
+	UStaticMesh* MeshRef = Mesh.Get();
+	if (!MeshRef)
+	{
+		UE_LOG(LogTRGame, Error, TEXT("GridManager SpawnISM could not load static mesh %s"), *Mesh.GetAssetName());
+		return -1;
+	}
+	TInlineComponentArray<UInstancedStaticMeshComponent*> ISMComps;
+	UInstancedStaticMeshComponent* FoundISMComp = nullptr;
+	GetComponents(ISMComps, false);
+	for (UInstancedStaticMeshComponent* ISMComp : ISMComps)
+	{
+		if (ISMComp->GetStaticMesh() && ISMComp->GetStaticMesh()->GetPathName().Equals(MeshRef->GetPathName()))
+		{
+			if (ISMComp->GetMaterial(0)->GetPathName().Equals(Material->GetPathName()))
+			{
+				FoundISMComp = ISMComp;
+				break;
+			}
+		}
+	}
+	if (!FoundISMComp)
+	{
+		DebugLog(FString::Printf(TEXT("GridManager creating new ISM component")));
+		// Create an ISM component for this mesh and material
+		FoundISMComp = NewObject<UInstancedStaticMeshComponent>(this);
+		FoundISMComp->SetMobility(EComponentMobility::Movable);
+		FoundISMComp->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		FoundISMComp->RegisterComponent();
+		//FoundISMComp->bCastDynamicShadow = false;
+		//FoundISMComp->CastShadow = false;		
+		FoundISMComp->SetVisibility(true);
+		FoundISMComp->SetStaticMesh(MeshRef);
+		FoundISMComp->SetMaterial(0, Material);
+		FoundISMComp->SetIsReplicated(true);
+		FoundISMComp->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
+	}
+	if (FoundISMComp)
+	{
+		DebugLog(FString::Printf(TEXT("GridManager Adding ISM instance %s"), *SpawnTransform.GetLocation().ToString()));
+		return FoundISMComp->AddInstanceWorldSpace(SpawnTransform);
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Error, TEXT("GridManager Could not find or create ISM component for %s"), *MeshRef->GetPathName());
+	}
+	return -1;
 }
