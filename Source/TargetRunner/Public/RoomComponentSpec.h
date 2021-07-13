@@ -2,6 +2,7 @@
 
 #include "Engine/DataTable.h"
 #include "PrefabricatorAsset.h"
+#include "RoomComponentActor.h"
 #include "TREnums.h"
 #include "RoomExitInfo.h"
 #include "RoomComponentSpec.generated.h"
@@ -25,10 +26,14 @@ public:
 
 public:
 
-	// The actor to spawn for this component. Actor must be oriented to default (North) orientation.
+	// The RoomComponentActor to spawn for this component. It must be oriented to default (North) orientation.
+	// Takes precedence over ComponentPrefab.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TSoftObjectPtr<UPrefabricatorAssetInterface> ComponentPrefab;
-		//TSubclassOf<UObject> ComponentActorOrPrefab;
+		TSubclassOf<ARoomComponentActor> ComponentActor;
+
+	// The prefag to spawn for this component. Prefab must be oriented to default (North) orientation.
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	//	TSoftObjectPtr<UPrefabricatorAssetInterface> ComponentPrefab;
 
 	// The type of this component. Room, Ceiling, etc.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)

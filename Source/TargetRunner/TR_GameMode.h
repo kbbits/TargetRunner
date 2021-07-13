@@ -12,7 +12,6 @@
 #include "PlatformGridMgr.h"
 #include "ToolBase.h"
 #include "ToolActorBase.h"
-#include "RoomComponentSpec.h"
 #include "TR_GameMode.generated.h"
 
 /**
@@ -138,11 +137,6 @@ private:
 	// Our Grid Manager. Set by InitGridManager.
 	APlatformGridMgr* GridManager;
 
-	// Our cache of floor room components info loaded from data table and kept as a map for use.
-	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>> RoomFloorComponentMap;
-	// Our cache of ceiling room components info loaded from data table and kept as a map for use.
-	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>> RoomCeilingComponentMap;
-
 protected:
 
 	// Called when the game starts or when spawned
@@ -158,9 +152,6 @@ protected:
 	//UFUNCTION(BlueprintCallable)
 	//	APlatformGridMgr* SpawnNewGridManager(const TSubclassOf<APlatformGridMgr> GridManagerClass, const FTransform Transform);
 
-	// Load room component info from data table into our map.
-	void InitRoomComponentMaps(const bool bForceReload = false);
-
 public:
 	/*---------- Level Template and Grid -------------*/
 
@@ -174,9 +165,6 @@ public:
 	// Creates the goods dropper if it does not exist. Then adds the GoodsDropTable data table to the GoodsDropper and applies all initial settings.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void InitGoodsDropper();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		TSoftObjectPtr<UPrefabricatorAssetInterface> GetRoomComponentPrefab(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound);
 
 	// Evaluates the drops for clutter shootables.
 	// Returns list of goods to drop. 

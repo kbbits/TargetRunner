@@ -79,67 +79,6 @@ void ATR_GameMode::HandleMatchIsWaitingToStart()
 //}
 
 
-void ATR_GameMode::InitRoomComponentMaps(const bool bForceReload)
-{
-	if (bForceReload || RoomFloorComponentMap.Num() == 0)
-	{
-		RoomFloorComponentMap.Empty();
-		RoomCeilingComponentMap.Empty();
-		if (IsValid(RoomComponentsTable))
-		{
-			for (TPair<FName, uint8*> CompIt : RoomComponentsTable->GetRowMap())
-			{
-				// CompIt.Key has the key, CompIt.Value has a pointer to the struct of data
-				FRoomComponentSpec* Spec = reinterpret_cast<FRoomComponentSpec*>(CompIt.Value);
-				if (Spec)
-				{
-					if (Spec->Type == ETRRoomComponentType::Floor)
-					{
-						for (ETRRoomExitLayout ExitLayout : Spec->ValidExitLayouts)
-						{
-							if (RoomFloorComponentMap.Contains(ExitLayout))
-							{
-								RoomFloorComponentMap[ExitLayout].Add(*Spec);
-							}
-							else
-							{
-								TArray<FRoomComponentSpec> TmpSpecs;
-								TmpSpecs.Add(*Spec);
-								RoomFloorComponentMap.Add(ExitLayout, TmpSpecs);
-							}
-						}
-					}
-					else if (Spec->Type == ETRRoomComponentType::Ceiling)
-					{
-						for (ETRRoomExitLayout ExitLayout : Spec->ValidExitLayouts)
-						{
-							if (RoomCeilingComponentMap.Contains(ExitLayout))
-							{
-								RoomCeilingComponentMap[ExitLayout].Add(*Spec);
-							}
-							else
-							{
-								TArray<FRoomComponentSpec> TmpSpecs;
-								TmpSpecs.Add(*Spec);
-								RoomCeilingComponentMap.Add(ExitLayout, TmpSpecs);
-							}
-						}
-					}
-				}
-				else
-				{
-					UE_LOG(LogTRGame, Error, TEXT("TRGameMode - InitRoomComponentMap found row in RoomComponentsTable is not a FRoomComponentSpec"));
-				}
-			}
-		}
-		else
-		{
-			UE_LOG(LogTRGame, Error, TEXT("TRGameMode - RoomComponentsTable is invalid"));
-		}
-	}
-}
-
-
 void ATR_GameMode::SetNewLevelTemplate(const FLevelTemplate& NewTemplate)
 {
 	if (NewTemplate.LevelSeed == 0) { UE_LOG(LogTRGame, Warning, TEXT("GameMode - SetNewLevelTemplate - Template has 0 seed.")); }
@@ -184,53 +123,6 @@ void ATR_GameMode::InitGoodsDropper_Implementation()
 			UE_LOG(LogTRGame, Error, TEXT("TRGameMode InitGoodsDropper ResourceDropTable was not valid."));
 		}
 	}
-}
-
-
-TSoftObjectPtr<UPrefabricatorAssetInterface> ATR_GameMode::GetRoomComponentPrefab_Implementation(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound)
-{
-	InitRoomComponentMaps();
-	float TotalWeight = 0.0f;
-	float CurWeightSum = 0.0f;
-	float PickedWeight = 0.0f;
-	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>>* CompMap = nullptr;
-	if (Type == ETRRoomComponentType::Floor)
-	{
-		CompMap = &RoomFloorComponentMap;
-	}
-	else if (Type == ETRRoomComponentType::Ceiling)
-	{
-		CompMap = &RoomCeilingComponentMap;
-	}
-	if (CompMap && CompMap->Contains(ExitLayout))
-	{
-		if ((*CompMap)[ExitLayout].Num() > 1)
-		{
-			TotalWeight = 0.0f;
-			for (FRoomComponentSpec Spec : (*CompMap)[ExitLayout])
-			{
-				TotalWeight += Spec.PickWeight;
-			}
-			PickedWeight = FRandRangeGrid(0.0f, TotalWeight);
-			CurWeightSum = 0.0f;
-			for (FRoomComponentSpec Spec : (*CompMap)[ExitLayout])
-			{
-				CurWeightSum += Spec.PickWeight;
-				if (CurWeightSum >= PickedWeight)
-				{
-					bFound = true;
-					return Spec.ComponentPrefab;
-				}
-			}
-		}
-		else
-		{
-			bFound = true;
-			return (*CompMap)[ExitLayout][0].ComponentPrefab;
-		}
-	}
-	bFound = false;
-	return nullptr;
 }
 
 void ATR_GameMode::GetClutterDropGoods(TArray<FGoodsQuantity>& DroppedGoods)

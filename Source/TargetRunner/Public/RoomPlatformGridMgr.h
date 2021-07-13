@@ -7,6 +7,7 @@
 #include "RoomPlatformBase.h"
 #include "RoomGridTemplate.h"
 #include "ResourceDropperBase.h"
+#include "RoomComponentSpec.h"
 #include "ProgressItem.h"
 #include "RoomPlatformGridMgr.generated.h"
 
@@ -76,6 +77,18 @@ public:
 	// Delegate event notification for grid/room generation progress.
 	// Listeners bind to this to recieve room generation progress.
 	FOnGenerateProgress OnGenerateProgress;
+
+	// Room components data to use. Describes floors and ceiling room actors to use when spawning rooms.
+	// Using different data tables allows, for example, different themes.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		UDataTable* RoomComponentsTable;
+
+protected:
+
+	// Our cache of floor room components info loaded from data table and kept as a map for use.
+	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>> RoomFloorComponentMap;
+	// Our cache of ceiling room components info loaded from data table and kept as a map for use.
+	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>> RoomCeilingComponentMap;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -83,6 +96,9 @@ protected:
 
 	// GridForge will bind to this to update us on its progress.
 	void OnGridForgeProgress(const FProgressItem ProgressItem);
+
+	// Load room component info from data table into our cached maps.
+	void InitRoomComponentMaps(const bool bForceReload = false);
 
 public:	
 	// Called every frame
@@ -102,7 +118,11 @@ public:
 
 	// Spanwn the room from the room template grid with the given coordinates.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		void SpawnRoom(FVector2D GridCoords);	
+		void SpawnRoom(FVector2D GridCoords);
+
+	// Called when spawning of all rooms has completed.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void SpawnsFinished();
 
 	//UFUNCTION(NetMulticast, Reliable, BlueprintCallable)
 	UFUNCTION(BlueprintNativeEvent)
@@ -116,7 +136,18 @@ public:
 	// Does not wake diagonal neighbors.
 	virtual void WakeNeighborsImpl(FVector2D AroundGridCoords) override;
 
-protected:
+	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	//	TSoftObjectPtr<UPrefabricatorAssetInterface> GetRoomComponentPrefab(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound);
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		TSubclassOf<ARoomComponentActor> GetRoomComponentActorByLayout(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		TSubclassOf<ARoomComponentActor> GetRoomComponentActor(const ETRRoomComponentType Type, const FIntPoint RoomCoords, FRoomExitInfo& ExitInfo, bool& bFound);
 	
+	// Clears internal RoomComponentMaps built from the RoomComponentsTable.
+	// Caches will be rebuilt when needed from underlying data table.
+	UFUNCTION(BlueprintCallable)
+		void ClearRoomComponentMapCaches();
+
 };
