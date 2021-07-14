@@ -64,9 +64,13 @@ bool ARoomComponentActor::SpawnRCACollections()
 		if (CollectionActor) {
 			CollectionActor->RoomComponentActorCollection = RCACollection;
 			CollectionActor->RandSeed = RandStream.RandRange(0, INT_MAX - 1);
+			UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor - new collection seed: %d"), CollectionActor->RandSeed);
 			UGameplayStatics::FinishSpawningActor(CollectionActor, CollectionActor->GetTransform());
 			CollectionActor->PickAndInit();
 			SpawnedCollections.Add(CollectionActor);
+#if WITH_EDITORONLY_DATA
+			CollectionActor->SetFolderPath(EditorCollectionSpawnsFolder);
+#endif
 			bCollectionSpawned = true;
 		}
 	}
@@ -80,18 +84,7 @@ void ARoomComponentActor::PostInitProperties()
 	if (RandStream.GetInitialSeed() != RandSeed) {
 		RandStream.Initialize(RandSeed);
 	}
-	FilterRCACollections();
-	if (GetWorld())
-	{
-		for (ARoomComponentActorCollectionActor* CollectionActor : SpawnedCollections)
-		{
-			if (IsValid(CollectionActor)) {
-				CollectionActor->Destroy();
-			}
-		}
-		bCollectionSpawned = false;
-		SpawnRCACollections();
-	}
+	RespawnRCACollections();
 }
 
 
@@ -102,18 +95,7 @@ void ARoomComponentActor::PostEditChangeProperty(FPropertyChangedEvent& Property
 	if (RandStream.GetInitialSeed() != RandSeed) {
 		RandStream.Initialize(RandSeed);
 	}
-	FilterRCACollections();
-	if (GetWorld())
-	{
-		for (ARoomComponentActorCollectionActor* CollectionActor : SpawnedCollections)
-		{
-			if (IsValid(CollectionActor)) {
-				CollectionActor->Destroy();
-			}
-		}
-		bCollectionSpawned = false;
-		SpawnRCACollections();
-	}
+	FilterRCACollections();	
 }
 #endif
 
@@ -121,8 +103,10 @@ void ARoomComponentActor::PostEditChangeProperty(FPropertyChangedEvent& Property
 void ARoomComponentActor::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-
-	SpawnRCACollections();
+	if (RandStream.GetInitialSeed() != RandSeed) {
+		RandStream.Initialize(RandSeed);
+	}
+	RespawnRCACollections();
 }
 
 
@@ -142,6 +126,29 @@ bool ARoomComponentActor::CanContainRoomComponentClass(const TSubclassOf<ARoomCo
 		return false;
 	}
 	return true;
+}
+
+
+void ARoomComponentActor::DestroyRCACollections()
+{
+	for (ARoomComponentActorCollectionActor* CollectionActor : SpawnedCollections)
+	{
+		if (IsValid(CollectionActor)) {
+			CollectionActor->Destroy();
+		}
+	}
+	SpawnedCollections.Empty();
+	bCollectionSpawned = false;
+}
+
+
+void ARoomComponentActor::RespawnRCACollections()
+{
+	DestroyRCACollections();
+	if (GetWorld())
+	{
+		SpawnRCACollections();
+	}
 }
 
 
@@ -309,6 +316,7 @@ void ARoomComponentActorCollectionActor::BeginPlay()
 	{
 		ARoomComponentActor * ChildRef = Cast<ARoomComponentActor>(PickedRoomComponentActor_CAC->GetChildActor());
 		if (ChildRef) {
+			UE_LOG(LogTRGame, Log, TEXT("RoomComponentActorCollectionActor setting RCA to MoveISMCs true."));
 			ChildRef->SetMoveISMCs(true);
 		}
 	}
@@ -318,13 +326,9 @@ void ARoomComponentActorCollectionActor::BeginPlay()
 void ARoomComponentActorCollectionActor::PickAndInit()
 {
 	bool bFound = true;
-	if (RandStream.GetInitialSeed() != RandSeed) {
-		RandStream.Initialize(RandSeed);
-		Reset();
-	}	
-	if (!IsValid(PickedClass)) {
-		GetRoomComponentActorClass(bFound);
-	}
+	RandStream.Initialize(RandSeed);
+	Reset();
+	GetRoomComponentActorClass(bFound);
 	if (bFound && IsValid(PickedClass) && PickedRoomComponentActor_CAC->GetChildActorClass() != PickedClass) {
 		if (IsValid(PickedRoomComponentActor_CAC->GetChildActor())) {
 			PickedRoomComponentActor_CAC->DestroyChildActor();

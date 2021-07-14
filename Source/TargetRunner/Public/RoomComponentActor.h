@@ -14,10 +14,10 @@ struct TARGETRUNNER_API FRoomComponentActorCollectionItem
 
 public:
 
-	UPROPERTY(EditAnywhere, Category = "RoomComponentActor")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RoomComponentActor")
 		TSubclassOf<ARoomComponentActor> RCAClass;
 
-	UPROPERTY(EditAnywhere, Category = "RoomComponentActor")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RoomComponentActor")
 		float Weight = 1.0f;
 
 	FORCEINLINE bool operator==(const FRoomComponentActorCollectionItem& OtherType) const
@@ -47,10 +47,10 @@ struct TARGETRUNNER_API FRoomComponentActorCollection
 
 public:
 
-	UPROPERTY(EditAnywhere, Category = "RoomComponentActor")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RoomComponentActor")
 		TArray<FRoomComponentActorCollectionItem> RoomComponentActors;
 
-	UPROPERTY(EditAnywhere, Category = "RoomComponentActor")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RoomComponentActor")
 		FTransform LocalTransform;
 };
 
@@ -87,6 +87,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		int32 RandSeed;
 
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FName EditorCollectionSpawnsFolder;
+#endif
+
 protected:
 
 	UPROPERTY()
@@ -114,6 +119,12 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 		bool CanContainRoomComponentClass(const TSubclassOf<ARoomComponentActor> ContainClass);
+
+	UFUNCTION(BlueprintCallable, CallInEditor)
+		void DestroyRCACollections();
+
+	UFUNCTION(BlueprintCallable, CallInEditor)
+		void RespawnRCACollections();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void SetMoveISMCs(const bool bMoveThem);
