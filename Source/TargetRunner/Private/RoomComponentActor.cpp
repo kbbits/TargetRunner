@@ -9,8 +9,7 @@ ARoomComponentActor::ARoomComponentActor()
 	bReplicates = false;
 	PrimaryActorTick.bCanEverTick = false;
 	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
-	SetRootComponent(RootScene);	
-	bMoveISMCs = false;
+	SetRootComponent(RootScene);
 	bCollectionSpawned = false;
 }
 
@@ -63,13 +62,14 @@ bool ARoomComponentActor::SpawnRCACollections()
 		CollectionActor = GetWorld()->SpawnActorDeferred<ARoomComponentActorCollectionActor>(ARoomComponentActorCollectionActor::StaticClass(), SpawnTransform, SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
 		if (CollectionActor) {
 			CollectionActor->RoomComponentActorCollection = RCACollection;
-			CollectionActor->RandSeed = RandStream.RandRange(0, INT_MAX - 1);
-			UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor - new collection seed: %d"), CollectionActor->RandSeed);
+			CollectionActor->RandSeed = RandStream.RandRange(1, INT_MAX - 1);
+			UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s spawning collection %s with seed %d"), *GetName(), *CollectionActor->GetName(), CollectionActor->RandSeed);
 			UGameplayStatics::FinishSpawningActor(CollectionActor, CollectionActor->GetTransform());
-			CollectionActor->PickAndInit();
+			CollectionActor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+			//CollectionActor->PickAndInit();
 			SpawnedCollections.Add(CollectionActor);
 #if WITH_EDITORONLY_DATA
-			CollectionActor->SetFolderPath(EditorCollectionSpawnsFolder);
+			//CollectionActor->SetFolderPath(EditorCollectionSpawnsFolder);
 #endif
 			bCollectionSpawned = true;
 		}
@@ -81,10 +81,11 @@ bool ARoomComponentActor::SpawnRCACollections()
 void ARoomComponentActor::PostInitProperties()
 {
 	Super::PostInitProperties();
-	if (RandStream.GetInitialSeed() != RandSeed) {
-		RandStream.Initialize(RandSeed);
-	}
-	RespawnRCACollections();
+	//if (RandSeed > 0 && RandStream.GetInitialSeed() != RandSeed) {
+	//	RandStream.Initialize(RandSeed);
+	//}
+	//RespawnRCACollections();
+	//UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor PostInitProperties. RandSeed: %d Location: %s"), RandSeed, *GetActorLocation().ToString());
 }
 
 
@@ -92,7 +93,7 @@ void ARoomComponentActor::PostInitProperties()
 void ARoomComponentActor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
-	if (RandStream.GetInitialSeed() != RandSeed) {
+	if (RandSeed > 0 && RandStream.GetInitialSeed() != RandSeed) {
 		RandStream.Initialize(RandSeed);
 	}
 	FilterRCACollections();	
@@ -103,10 +104,41 @@ void ARoomComponentActor::PostEditChangeProperty(FPropertyChangedEvent& Property
 void ARoomComponentActor::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	if (RandStream.GetInitialSeed() != RandSeed) {
+	if (RandSeed > 0 && RandStream.GetInitialSeed() != RandSeed) {
 		RandStream.Initialize(RandSeed);
 	}
 	RespawnRCACollections();
+	UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s PostInitializeComponents. RandSeed: %d Location: %s"), *GetName(), RandSeed, *GetActorLocation().ToString());
+}
+
+void ARoomComponentActor::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	if (RandSeed > 0 && RandStream.GetInitialSeed() != RandSeed) {
+		RandStream.Initialize(RandSeed);
+	}
+	RespawnRCACollections();
+	UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s OnConstruction. RandSeed: %d Location: %s"), *GetName(), RandSeed, *GetActorLocation().ToString());
+}
+
+
+void ARoomComponentActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	/*
+	AActor* Parent = GetParentActor();
+	if (Parent)
+	{
+		// If we were created by a collection actor and it is still valid, destroy the parent collection when we get destroyed.
+		ARoomComponentActorCollectionActor* CollectionActor = Cast<ARoomComponentActorCollectionActor>(Parent);
+		if (IsValid(CollectionActor)) {
+			CollectionActor->Destroy();
+			UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s destroyed parent collection actor %s"), *GetName(), *CollectionActor->GetName());
+		}
+	}
+	*/
+	//DestroyRCACollections();
+	SpawnedCollections.Empty();
+	Super::EndPlay(EndPlayReason);
 }
 
 
@@ -131,10 +163,12 @@ bool ARoomComponentActor::CanContainRoomComponentClass(const TSubclassOf<ARoomCo
 
 void ARoomComponentActor::DestroyRCACollections()
 {
-	for (ARoomComponentActorCollectionActor* CollectionActor : SpawnedCollections)
+	TWeakObjectPtr<ARoomComponentActorCollectionActor> CollectionActor;
+	for (int32 i = 0; i < SpawnedCollections.Num(); i++)
 	{
-		if (IsValid(CollectionActor)) {
-			CollectionActor->Destroy();
+		CollectionActor = SpawnedCollections[i];
+		if (CollectionActor.IsValid()) {
+			CollectionActor.Get()->Destroy();
 		}
 	}
 	SpawnedCollections.Empty();
@@ -145,6 +179,9 @@ void ARoomComponentActor::DestroyRCACollections()
 void ARoomComponentActor::RespawnRCACollections()
 {
 	DestroyRCACollections();
+	if (RandSeed > 0 && RandStream.GetInitialSeed() != RandSeed) {
+		RandStream.Initialize(RandSeed);
+	}
 	if (GetWorld())
 	{
 		SpawnRCACollections();
@@ -152,10 +189,10 @@ void ARoomComponentActor::RespawnRCACollections()
 }
 
 
-void ARoomComponentActor::SetMoveISMCs_Implementation(const bool bMoveThem)
-{
-	bMoveISMCs = bMoveThem;
-}
+//void ARoomComponentActor::SetMoveISMCs_Implementation(const bool bMoveThem)
+//{
+//	bMoveISMCs = bMoveThem;
+//}
 
 
 int32 ARoomComponentActor::GetPrimaryISMCs(TArray<UInstancedStaticMeshComponent*>& PrimaryISMCs)
@@ -292,56 +329,50 @@ ARoomComponentActorCollectionActor::ARoomComponentActorCollectionActor()
 	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
 	SetRootComponent(RootScene);    
 	PickedRoomComponentActor_CAC = CreateDefaultSubobject<UChildActorComponent>(TEXT("PickedRoomComponent"));
+	PickedRoomComponentActor_CAC->SetChildActorClass(NULL);
 	PickedRoomComponentActor_CAC->SetupAttachment(RootScene);
 	bool bFound = false;
 	PickedClass = NULL;
-	GetRoomComponentActorClass(bFound);
-	if (bFound) {
-		PickedRoomComponentActor_CAC->SetChildActorClass(PickedClass);
-		PickedRoomComponentActor_CAC->CreateChildActor();
-	}
+	//GetRoomComponentActorClass(bFound);
+	//if (bFound) {
+	//	PickedRoomComponentActor_CAC->SetChildActorClass(PickedClass);
+	//	PickedRoomComponentActor_CAC->CreateChildActor();
+	//}
 }
-
-//ARoomComponentActorCollectionActor::ARoomComponentActorCollectionActor(const FRoomComponentActorCollection& RCACollection)
-//{
-//	RoomComponentActorCollection = RCACollection;
-//	ARoomComponentActorCollectionActor::ARoomComponentActorCollectionActor();
-//}
 
 
 void ARoomComponentActorCollectionActor::BeginPlay()
 {
-	PickAndInit();
+	//PickAndInit();
+	/*
 	if (IsValid(PickedRoomComponentActor_CAC->GetChildActor()))
 	{
 		ARoomComponentActor * ChildRef = Cast<ARoomComponentActor>(PickedRoomComponentActor_CAC->GetChildActor());
 		if (ChildRef) {
-			UE_LOG(LogTRGame, Log, TEXT("RoomComponentActorCollectionActor setting RCA to MoveISMCs true."));
+			UE_LOG(LogTRGame, Log, TEXT("RoomComponentActorCollectionActor %s setting RCA %s to MoveISMCs true."), *GetName(), *ChildRef->GetName());
 			ChildRef->SetMoveISMCs(true);
 		}
 	}
-}
-
-
-void ARoomComponentActorCollectionActor::PickAndInit()
-{
-	bool bFound = true;
-	RandStream.Initialize(RandSeed);
-	Reset();
-	GetRoomComponentActorClass(bFound);
-	if (bFound && IsValid(PickedClass) && PickedRoomComponentActor_CAC->GetChildActorClass() != PickedClass) {
-		if (IsValid(PickedRoomComponentActor_CAC->GetChildActor())) {
-			PickedRoomComponentActor_CAC->DestroyChildActor();
-		}
-		PickedRoomComponentActor_CAC->SetChildActorClass(PickedClass);
-		PickedRoomComponentActor_CAC->CreateChildActor();
-	}
+	*/
 }
 
 
 void ARoomComponentActorCollectionActor::PostInitProperties()
 {
 	Super::PostInitProperties();
+}
+
+
+void ARoomComponentActorCollectionActor::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	PickAndInit();
+}
+
+
+void ARoomComponentActorCollectionActor::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
 	PickAndInit();
 }
 
@@ -355,12 +386,39 @@ void ARoomComponentActorCollectionActor::PostEditChangeProperty(FPropertyChanged
 #endif
 
 
+void ARoomComponentActorCollectionActor::PickAndInit()
+{
+	UE_LOG(LogTRGame, Log, TEXT("RCACollection %s PickAndInit RandSeed: %d"), *GetName(), RandSeed);
+	bool bFound = true;
+	RandStream.Initialize(RandSeed);
+	Reset();
+	GetRoomComponentActorClass(bFound);
+	if (bFound && IsValid(PickedClass) && PickedRoomComponentActor_CAC->GetChildActorClass() != PickedClass) {
+		if (IsValid(PickedRoomComponentActor_CAC->GetChildActor())) {
+			PickedRoomComponentActor_CAC->DestroyChildActor();
+		}
+		PickedRoomComponentActor_CAC->SetChildActorClass(PickedClass);
+		PickedRoomComponentActor_CAC->CreateChildActor();
+		ARoomComponentActor* ChildRCA = Cast<ARoomComponentActor>(PickedRoomComponentActor_CAC->GetChildActor());
+		if (ChildRCA) {
+			ChildRCA->RandSeed = RandStream.RandRange(1, INT_MAX - 1);
+			ChildRCA->RespawnRCACollections();
+			UE_LOG(LogTRGame, Log, TEXT("RCACollection %s created child component for RCA %s. Child RandSeed: %d"),
+				*GetName(),
+				*ChildRCA->GetName(),
+				ChildRCA->RandSeed);
+		}
+	}
+}
+
+
 TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::PickRoomComponentActorClass(bool& bFoundValid)
 {
 	if (IsValid(PickedClass) && PickedClass != ARoomComponentActor::StaticClass()) {
 		return PickedClass;
 	}
 	if (RoomComponentActorCollection.RoomComponentActors.Num() == 0) {
+		UE_LOG(LogTRGame, Log, TEXT("RCACollection cannot PickRCA class, collection %s contains no entries."), *GetName());
 		bFoundValid = false;
 		PickedClass = NULL;// ARoomComponentActor::StaticClass();
 		return PickedClass;
@@ -376,6 +434,10 @@ TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::PickRoomCom
 	{
 		bFoundValid = true;
 		PickedClass = RoomComponentActorCollection.RoomComponentActors[RandStream.RandRange(0, RoomComponentActorCollection.RoomComponentActors.Num() - 1)].RCAClass;
+		UE_LOG(LogTRGame, Log, TEXT("RCACollection %s picking room component %s from %d choice(s)"),
+			*GetName(),
+			*PickedClass->GetName(),
+			RoomComponentActorCollection.RoomComponentActors.Num());
 		return PickedClass;
 	}
 	else
@@ -389,6 +451,11 @@ TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::PickRoomCom
 			if (PickedWeight <= TotalWeight) {
 				bFoundValid = true;
 				PickedClass = CollectionItem.RCAClass;
+				UE_LOG(LogTRGame, Log, TEXT("RCACollection %s picking room component %s from %d choices (picked weight: %f)"),
+					*GetName(),
+					*PickedClass->GetName(),
+					RoomComponentActorCollection.RoomComponentActors.Num(),
+					PickedWeight);
 				return PickedClass;
 			}
 		}

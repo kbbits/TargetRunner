@@ -533,6 +533,11 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorByLa
 				CurWeightSum += Spec.PickWeight;
 				if (CurWeightSum >= PickedWeight)
 				{
+					UE_LOG(LogTRGame, Log, TEXT("RoomGridMgr picking room component %s from %d choices for exit layout %s (picked weight: %f)"),
+						*Spec.ComponentActor->GetName(),
+						(*CompMap)[ExitLayout].Num(),
+						*GetEnumValueAsString<ETRRoomExitLayout>(ExitLayout),
+						PickedWeight);
 					bFound = true;
 					return Spec.ComponentActor;
 				}
@@ -542,6 +547,17 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorByLa
 		{
 			bFound = true;
 			return (*CompMap)[ExitLayout][0].ComponentActor;
+		}
+	}
+	else
+	{
+		if (!CompMap) {
+			UE_LOG(LogTRGame, Warning, TEXT("No room component of type %s"), *GetEnumValueAsString<ETRRoomComponentType>(Type));
+		}
+		if (CompMap && !CompMap->Contains(ExitLayout)) {
+			UE_LOG(LogTRGame, Warning, TEXT("No %s room component for exit layout %s"), 
+				*GetEnumValueAsString<ETRRoomComponentType>(Type), 
+				*GetEnumValueAsString<ETRRoomExitLayout>(ExitLayout));
 		}
 	}
 	bFound = false;

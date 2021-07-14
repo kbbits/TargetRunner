@@ -78,8 +78,8 @@ public:
 		float AltMeshPercent;
 
 	// Should this move it's ISMCs to the grid manager?
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-		bool bMoveISMCs;
+	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	//	bool bMoveISMCs;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FRoomComponentActorCollection> SubRoomComponents;
@@ -100,7 +100,7 @@ protected:
 	bool bCollectionSpawned;
 
 	UPROPERTY()
-		TArray<ARoomComponentActorCollectionActor*> SpawnedCollections;
+		TArray<TWeakObjectPtr<ARoomComponentActorCollectionActor>> SpawnedCollections;
 
 protected:
 
@@ -117,6 +117,10 @@ public:
 
 	virtual void PostInitializeComponents() override;
 
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	UFUNCTION(BlueprintCallable)
 		bool CanContainRoomComponentClass(const TSubclassOf<ARoomComponentActor> ContainClass);
 
@@ -126,8 +130,8 @@ public:
 	UFUNCTION(BlueprintCallable, CallInEditor)
 		void RespawnRCACollections();
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		void SetMoveISMCs(const bool bMoveThem);
+	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	//	void SetMoveISMCs(const bool bMoveThem);
 
 	// Get all the primary (i.e. non-alt) InstancedStaticMeshComponents of this Room Component. These are the ISMCs attached directly to the RootScene.
 	// Returns the count of components in PrimaryISMCs.
@@ -160,8 +164,6 @@ class TARGETRUNNER_API ARoomComponentActorCollectionActor : public AActor
 public:
 	ARoomComponentActorCollectionActor();
 
-	//ARoomComponentActorCollectionActor(const FRoomComponentActorCollection& RCACollection);
-
 public:
 	UPROPERTY()
 		USceneComponent* RootScene;
@@ -187,14 +189,18 @@ protected:
 
 public:
 
-	UFUNCTION(BlueprintCallable, CallInEditor)
-		void PickAndInit();
-
 	virtual void PostInitProperties() override;
+
+	virtual void PostInitializeComponents() override;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
+
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+	UFUNCTION(BlueprintCallable, CallInEditor)
+		void PickAndInit();
 
 	UFUNCTION()
 		TSubclassOf<ARoomComponentActor> PickRoomComponentActorClass(bool& bFoundValid);
