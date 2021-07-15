@@ -97,7 +97,7 @@ protected:
 	UPROPERTY()
 		FRandomStream RandStream;
 
-	bool bCollectionSpawned;
+	//bool bCollectionSpawned;
 
 	UPROPERTY()
 		TArray<TWeakObjectPtr<ARoomComponentActorCollectionActor>> SpawnedCollections;
@@ -119,7 +119,8 @@ public:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void Destroyed() override;
 
 	UFUNCTION(BlueprintCallable)
 		bool CanContainRoomComponentClass(const TSubclassOf<ARoomComponentActor> ContainClass);
@@ -198,6 +199,8 @@ public:
 #endif
 
 	virtual void OnConstruction(const FTransform& Transform) override;
+
+	int32 GetRandSeedForChild();
 
 	UFUNCTION(BlueprintCallable, CallInEditor)
 		void PickAndInit();
