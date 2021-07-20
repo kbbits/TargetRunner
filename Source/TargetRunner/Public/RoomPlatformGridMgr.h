@@ -89,6 +89,11 @@ protected:
 	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>> RoomFloorComponentMap;
 	// Our cache of ceiling room components info loaded from data table and kept as a map for use.
 	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>> RoomCeilingComponentMap;
+
+	// Our cache of solid wall room components info loaded from data table and kept as an array for use.
+	TArray<FRoomComponentSpec> RoomWallComponentArray;
+	// Our cache of door room components info loaded from data table and kept as an array for use.
+	TArray<FRoomComponentSpec> RoomDoorComponentArray;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -139,15 +144,21 @@ public:
 	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	//	TSoftObjectPtr<UPrefabricatorAssetInterface> GetRoomComponentPrefab(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound);
 
+	// Pick a floor or ceiling component type for the given exit layout.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		TSubclassOf<ARoomComponentActor> GetRoomComponentActorByLayout(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound);
+		TSubclassOf<ARoomComponentActor> GetRoomComponentActorInLayoutMap(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound);
+	
+	// Pick a wall or door component type for the room at the given coords.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		TSubclassOf<ARoomComponentActor> GetRoomComponentActorInArray(const ETRRoomComponentType Type, const FIntPoint RoomCoords, bool& bFound);
 
+	// Pick room component of the given type for the room at the given coords.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		TSubclassOf<ARoomComponentActor> GetRoomComponentActor(const ETRRoomComponentType Type, const FIntPoint RoomCoords, FRoomExitInfo& ExitInfo, bool& bFound);
 	
 	// Clears internal RoomComponentMaps built from the RoomComponentsTable.
 	// Caches will be rebuilt when needed from underlying data table.
 	UFUNCTION(BlueprintCallable)
-		void ClearRoomComponentMapCaches();
+		void ClearRoomComponentCaches();
 
 };

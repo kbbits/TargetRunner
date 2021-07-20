@@ -96,8 +96,11 @@ protected:
 
 	UPROPERTY()
 		FRandomStream RandStream;
+	
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
+		bool bMyISMsCopiedOut;
 
-	//bool bCollectionSpawned;
+	bool bAllChildISMsCopiedOut;
 
 	UPROPERTY()
 		TArray<TWeakObjectPtr<ARoomComponentActorCollectionActor>> SpawnedCollections;
@@ -144,7 +147,7 @@ public:
 		int32 GetAltISMCs(const UInstancedStaticMeshComponent* ParentISMC, TArray<UInstancedStaticMeshComponent*>& AltISMCs);
 
 	// Swaps AltMeshPercent percent of instances of all primary ISMCs with instances of one of their associated Alt ISMCs.
-	// This adds alt instances. You may want to call RevertToPrimaryMeshes before calling this. 
+	// This adds instances to alt ISMCs. You may want to call RevertToPrimaryMeshes before calling this. 
 	// Returns true if any instances were swapped with an alt.
 	UFUNCTION(BlueprintCallable)
 		bool ApplyAltMeshes();
@@ -152,6 +155,17 @@ public:
 	// Reverts all "alt" mesh instances to an instance of their coresponding primary mesh.
 	UFUNCTION(BlueprintCallable)
 		bool RevertToPrimaryMeshes();
+
+	// Returns true if all of this RoomComponentActor's ISMC instances have been copied out and all it's children as well.
+	UFUNCTION(BlueprintCallable)
+		bool AllISMsCopiedOut();
+
+protected:
+
+	// Checks if all the child ISMC instances have been copied out.
+	// Note: This only works correctly if our refs to our SpawnedCollections are valid.
+	UFUNCTION()
+		bool AllChildISMsCopiedOut();
 };
 
 
@@ -213,4 +227,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "RoomComponentActor")
 		void Reset();
+
+	// Checks if the collection's child RoomComponentActor has copied out it's ISM instances.
+	UFUNCTION(BlueprintCallable)
+		bool AllISMsCopiedOut();
 };

@@ -52,47 +52,55 @@ void ARoomPlatformGridMgr::InitRoomComponentMaps(const bool bForceReload)
 	}
 	if (bForceReload || RoomFloorComponentMap.Num() == 0)
 	{
-		RoomFloorComponentMap.Empty();
-		RoomCeilingComponentMap.Empty();
+		ClearRoomComponentCaches();
 		if (IsValid(RoomComponentsTable))
 		{
 			for (TPair<FName, uint8*> CompIt : RoomComponentsTable->GetRowMap())
 			{
 				// CompIt.Key has the key, CompIt.Value has a pointer to the struct of data
-				FRoomComponentSpec* Spec = reinterpret_cast<FRoomComponentSpec*>(CompIt.Value);
-				if (Spec)
+				FRoomComponentSpec* SpecRef = reinterpret_cast<FRoomComponentSpec*>(CompIt.Value);	
+				if (SpecRef)
 				{
-					if (Spec->Type == ETRRoomComponentType::Floor)
+					FRoomComponentSpec& Spec = *SpecRef;
+					if (Spec.Type == ETRRoomComponentType::Floor)
 					{
-						for (ETRRoomExitLayout ExitLayout : Spec->ValidExitLayouts)
+						for (ETRRoomExitLayout ExitLayout : Spec.ValidExitLayouts)
 						{
 							if (RoomFloorComponentMap.Contains(ExitLayout))
 							{
-								RoomFloorComponentMap[ExitLayout].Add(*Spec);
+								RoomFloorComponentMap[ExitLayout].Add(Spec);
 							}
 							else
 							{
 								TArray<FRoomComponentSpec> TmpSpecs;
-								TmpSpecs.Add(*Spec);
+								TmpSpecs.Add(Spec);
 								RoomFloorComponentMap.Add(ExitLayout, TmpSpecs);
 							}
 						}
 					}
-					else if (Spec->Type == ETRRoomComponentType::Ceiling)
+					else if (Spec.Type == ETRRoomComponentType::Ceiling)
 					{
-						for (ETRRoomExitLayout ExitLayout : Spec->ValidExitLayouts)
+						for (ETRRoomExitLayout ExitLayout : Spec.ValidExitLayouts)
 						{
 							if (RoomCeilingComponentMap.Contains(ExitLayout))
 							{
-								RoomCeilingComponentMap[ExitLayout].Add(*Spec);
+								RoomCeilingComponentMap[ExitLayout].Add(Spec);
 							}
 							else
 							{
 								TArray<FRoomComponentSpec> TmpSpecs;
-								TmpSpecs.Add(*Spec);
+								TmpSpecs.Add(Spec);
 								RoomCeilingComponentMap.Add(ExitLayout, TmpSpecs);
 							}
 						}
+					}
+					else if (Spec.Type == ETRRoomComponentType::Wall)
+					{
+						RoomWallComponentArray.Add(Spec);
+					}
+					else if (Spec.Type == ETRRoomComponentType::Door)
+					{
+						RoomDoorComponentArray.Add(Spec);
 					}
 				}
 				else
@@ -276,7 +284,7 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 	RoomGridTemplate.Grid.Empty();
 	RoomGridTemplate.StartCells.Empty();
 	RoomGridTemplate.EndCells.Empty();
-	ClearRoomComponentMapCaches();
+	ClearRoomComponentCaches();
 
 	if (GetLocalRole() == ROLE_Authority)
 	{
@@ -377,7 +385,7 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 
 void ARoomPlatformGridMgr::SpawnsFinished_Implementation()
 {
-	ClearRoomComponentMapCaches();
+	ClearRoomComponentCaches();
 }
 
 
@@ -490,7 +498,7 @@ TSoftObjectPtr<UPrefabricatorAssetInterface> ARoomPlatformGridMgr::GetRoomCompon
 */
 
 
-TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorByLayout_Implementation(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound)
+TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInLayoutMap_Implementation(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound)
 {
 	InitRoomComponentMaps();
 	float TotalWeight = 0.0f;
@@ -515,6 +523,11 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorByLa
 	{
 		CompMap = &RoomCeilingComponentMap;
 	}
+	else {
+		UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr GetRoomComponentActorInLayoutMap - called with invalid room type %s"), *GetEnumValueAsString<ETRRoomComponentType>(Type));
+		bFound = false;
+		return nullptr;
+	}
 	if (CompMap && CompMap->Contains(ExitLayout))
 	{
 		if ((*CompMap)[ExitLayout].Num() > 1)
@@ -533,7 +546,7 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorByLa
 				CurWeightSum += Spec.PickWeight;
 				if (CurWeightSum >= PickedWeight)
 				{
-					UE_LOG(LogTRGame, Log, TEXT("RoomGridMgr picking room component %s from %d choices for exit layout %s (picked weight: %f)"),
+					UE_LOG(LogTRGame, Log, TEXT("RoomGridMgr GetRoomComponentActorInLayoutMap picked room component %s from %d choices for exit layout %s (picked weight: %f)"),
 						*Spec.ComponentActor->GetName(),
 						(*CompMap)[ExitLayout].Num(),
 						*GetEnumValueAsString<ETRRoomExitLayout>(ExitLayout),
@@ -552,10 +565,10 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorByLa
 	else
 	{
 		if (!CompMap) {
-			UE_LOG(LogTRGame, Warning, TEXT("No room component of type %s"), *GetEnumValueAsString<ETRRoomComponentType>(Type));
+			UE_LOG(LogTRGame, Warning, TEXT("RoomPlatformGridMgr GetRoomComponentActorInLayoutMap - No room component of type %s"), *GetEnumValueAsString<ETRRoomComponentType>(Type));
 		}
 		if (CompMap && !CompMap->Contains(ExitLayout)) {
-			UE_LOG(LogTRGame, Warning, TEXT("No %s room component for exit layout %s"), 
+			UE_LOG(LogTRGame, Warning, TEXT("RoomPlatformGridMgr GetRoomComponentActorInLayoutMap - No %s room component for exit layout %s"), 
 				*GetEnumValueAsString<ETRRoomComponentType>(Type), 
 				*GetEnumValueAsString<ETRRoomExitLayout>(ExitLayout));
 		}
@@ -565,21 +578,104 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorByLa
 }
 
 
+TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInArray_Implementation(const ETRRoomComponentType Type, const FIntPoint RoomCoords, bool& bFound)
+{
+	InitRoomComponentMaps();
+	float TotalWeight = 0.0f;
+	float CurWeightSum = 0.0f;
+	float PickedWeight = 0.0f;
+	TArray<FRoomComponentSpec>* CompArray = nullptr;
+	FRandomStream* GridStreamFound = nullptr;
+	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
+	if (IsValid(GameMode))
+	{
+		GridStreamFound = &GameMode->GetGridStream();
+	}
+	else
+	{
+		GridStreamFound = &DefaultGridRandStream;
+	}
+	if (Type == ETRRoomComponentType::Wall)
+	{
+		CompArray = &RoomWallComponentArray;
+	}
+	else if (Type == ETRRoomComponentType::Door)
+	{
+		CompArray = &RoomDoorComponentArray;
+	}
+	else {
+		UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr GetRoomComponentActorInArray - called with invalid room type %s"), *GetEnumValueAsString<ETRRoomComponentType>(Type));
+		bFound = false;
+		return nullptr;
+	}
+	if (CompArray && CompArray->Num() > 0)
+	{
+		if (CompArray->Num() > 1)
+		{
+			// Sum total weight
+			TotalWeight = 0.0f;
+			for (FRoomComponentSpec Spec : (*CompArray))
+			{
+				TotalWeight += Spec.PickWeight;
+			}
+			// Find the one at the picked weight.
+			PickedWeight = GridStreamFound->FRandRange(0.0f, TotalWeight);
+			CurWeightSum = 0.0f;
+			for (FRoomComponentSpec Spec : (*CompArray))
+			{
+				CurWeightSum += Spec.PickWeight;
+				if (CurWeightSum >= PickedWeight)
+				{
+					UE_LOG(LogTRGame, Log, TEXT("RoomGridMgr GetRoomComponentActorInArray picked room component %s from %d choices for room X:%d Y:%d (picked weight: %f)"),
+						*Spec.ComponentActor->GetName(),
+						CompArray->Num(),
+						RoomCoords.X,
+						RoomCoords.Y,
+						PickedWeight);
+					bFound = true;
+					return Spec.ComponentActor;
+				}
+			}
+		}
+		else
+		{
+			bFound = true;
+			return (*CompArray)[0].ComponentActor;
+		}
+	}
+	else
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("RoomPlatformGridMgr GetRoomComponentActorInArray - No room component of type %s"), *GetEnumValueAsString<ETRRoomComponentType>(Type));
+	}
+	bFound = false;
+	return nullptr;
+}
+
 TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActor_Implementation(const ETRRoomComponentType Type, const FIntPoint RoomCoords, FRoomExitInfo& ExitInfo, bool& bFound)
 {
 	ExitInfo = URoomFunctionLibrary::GetRoomExitInfo(RoomGridTemplate, RoomCoords);
 	if (ExitInfo.ExitLayout == ETRRoomExitLayout::None)
 	{
-		UE_LOG(LogTRGame, Error, TEXT("Could not get room exit info for room X:%d Y:%d"), RoomCoords.X, RoomCoords.Y);
+		UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr - Could not get room exit info for room X:%d Y:%d. Exit layout was None."), RoomCoords.X, RoomCoords.Y);
 		bFound = false;
 		return ARoomComponentActor::StaticClass();
 	}
-	return GetRoomComponentActorByLayout(Type, ExitInfo.ExitLayout, bFound);
+	if (Type == ETRRoomComponentType::Floor || Type == ETRRoomComponentType::Ceiling) {
+		return GetRoomComponentActorInLayoutMap(Type, ExitInfo.ExitLayout, bFound);
+	}
+	else if (Type == ETRRoomComponentType::Wall || Type == ETRRoomComponentType::Door) {
+		return GetRoomComponentActorInArray(Type, RoomCoords, bFound);
+	}
+	UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr - Could not get room exit info for room X:%d Y:%d. Room component type was invalid %s."), RoomCoords.X, RoomCoords.Y, *GetEnumValueAsString<ETRRoomComponentType>(Type));
+	bFound = false;
+	return ARoomComponentActor::StaticClass();
 }
 
 
-void ARoomPlatformGridMgr::ClearRoomComponentMapCaches()
+void ARoomPlatformGridMgr::ClearRoomComponentCaches()
 {
 	RoomFloorComponentMap.Empty();
 	RoomCeilingComponentMap.Empty();
+	RoomWallComponentArray.Empty();
+	RoomDoorComponentArray.Empty();
 }

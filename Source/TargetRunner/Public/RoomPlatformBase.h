@@ -8,6 +8,8 @@
 #include "Math/TransformNonVectorized.h"
 #include "RoomPlatformBase.generated.h"
 
+class ARoomComponentActor;
+
 UCLASS()
 class TARGETRUNNER_API ARoomPlatformBase : public APlatformBase
 {
@@ -30,6 +32,10 @@ public:
 	/**  */
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 		TArray<ETRWallState> WallTemplate;
+
+	// Our cache of refs to the RoomComponentActors this platform spawned.
+	UPROPERTY()
+		TArray<TWeakObjectPtr<ARoomComponentActor>> SpawnedRoomComponents;
 
 protected:
 
@@ -107,6 +113,25 @@ public:
 	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		bool SpawnSpecials();
+
+	// Checks that all spawned RoomComponentActors have finished their spawn and setup.
+	// This includes checking if the RoomComponents have copied out their ISM instances.
+	UFUNCTION(BlueprintCallable)
+		bool AllTrackedRoomComponentsSetup();
+
+	// Add this RoomComponentActor to our collection of spawned RCAs so it will be tracked for updates and destruction, etc.
+	UFUNCTION(BlueprintCallable)
+		int32 TrackRoomComponentActor(ARoomComponentActor* RoomComponentActor);
+
+	// Get all the tracked RoomComponentActors (that still have have valid refs).
+	// Returns the number of valid RCAs found.
+	UFUNCTION(BlueprintCallable)
+		int32 GetTrackedRoomComponentActors(TArray<ARoomComponentActor*>& RoomComponentActors);
+
+	// Destroys all the RoomComponentActors that this plaform spawned.
+	// Returns the number of RCAs destroyed.
+	UFUNCTION(BlueprintCallable)
+		int32 DestroyTrackedRoomComponents();
 
 	// If this room is connected to another room in the given direction, this returns the connected room.
 	// If not connected in that direction, this returns nullptr.

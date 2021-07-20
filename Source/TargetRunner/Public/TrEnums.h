@@ -80,7 +80,8 @@ enum class ETRRoomComponentType : uint8
 {
 	Floor		UMETA(DisplayName = "Floor"),
 	Ceiling		UMETA(DisplayName = "Ceiling"),
-	Wall		UMETA(DisplayName = "Wall")
+	Wall		UMETA(DisplayName = "Wall"),
+	Door		UMETA(DisplayName = "Door")
 };
 
 

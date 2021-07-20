@@ -1,6 +1,7 @@
 
 #include "RoomPlatformBase.h"
 #include "RoomPlatformGridMgr.h"
+#include "RoomComponentActor.h"
 #include "ObjectPlacer.h"
 #include "TrEnums.h"
 #include "Math/Vector2D.h"
@@ -322,6 +323,66 @@ bool ARoomPlatformBase::SpawnSpecials_Implementation()
 		Placers.RemoveAt(Index);
 	}
 	return true;
+}
+
+
+bool ARoomPlatformBase::AllTrackedRoomComponentsSetup()
+{
+	TWeakObjectPtr<ARoomComponentActor> RoomComponent;
+	for (int32 i = 0; i < SpawnedRoomComponents.Num(); i++)
+	{
+		// Check all the room components with valid refs
+		RoomComponent = SpawnedRoomComponents[i];
+		if (RoomComponent.IsValid()) {
+			// Check that ISMs are copied
+			if (!RoomComponent.Get()->AllISMsCopiedOut()) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+
+int32 ARoomPlatformBase::TrackRoomComponentActor(ARoomComponentActor* RoomComponentActor)
+{
+	SpawnedRoomComponents.Add(RoomComponentActor);
+	return SpawnedRoomComponents.Num();
+}
+
+
+int32 ARoomPlatformBase::GetTrackedRoomComponentActors(TArray<ARoomComponentActor*>& RoomComponentActors)
+{
+	int32 NumValid = 0;
+	TWeakObjectPtr<ARoomComponentActor> RoomComponent;
+	for (int32 i = 0; i < SpawnedRoomComponents.Num(); i++)
+	{
+		// Get all the room components with valid refs
+		RoomComponent = SpawnedRoomComponents[i];
+		if (RoomComponent.IsValid() && IsValid(RoomComponent.Get())) {
+			RoomComponentActors.Add(RoomComponent.Get());
+			NumValid++;
+		}
+	}
+	return NumValid;
+}
+
+
+int32 ARoomPlatformBase::DestroyTrackedRoomComponents()
+{
+	int32 NumDestroyed = 0;
+	TWeakObjectPtr<ARoomComponentActor> RoomComponent;
+	for (int32 i = 0; i < SpawnedRoomComponents.Num(); i++)
+	{
+		// Destroy all the room components with valid refs
+		RoomComponent = SpawnedRoomComponents[i];
+		if (RoomComponent.IsValid()) {
+			RoomComponent.Get()->Destroy();
+			NumDestroyed++;
+		}
+	}
+	SpawnedRoomComponents.Empty();
+	return NumDestroyed;
 }
 
 

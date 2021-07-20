@@ -7,6 +7,8 @@ ARoomComponentActor::ARoomComponentActor()
 {
 	bReplicates = false;
 	PrimaryActorTick.bCanEverTick = false;
+	bMyISMsCopiedOut = true;
+	bAllChildISMsCopiedOut = false;
 	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
 	SetRootComponent(RootScene);
 	UBlueprint* Blueprint = Cast<UBlueprint>(GetClass()->ClassGeneratedBy);
@@ -137,8 +139,8 @@ void ARoomComponentActor::OnConstruction(const FTransform& Transform)
 
 void ARoomComponentActor::Destroyed()
 {
+	/*
 	if (!GetWorld() || (GetWorld() && GetWorld()->WorldType != EWorldType::Game)) {
-		/*
 		AActor* Parent = GetParentActor();
 		if (Parent)
 		{
@@ -149,7 +151,6 @@ void ARoomComponentActor::Destroyed()
 				UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s destroyed parent collection actor %s"), *GetName(), *CollectionActor->GetName());
 			}
 		}
-		*/
 		//UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s Destroyed, destroying %d spawned collections."), *GetName(), SpawnedCollections.Num());
 		DestroyRCACollections();
 	}
@@ -158,6 +159,8 @@ void ARoomComponentActor::Destroyed()
 		SpawnedCollections.Empty();
 		//UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s Destroyed, NOT destroying spawned collections."), *GetName(), SpawnedCollections.Num());
 	}
+	*/
+	DestroyRCACollections();
 	Super::Destroyed();
 }
 
@@ -336,6 +339,39 @@ bool ARoomComponentActor::RevertToPrimaryMeshes()
 	return AnyAltsRemoved;
 }
 
+
+bool ARoomComponentActor::AllISMsCopiedOut()
+{
+	if (!bMyISMsCopiedOut) {
+		return false;
+	}    
+	if (!bAllChildISMsCopiedOut) {
+		return AllChildISMsCopiedOut();
+	}
+	return true;
+}
+
+
+bool ARoomComponentActor::AllChildISMsCopiedOut()
+{
+	if (bAllChildISMsCopiedOut) {
+		return true;
+	}
+	TWeakObjectPtr<ARoomComponentActorCollectionActor> CollectionActor;
+	for (int32 i = 0; i < SpawnedCollections.Num(); i++)
+	{
+		CollectionActor = SpawnedCollections[i];
+		if (CollectionActor.IsValid()) {
+			if (!CollectionActor.Get()->AllISMsCopiedOut()) {
+				return false;
+			}
+		}
+	}
+	bAllChildISMsCopiedOut = true;
+	return true;
+}
+
+
 /////////////////////////////////////////// ARoomComponentActorCollectionActor ///////////////////////////////////
 
 ARoomComponentActorCollectionActor::ARoomComponentActorCollectionActor()
@@ -493,4 +529,17 @@ TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::GetRoomComp
 void ARoomComponentActorCollectionActor::Reset()
 {
 	PickedClass = NULL;
+}
+
+
+bool ARoomComponentActorCollectionActor::AllISMsCopiedOut()
+{
+	if (!IsValid(PickedClass)) {
+		return false;
+	}
+	ARoomComponentActor* ChildRCA = Cast<ARoomComponentActor>(PickedRoomComponentActor_CAC->GetChildActor());
+	if (!IsValid(ChildRCA)) {
+		return true;
+	}
+	return ChildRCA->AllISMsCopiedOut();
 }
