@@ -175,7 +175,7 @@ public:
 	// Evaluates the resource drops for clutter shootables.
 	// Returns list of resources to drop.
 	// Clutter resource drops are implemented through goods drop tables with the resource code as the goods name. And translated to resource quantities.
-	// Clutter resource drop table names are in the format: ClutterResources<level tier> ex: ClutterResources01
+	// Clutter resource drop table names (i.e. rows in a GoodsDropper table) are in the format: ClutterResources<level tier> ex: ClutterResources01
 	UFUNCTION(BlueprintCallable)
 		void GetClutterDropResources(TArray<FResourceQuantity>& DroppedResources);
 

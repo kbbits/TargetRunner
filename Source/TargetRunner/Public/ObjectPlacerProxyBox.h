@@ -21,7 +21,7 @@ public:
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TSubclassOf<AActor> ClassToPlace;
+		TSubclassOf<AActor> DefaultClassToPlace;
 
 	// This is our proxy placement bounding box extents (the half-size of each dimention).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPreserveRatio = "True"))
@@ -52,8 +52,8 @@ protected:
 
 #if WITH_EDITORONLY_DATA
 	// When used in-editor, we track actors we've placed so they can be destroyed when this instance is.
-	UPROPERTY(BlueprintReadOnly)
-		TArray<AActor*> PlacedObjectRefs;
+	UPROPERTY()
+		TArray<TWeakObjectPtr<AActor>> PlacedObjectRefs;
 #endif
 
 protected:
@@ -65,6 +65,7 @@ protected:
 public:
 
 	virtual void BeginDestroy() override;
+	virtual void Destroyed() override;
 
 	virtual void PostInitProperties() override;
 
@@ -86,10 +87,31 @@ public:
 		void ClearPlaced();
 #endif
 
+	// Returns the class that this placer should place.
+	// Base class implementation just returns DefaultClassToPlace.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		TSubclassOf<AActor> GetClassToPlace();
+
 	UFUNCTION(BlueprintPure)
 		FTransform GetInitialPlaceTransform(UPARAM(ref) FRandomStream& RandStream);
 
 	// Do the given extents fit fully within this instance's target box?
 	UFUNCTION(BlueprintPure)
 		bool FitsIntoBoxBounds(const FVector& Extents);
+};
+
+
+// For placing room special actors.
+UCLASS()
+class TARGETRUNNER_API AObjectPlacerProxyBoxSpecial : public AObjectPlacerProxyBox
+{
+	GENERATED_BODY()
+};
+
+
+// For placing room clutter actors.
+UCLASS()
+class TARGETRUNNER_API AObjectPlacerProxyBoxClutter : public AObjectPlacerProxyBox
+{
+	GENERATED_BODY()
 };

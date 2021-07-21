@@ -3,6 +3,7 @@
 #include "RoomPlatformGridMgr.h"
 #include "RoomComponentActor.h"
 #include "ObjectPlacer.h"
+#include "ObjectPlacerProxyBox.h"
 #include "TrEnums.h"
 #include "Math/Vector2D.h"
 #include "UnrealNetwork.h"
@@ -265,6 +266,10 @@ bool ARoomPlatformBase::SpawnContents_Implementation()
 		{
 			return false;
 		}
+		if (!SpawnClutter())
+		{
+			return false;
+		}
 		DestroySpecialPlacers();
 		return true;
 	}
@@ -309,7 +314,7 @@ bool ARoomPlatformBase::SpawnSpecials_Implementation()
 		Placer = Cast<AObjectPlacerSpecialActor>(Placers[Index]);
 		if (Placer)
 		{
-			Placer->ClassToPlace = Itr->Get();
+			Placer->DefaultClassToPlace = Itr->Get();
 			NewSpecialActor = Placer->PlaceOne(PlatformRandStream, this, bSuccess);
 			if (NewSpecialActor)
 			{
@@ -321,6 +326,41 @@ bool ARoomPlatformBase::SpawnSpecials_Implementation()
 			UE_LOG(LogTRGame, Warning, TEXT("%s - SpawnSpecials no valid placer for %s in room (%d, %d)"), *GetNameSafe(this), *GetNameSafe(Itr->Get()), GridX, GridY);
 		}
 		Placers.RemoveAt(Index);
+	}
+	return true;
+}
+
+
+bool ARoomPlatformBase::SpawnClutter_Implementation()
+{
+	TArray<AActor*> Placers;
+	AObjectPlacerProxyBoxClutter* Placer;
+	bool bSuccess;
+	AActor* NewClutterActor;
+
+	// Find all the special actor object placers.
+	PlatformControlZone->GetOverlappingActors(Placers, AObjectPlacerProxyBoxClutter::StaticClass());
+	if (Placers.Num() == 0)
+	{
+		UE_LOG(LogTRGame, Warning, TEXT("%s - SpawnClutter no AObjectPlacerProxyBoxClutter placers found in room (%d, %d)"), *GetNameSafe(this), GridX, GridY);
+		return true;
+	}
+	// For each special actor to place, pick a placer and have it place one.
+	for (AActor* PlacerActor : Placers)
+	{
+		Placer = Cast<AObjectPlacerProxyBoxClutter>(PlacerActor);
+		if (Placer)
+		{
+			if (!IsValid(Placer->GetClassToPlace())) {
+				UE_LOG(LogTRGame, Warning, TEXT("Clutter object placer %s has invalid ClassToPlace"), *Placer->GetName());
+				continue;
+			}
+			NewClutterActor = Placer->PlaceOne(PlatformRandStream, this, bSuccess);
+			if (NewClutterActor)
+			{
+				PlatformActorCache.Add(FName(FString::Printf(TEXT("Clutter_%s"), *FGuid::NewGuid().ToString())), NewClutterActor);
+			}
+		}
 	}
 	return true;
 }

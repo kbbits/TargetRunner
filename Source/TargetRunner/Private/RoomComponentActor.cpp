@@ -93,7 +93,7 @@ void ARoomComponentActor::PostEditChangeProperty(FPropertyChangedEvent& Property
 	if (RandSeed > 0 && RandStream.GetInitialSeed() != RandSeed) {
 		RandStream.Initialize(RandSeed);
 	}
-	FilterRCACollections();	
+	FilterRCACollections();
 }
 #endif
 
@@ -133,7 +133,7 @@ void ARoomComponentActor::OnConstruction(const FTransform& Transform)
 		RandStream.Initialize(RandSeed);
 	}
 	//UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s OnConstruction. RandSeed: %d Location: %s"), *GetName(), RandSeed, *GetActorLocation().ToString());
-	SpawnRCACollections();
+	RespawnRCACollections();
 }
 
 
@@ -407,6 +407,7 @@ void ARoomComponentActorCollectionActor::PostInitProperties()
 void ARoomComponentActorCollectionActor::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+	Reset();
 	PickAndInit();
 }
 
@@ -414,6 +415,7 @@ void ARoomComponentActorCollectionActor::PostInitializeComponents()
 void ARoomComponentActorCollectionActor::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
+	Reset();
 	PickAndInit();
 }
 
@@ -422,6 +424,7 @@ void ARoomComponentActorCollectionActor::OnConstruction(const FTransform& Transf
 void ARoomComponentActorCollectionActor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
+	
 }
 #endif
 

@@ -51,10 +51,16 @@ void AObjectPlacerProxyBox::UpdateComponents()
 
 void AObjectPlacerProxyBox::BeginDestroy()
 {
+	Super::BeginDestroy();
+}
+
+
+void AObjectPlacerProxyBox::Destroyed()
+{
 #if WITH_EDITOR
 	ClearPlaced();
 #endif
-	Super::BeginDestroy();
+	Super::Destroyed();
 }
 
 
@@ -90,15 +96,21 @@ AActor* AObjectPlacerProxyBox::PlaceOne(FRandomStream& RandStream, const AActor*
 	AActor* TmpPlacedObject = nullptr;
 	FTransform SpawnTransform;
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	if (PlacedObjectOwner) { SpawnParams.Owner = const_cast<AActor*>(PlacedObjectOwner); }
-	SpawnTransform = GetInitialPlaceTransform(RandStream);
-	TmpPlacedObject = GetWorld()->SpawnActor<AActor>(ClassToPlace, SpawnTransform, SpawnParams);
-	if (TmpPlacedObject)
-	{
-		bPlacedSuccessfully = true;
-		PlacedObjects++;
-	}	
+	TSubclassOf<AActor> ClassToPlace = GetClassToPlace();
+	if (IsValid(ClassToPlace)) {
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (PlacedObjectOwner) { SpawnParams.Owner = const_cast<AActor*>(PlacedObjectOwner); }
+		SpawnTransform = GetInitialPlaceTransform(RandStream);
+		TmpPlacedObject = GetWorld()->SpawnActor<AActor>(ClassToPlace, SpawnTransform, SpawnParams);
+		if (TmpPlacedObject)
+		{
+			bPlacedSuccessfully = true;
+			PlacedObjects++;
+		}
+	} 
+	else {
+		bPlacedSuccessfully = false;
+	}
 	return TmpPlacedObject;
 }
 
@@ -117,16 +129,21 @@ void AObjectPlacerProxyBox::TryPlaceOne()
 
 void AObjectPlacerProxyBox::ClearPlaced()
 {
-	for (AActor* TmpActor : PlacedObjectRefs)
+	for (TWeakObjectPtr<AActor> WeakActor : PlacedObjectRefs)
 	{
-		if (TmpActor)
+		if (WeakActor.IsValid() && WeakActor.Get())
 		{
-			TmpActor->Destroy();
+			WeakActor.Get()->Destroy();
 		}
 	}
 	PlacedObjectRefs.Empty();
 }
 #endif
+
+TSubclassOf<AActor> AObjectPlacerProxyBox::GetClassToPlace_Implementation()
+{
+	return DefaultClassToPlace;
+}
 
 
 FTransform AObjectPlacerProxyBox::GetInitialPlaceTransform(FRandomStream& RandStream)

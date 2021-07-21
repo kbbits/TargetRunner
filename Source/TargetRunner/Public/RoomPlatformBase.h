@@ -114,6 +114,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		bool SpawnSpecials();
 
+	// [Server]
+	// Spawns clutter actor instances in this room. (if any)
+	// Call this on server!
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		bool SpawnClutter();
+
 	// Checks that all spawned RoomComponentActors have finished their spawn and setup.
 	// This includes checking if the RoomComponents have copied out their ISM instances.
 	UFUNCTION(BlueprintCallable)

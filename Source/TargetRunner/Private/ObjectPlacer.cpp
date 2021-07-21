@@ -71,16 +71,28 @@ void AObjectPlacer::UpdateComponents()
 
 void AObjectPlacer::BeginDestroy()
 {
-#if WITH_EDITOR
-	ClearPlaced();
-#endif
 	Super::BeginDestroy();
 }
 
 
+void AObjectPlacer::Destroyed()
+{
+#if WITH_EDITOR
+	ClearPlaced();
+#endif
+	Super::Destroyed();
+}
+
 void AObjectPlacer::PostInitProperties()
 {
 	Super::PostInitProperties();
+	//UpdateComponents();
+}
+
+
+void AObjectPlacer::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 	UpdateComponents();
 }
 
@@ -111,18 +123,30 @@ void AObjectPlacer::Tick(float DeltaTime)
 }
 
 
+TSubclassOf<AActor> AObjectPlacer::GetClassToPlace_Implementation()
+{
+	return DefaultClassToPlace;
+}
+
+
 AActor* AObjectPlacer::PlaceOne(FRandomStream& RandStream, const AActor* PlacedObjectOwner, bool& bPlacedSuccessfully)
 {
 	AActor* TmpPlacedObject = nullptr;
 	FTransform SpawnTransform;
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	if (PlacedObjectOwner) { SpawnParams.Owner = const_cast<AActor*>(PlacedObjectOwner); }
-	SpawnTransform = GetPlaceTransform(RandStream, bPlacedSuccessfully);
-	if (!bPlacedSuccessfully) { return nullptr; }
-	UE_LOG(LogTRGame, Log, TEXT("ObjectPlacer PlaceOne %s"), *ClassToPlace->GetName());
-	TmpPlacedObject = GetWorld()->SpawnActor<AActor>(ClassToPlace, SpawnTransform, SpawnParams);
-	PlacedObjects++;
+	TSubclassOf<AActor> ClassToPlace = GetClassToPlace();
+	if (IsValid(ClassToPlace)) {
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (PlacedObjectOwner) { SpawnParams.Owner = const_cast<AActor*>(PlacedObjectOwner); }
+		SpawnTransform = GetPlaceTransform(RandStream, bPlacedSuccessfully);
+		if (!bPlacedSuccessfully) { return nullptr; }
+		UE_LOG(LogTRGame, Log, TEXT("ObjectPlacer PlaceOne %s"), *ClassToPlace->GetName());
+		TmpPlacedObject = GetWorld()->SpawnActor<AActor>(ClassToPlace, SpawnTransform, SpawnParams);
+		PlacedObjects++;
+	}
+	else {
+		UE_LOG(LogTRGame, Warning, TEXT("Class to place for ObjectPlacer %s is not valid."), *GetName());
+	}
 	return TmpPlacedObject;
 }
 
@@ -140,11 +164,11 @@ void AObjectPlacer::TryPlaceOne()
 
 void AObjectPlacer::ClearPlaced()
 {
-	for (AActor* TmpActor : PlacedObjectRefs)
+	for (TWeakObjectPtr<AActor> WeakActor : PlacedObjectRefs)
 	{
-		if (TmpActor)
+		if (WeakActor.IsValid() && WeakActor.Get())
 		{
-			TmpActor->Destroy();
+			WeakActor.Get()->Destroy();
 		}
 	}
 	PlacedObjectRefs.Empty();
@@ -162,6 +186,7 @@ FTransform AObjectPlacer::GetPlaceTransform(FRandomStream& RandStream, bool& bFo
 	FHitResult Hit;
 	bool bHitSomething = false;
 	FCollisionShape TraceShape = FCollisionShape::MakeBox(TraceBoxExtents);
+	TSubclassOf<AActor> ClassToPlace = GetClassToPlace();
 	
 	bFound = false;
 	while (!bHitSomething && TraceTries < MaxTraces)

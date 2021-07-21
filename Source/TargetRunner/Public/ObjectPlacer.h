@@ -38,7 +38,7 @@ public:
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		TSubclassOf<AActor> ClassToPlace;
+		TSubclassOf<AActor> DefaultClassToPlace;
 
 	// The targeting area type to use for placement.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -121,8 +121,8 @@ protected:
 
 #if WITH_EDITORONLY_DATA
 	// When used in-editor, we track actors we've placed so they can be destroyed when this instance is.
-	UPROPERTY(BlueprintReadOnly)
-		TArray<AActor*> PlacedObjectRefs;
+	UPROPERTY()
+		TArray<TWeakObjectPtr<AActor>> PlacedObjectRefs;
 #endif
 
 protected:
@@ -134,8 +134,11 @@ protected:
 public:	
 	
 	void BeginDestroy() override;
+	void Destroyed() override;
 
 	void PostInitProperties() override;
+
+	void PostInitializeComponents() override;
 
 #if WITH_EDITOR
 	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -143,6 +146,11 @@ public:
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	// Returns the class that this placer should place.
+	// Base class implementation just returns DefaultClassToPlace.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		TSubclassOf<AActor> GetClassToPlace();
 
 	UFUNCTION(BlueprintCallable, Meta = (UnsafeDuringActorConstruction = "true"))
 		AActor* PlaceOne(UPARAM(ref) FRandomStream& RandStream, const AActor* PlacedObjectOwner, bool& bPlacedSuccessfully);
