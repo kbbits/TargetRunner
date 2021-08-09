@@ -185,7 +185,9 @@ public:
 	// Native function to do the work, so native subclasses can override.
 	virtual void WakeNeighborsImpl(const FVector2D AroundGridCoords);
 
+	// [Server]
 	// Add an instance of a static mesh using the given material. SpawnTransform is in world space.
+	// Returns the index of the instance spawned.
 	UFUNCTION(BlueprintCallable)
 		int32 SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, UPARAM(ref) UMaterialInterface* Material, const FTransform& SpawnTransform);
 

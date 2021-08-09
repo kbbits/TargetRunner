@@ -139,7 +139,7 @@ public:
 	//	void ClientSetSnapshotInventory(const TArray<FGoodsQuantity>& NewSnapshotGoods);
 
 	// [Server]
-	// Empties the snapshot inventory. Usually don't need to call this manually. It is called when a new snapshot is started.
+	// Empties the snapshot inventory. 
 	// This will call client if needed to handle replication.
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 		void ServerClearSnapshotInventory();

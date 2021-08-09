@@ -3,12 +3,17 @@
 
 #include "GoodsFunctionLibrary.h"
 
-TArray<FGoodsQuantity> UGoodsFunctionLibrary::MultiplyGoodsQuantities(const TArray<FGoodsQuantity> GoodsQuantities, const float Multiplier)
+TArray<FGoodsQuantity> UGoodsFunctionLibrary::MultiplyGoodsQuantities(const TArray<FGoodsQuantity> GoodsQuantities, const float Multiplier, const bool bTruncateQuantities)
 {
 	TArray<FGoodsQuantity> NewQuantities;
 	for (FGoodsQuantity CurQuantity : GoodsQuantities) 
 	{
-		NewQuantities.Add(FGoodsQuantity(CurQuantity.Name, CurQuantity.Quantity * Multiplier));
+		if (bTruncateQuantities) {
+			NewQuantities.Add(FGoodsQuantity(CurQuantity.Name, FMath::TruncToFloat(CurQuantity.Quantity * Multiplier)));
+		}
+		else {
+			NewQuantities.Add(FGoodsQuantity(CurQuantity.Name, CurQuantity.Quantity * Multiplier));
+		}
 	}
 	return NewQuantities;
 }

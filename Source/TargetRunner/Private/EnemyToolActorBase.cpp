@@ -6,8 +6,7 @@
 
 AEnemyToolActorBase::AEnemyToolActorBase()
 {
-	SetReplicates(true);
-	
+	bReplicates = true;
 }
 
 

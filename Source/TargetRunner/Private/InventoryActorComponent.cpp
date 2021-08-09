@@ -50,7 +50,7 @@ bool UInventoryActorComponent::ShouldUpdateClient()
 		ENetMode NetMode = GetNetMode();
 		bUpdateClient = NetMode != NM_Client && NetMode != NM_Standalone;
 	}
-	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ShouldUpdateClient: %s."), bUpdateClient ? TEXT("True") : TEXT("False"));
+	//UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ShouldUpdateClient: %s."), bUpdateClient ? TEXT("True") : TEXT("False"));
 	return bUpdateClient;
 }
 
@@ -156,7 +156,7 @@ void UInventoryActorComponent::ServerAddSubtractGoods_Implementation(const FGood
 			ClientUpdateInventoryQuantity(GoodsQuantity, SnapshotDelta);
 		}
 	}
-	UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoods new: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
+	//UE_LOG(LogTRGame, Log, TEXT("InventoryActorComponent - ServerAddSubtractGoods new: %s: %d."), *GoodsQuantity.Name.ToString(), (int32)GoodsQuantity.Quantity);
 }
 
 bool UInventoryActorComponent::ServerAddSubtractGoods_Validate(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, const bool bAddToSnapshot)

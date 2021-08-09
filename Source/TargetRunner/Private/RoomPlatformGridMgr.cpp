@@ -340,7 +340,7 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	if (IsValid(OldRoom))
 	{
 		DebugLog(FString::Printf(TEXT("Destroying old room X:%d Y:%d."), OldRoom->GridX, OldRoom->GridY));
-		OldRoom->Destroy();
+		OldRoom->DestroyPlatform();
 		OldRoom = nullptr;
 	}
 
@@ -534,8 +534,7 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInLa
 		{
 			// Sum total weight
 			TotalWeight = 0.0f;
-			for (FRoomComponentSpec Spec : (*CompMap)[ExitLayout])
-			{
+			for (FRoomComponentSpec Spec : (*CompMap)[ExitLayout]) {
 				TotalWeight += Spec.PickWeight;
 			}
 			// Find the one at the picked weight.
@@ -546,11 +545,11 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInLa
 				CurWeightSum += Spec.PickWeight;
 				if (CurWeightSum >= PickedWeight)
 				{
-					UE_LOG(LogTRGame, Log, TEXT("RoomGridMgr GetRoomComponentActorInLayoutMap picked room component %s from %d choices for exit layout %s (picked weight: %f)"),
-						*Spec.ComponentActor->GetName(),
-						(*CompMap)[ExitLayout].Num(),
-						*GetEnumValueAsString<ETRRoomExitLayout>(ExitLayout),
-						PickedWeight);
+					//UE_LOG(LogTRGame, Log, TEXT("RoomGridMgr GetRoomComponentActorInLayoutMap picked room component %s from %d choices for exit layout %s (picked weight: %f)"),
+					//	*Spec.ComponentActor->GetName(),
+					//	(*CompMap)[ExitLayout].Num(),
+					//	*GetEnumValueAsString<ETRRoomExitLayout>(ExitLayout),
+					//	PickedWeight);
 					bFound = true;
 					return Spec.ComponentActor;
 				}
@@ -614,8 +613,7 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInAr
 		{
 			// Sum total weight
 			TotalWeight = 0.0f;
-			for (FRoomComponentSpec Spec : (*CompArray))
-			{
+			for (FRoomComponentSpec Spec : (*CompArray)) {
 				TotalWeight += Spec.PickWeight;
 			}
 			// Find the one at the picked weight.
@@ -626,12 +624,12 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInAr
 				CurWeightSum += Spec.PickWeight;
 				if (CurWeightSum >= PickedWeight)
 				{
-					UE_LOG(LogTRGame, Log, TEXT("RoomGridMgr GetRoomComponentActorInArray picked room component %s from %d choices for room X:%d Y:%d (picked weight: %f)"),
-						*Spec.ComponentActor->GetName(),
-						CompArray->Num(),
-						RoomCoords.X,
-						RoomCoords.Y,
-						PickedWeight);
+					//UE_LOG(LogTRGame, Log, TEXT("RoomGridMgr GetRoomComponentActorInArray picked room component %s from %d choices for room X:%d Y:%d (picked weight: %f)"),
+					//	*Spec.ComponentActor->GetName(),
+					//	CompArray->Num(),
+					//	RoomCoords.X,
+					//	RoomCoords.Y,
+					//	PickedWeight);
 					bFound = true;
 					return Spec.ComponentActor;
 				}

@@ -24,7 +24,7 @@ public:
 
 	// Multiply the quantity of each good by the given multiplier.
 	UFUNCTION(BlueprintPure, Category = "Goods")
-		static TArray<FGoodsQuantity> MultiplyGoodsQuantities(const TArray<FGoodsQuantity> GoodsQuantities, const float Multiplier);
+		static TArray<FGoodsQuantity> MultiplyGoodsQuantities(const TArray<FGoodsQuantity> GoodsQuantities, const float Multiplier, const bool bTruncateQuantities = true);
 
 
 	// Adds the quantities of the two GoodsQuantities arrays.
