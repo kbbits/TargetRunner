@@ -8,7 +8,12 @@
 #include "Components/BoxComponent.h"
 #include "ObjectPlacerProxyBox.generated.h"
 
-
+/*
+* Used during map spawning.
+* Placed in world (usually as a child actor of a RoomComponentActor) as a proxy for a random selection of actor that will be placed into the
+* world by this ObjectPlacer. Once the ObjectPlacer has placed it's selection(s) of object actor(s) the ObjectPlacer can be destroyed.
+* This ObjectPlacer provides a box wherein each placed actor will be spawned.
+*/
 UCLASS()
 class TARGETRUNNER_API AObjectPlacerProxyBox : public AActor
 {

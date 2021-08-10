@@ -7,7 +7,7 @@
 #include "TRCheatManager.generated.h"
 
 /**
- * 
+ * UNUSED
  */
 UCLASS()
 class TARGETRUNNER_API UTRCheatManager : public UCheatManager

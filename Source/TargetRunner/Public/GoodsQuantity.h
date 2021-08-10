@@ -5,12 +5,18 @@
 //#include "Engine/DataTable.h"
 #include "GoodsQuantity.generated.h"
 
+/*
+* Represents a quantity of a given goods type.
+* The GoodsQuantity.Name much match a valid GoodsType.Name.
+*/
 USTRUCT(BlueprintType)
 struct FGoodsQuantity //: public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
+
+	// The name of the GoodsType this quantity represents.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Name;
 

@@ -38,7 +38,6 @@ ATRPlayerState::ATRPlayerState()
 
 	if (ExperienceLevel <= 0) { ExperienceLevel = 1; }
 	LevelUpGoodsProgress.Name = FName(TEXT("LevelUpGoodsProgress"));
-	UE_LOG(LogTRGame, Log, TEXT("TRPlayerState constructed"));
 }
 
 
@@ -73,7 +72,7 @@ void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
 {
 	Super::CopyProperties(NewPlayerState);
 
-	UE_LOG(LogTRGame, Log, TEXT("PlayerState::CopyProperties to new player state: %s"), *NewPlayerState->GetName());
+	//UE_LOG(LogTRGame, Log, TEXT("PlayerState::CopyProperties to new player state: %s"), *NewPlayerState->GetName());
 	ATRPlayerState* NewTRPlayerState = Cast<ATRPlayerState>(NewPlayerState);
 	if (NewTRPlayerState)
 	{
@@ -149,7 +148,7 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 
 void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
-	UE_LOG(LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - new player %s : %s."), *SaveData.ProfileName.ToString(),*SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
+	//UE_LOG(LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - new player %s : %s."), *SaveData.ProfileName.ToString(),*SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
 	PlayerGuid = SaveData.PlayerGuid;
 	ProfileName = SaveData.ProfileName;
 	DisplayName = SaveData.DisplayName;

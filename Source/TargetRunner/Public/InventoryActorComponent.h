@@ -7,13 +7,14 @@
 #include "GoodsQuantity.h"
 #include "InventoryActorComponent.generated.h"
 
-// Replication of inventory content is managed by all changes going through server. Each of those changes is 
-// replicated to owning client via RPCs called from the ServerXxxx functions.
-
 // Event dispatcher for when CurrentValue changes
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryChanged, const TArray<FGoodsQuantity>&, GoodsDeltas, const TArray<FGoodsQuantity>&, ChangedTotals);
 
-
+/*
+* Manages an actor's inventory of goods. 
+* Replication of inventory content is managed by all changes going through server. Each of those changes is 
+* replicated to owning client via RPCs called from the ServerXxxx functions.
+*/
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TARGETRUNNER_API UInventoryActorComponent : public UActorComponent
 {
@@ -35,6 +36,7 @@ protected:
 		TArray<FGoodsQuantity> SnapshotInventory;
 
 	// Any goods name that matches one of these strings will be filtered out of saveable goods in GeSaveableGoods()
+	// TODO: This should probably be moved to a single location, e.g. GameMode.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FString> UnsaveableGoodsFilters;
 

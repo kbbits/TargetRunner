@@ -15,7 +15,7 @@ class UExtractsResources : public UInterface
 };
 
 /**		
- * Represents a tool (or weapon) that is usable by the player.
+ * Represents a tool (or weapon, etc.) that has the ability to extract resources from objects that implement the ExtractableResource interface.
  */
 class TARGETRUNNER_API IExtractsResources
 {

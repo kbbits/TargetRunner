@@ -5,8 +5,12 @@
 #include "GameModeRecordData.h"
 #include "GlobalGameSaveData.generated.h"
 
-// This class holds info on the current state of the installed game.
-// ex: last save slot selected, etc.
+/*
+* This class holds info on the current state of the installed game.
+* ex: last save slot selected, etc.
+* NOTE: Not currently fully implemented.
+* TODO: Finish implementation.
+*/ 
 USTRUCT(BlueprintType)
 struct FGlobalGameSaveData : public FTableRowBase
 {

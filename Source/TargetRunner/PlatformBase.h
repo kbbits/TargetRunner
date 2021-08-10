@@ -9,6 +9,9 @@
 
 class APlatformGridMgr;
 
+/*
+* Base class of platform (i.e. "room") to occupy a cell in the level grid.
+*/
 UCLASS()
 class TARGETRUNNER_API APlatformBase : public AActor
 {
@@ -32,24 +35,30 @@ public:
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, SaveGame, Meta = (ExposeOnSpawn = "true"))
 		int32 GridY;
 
+	// No longer used.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bCanRemoveDynamic;
 
 	// Call GetGridManager to initialize this.
+	// TODO: refactor so this is not directly exposed.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		APlatformGridMgr* MyGridManager;
 
+	// A helper collection of actors spawned by or associated with this platform. (see: DestroyPlatform)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FName, AActor*> PlatformActorCache;
 
+	// The random stream used for generation of actors, etc. within this platform.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FRandomStream PlatformRandStream;
 
+	// Has this platform woken it's neighbors from statis at least once?
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		bool bStasisWokeNeighbors;
 
 protected:
 
+	// Is this platform currently woken from stasis?
 	UPROPERTY(EditAnywhere)
 		bool bStasisAwake;
 

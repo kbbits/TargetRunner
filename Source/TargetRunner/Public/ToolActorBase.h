@@ -13,6 +13,9 @@
 
 class UToolBase;
 
+/*
+* The in-world actor for the tool represented by the ToolData property.
+*/
 UCLASS()
 class TARGETRUNNER_API AToolActorBase : public AActor, public IUsableTool
 {
@@ -72,17 +75,17 @@ public:
 
 	// IUsableTool interface functions
 
-	// The unique name (or code) of the tool
+	// The unique name (i.e. code) of the tool
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
 		FName GetName();
 	virtual FName GetName_Implementation();
 
-	// The display name of the weapon
+	// The display name of the tool
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
 		FText GetDisplayName();
 	virtual FText GetDisplayName_Implementation();
 
-	// The projectile that this weapon fires.
+	// Optional - The projectile that this tool fires.
 	UFUNCTION(BlueprintNativeEvent, BlueprintPure, Category = "Player Weapons")
 		TSubclassOf<ATRProjectileBase> GetProjectileClass();
 	virtual TSubclassOf<ATRProjectileBase> GetProjectileClass_Implementation();

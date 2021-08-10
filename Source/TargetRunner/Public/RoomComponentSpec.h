@@ -27,13 +27,8 @@ public:
 public:
 
 	// The RoomComponentActor to spawn for this component. It must be oriented to default (North) orientation.
-	// Takes precedence over ComponentPrefab.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TSubclassOf<ARoomComponentActor> ComponentActor;
-
-	// The prefag to spawn for this component. Prefab must be oriented to default (North) orientation.
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-	//	TSoftObjectPtr<UPrefabricatorAssetInterface> ComponentPrefab;
 
 	// The type of this component. Room, Ceiling, etc.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
@@ -41,9 +36,9 @@ public:
 
 	// The exit configurations this component type is valid for.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TArray<ETRRoomExitLayout>	ValidExitLayouts;
+		TArray<ETRRoomExitLayout> ValidExitLayouts;
 
-	// The relative weight of this component when selecting amongst available components as a weighted list.
+	// The relative weight of this component when selecting amongst available components in a weighted list.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float PickWeight;
 

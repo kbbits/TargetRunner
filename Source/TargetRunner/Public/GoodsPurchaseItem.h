@@ -11,7 +11,7 @@ struct FGoodsPurchaseItem : public FTableRowBase
 
 public:
 
-	// Internal name of the GoodsType. 
+	// Internal name of the GoodsType that this purchase represents.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Name;
 

@@ -104,6 +104,7 @@ public:
 protected:
 
 	// All tool types available for purchase in the market
+	// TODO: Verify this is still used/needed
 	UPROPERTY(EditAnywhere)
 		TArray<TSubclassOf<UToolBase>> MarketToolClasses;
 

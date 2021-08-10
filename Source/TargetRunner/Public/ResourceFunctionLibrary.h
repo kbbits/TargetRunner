@@ -13,7 +13,7 @@
 #include "ResourceFunctionLibrary.generated.h"
 
 /**
- * 
+ * Helper functions for managing and manipulating Resources and ResourceQuantities.
  */
 UCLASS()
 class TARGETRUNNER_API UResourceFunctionLibrary : public UBlueprintFunctionLibrary
@@ -50,7 +50,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static bool FindResourceRateFilter(const TArray<FResourceRateFilter>& ResourceFilters, const FResourceType& TargetType, FResourceRateFilter& FoundRate, ETRResourceMatch& FoundMatchDegree, const ETRResourceMatch& MinimumMatchDegree = ETRResourceMatch::Category);
 	
-	// Similar to FindResourceRateFilter, but this will return the highest rate among all matching resource types, not the most closely matching one.
+	// Similar to FindResourceRateFilter, but this will return the highest rate among all matching resource types, not the most closely matching one. (excluding match type None)
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static bool FindBestResourceRateFilter(const TArray<FResourceRateFilter>& ResourceFilters, const FResourceType& TargetType, FResourceRateFilter& FoundRate, ETRResourceMatch& FoundMatchDegree, const ETRResourceMatch& MinimumMatchDegree = ETRResourceMatch::Category);
 

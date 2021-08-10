@@ -6,6 +6,9 @@
 #include "TrEnums.h"
 #include "GridTemplateCell.generated.h"
 
+/*
+* Represents a single cell within a grid. (see: GridForgeBase)
+*/
 UCLASS(BlueprintType)
 class UGridTemplateCell : public UObject
 {

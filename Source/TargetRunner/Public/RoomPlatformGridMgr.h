@@ -13,10 +13,12 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGenerateProgress, const FProgressItem, Progress);
 
-// Sub-grid of the platform is desribed by the GridManager's RoomCellSubdivision. The room is divided in a (RoomCellSubdivisions - 1) x (RoomCellSubdivisions - 1) sub-grid.
-// Sub-grid coords are 0 based. i.e. (0, 0) is first cell in the South West corner of room. (1, 0) is one sub-grid cell north of (0, 0).
-// and last cell ((RoomCellSubdivisions - 1), (RoomCellSubdivisions - 1)) is in the North East corner.
-// As with other grids, North is + X direction of the related GridManager.
+/*
+* Sub-grid of the platform is desribed by the GridManager's RoomCellSubdivision. The room is divided in a (RoomCellSubdivisions - 1) x (RoomCellSubdivisions - 1) sub-grid.
+* Sub-grid coords are 0 based. i.e. (0, 0) is first cell in the South West corner of room. (1, 0) is one sub-grid cell north of (0, 0).
+* and last cell ((RoomCellSubdivisions - 1), (RoomCellSubdivisions - 1)) is in the North East corner.
+* As with other grids, North is + X direction of the related GridManager.
+*/
 UCLASS()
 class TARGETRUNNER_API ARoomPlatformGridMgr : public APlatformGridMgr
 {
@@ -60,7 +62,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		TSubclassOf<UResourceDropperBase> ResourceDropperClass;
 	
-	// A grid containing the temlates for the rooms. This is populated during grid generation.
+	// The grid containing the templates for the rooms. This is populated during grid generation.
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 		FRoomGridTemplate RoomGridTemplate;
 
@@ -78,7 +80,7 @@ public:
 	// Listeners bind to this to recieve room generation progress.
 	FOnGenerateProgress OnGenerateProgress;
 
-	// Room components data to use. Describes floors and ceiling room actors to use when spawning rooms.
+	// Room components data to use. Describes floors, ceiling, etc. room actors to use when spawning rooms.
 	// Using different data tables allows, for example, different themes.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* RoomComponentsTable;
@@ -121,7 +123,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, CallInEditor)
 		void SpawnRooms();
 
-	// Spanwn the room from the room template grid with the given coordinates.
+	// Spawn the room from the room template grid with the given coordinates.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void SpawnRoom(FVector2D GridCoords);
 

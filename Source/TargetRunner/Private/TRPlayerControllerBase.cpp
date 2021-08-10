@@ -15,7 +15,6 @@
 ATRPlayerControllerBase::ATRPlayerControllerBase()
 	: Super()
 {
-	UE_LOG(LogTRGame, Log, TEXT("Constructing TRPlayerControllerBase."));
 	FactionId = FGenericTeamId(static_cast<uint8>(ETRFaction::Player));
 	MaxEquippedWeapons = 1;
 	MaxEquippedEquipment = 1;
@@ -77,10 +76,10 @@ void ATRPlayerControllerBase::SeamlessTravelFrom(class APlayerController* OldPC)
 	Super::SeamlessTravelFrom(OldPC);
 	
 	if (!OldPC) {
-		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase::SeamlessTravelFrom old player controller is null"));
+		UE_LOG(LogTRGame, Warning, TEXT("TRPlayerControllerBase::SeamlessTravelFrom old player controller is null"));
 		return;
 	}
-	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase::SeamlessTravelFrom %s to %s"), *OldPC->GetName(), *this->GetName());
+	//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase::SeamlessTravelFrom %s to %s"), *OldPC->GetName(), *this->GetName());
 	ATRPlayerControllerBase* OldTRPlayerController = Cast<ATRPlayerControllerBase>(OldPC);
 	if (OldTRPlayerController)
 	{
@@ -152,9 +151,9 @@ void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
 	if (MoveComp && RunSpeedAttribute && JumpForceAttribute)
 	{
 		MoveComp->MaxWalkSpeed = RunSpeedAttribute->GetCurrent();
-		UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
+		//UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
 		MoveComp->JumpZVelocity = JumpForceAttribute->GetCurrent();
-		UE_LOG(LogTRGame, Log, TEXT("Player jump velocity changed to: %.0f"), MoveComp->JumpZVelocity);
+		//UE_LOG(LogTRGame, Log, TEXT("Player jump velocity changed to: %.0f"), MoveComp->JumpZVelocity);
 	}
 }
 
@@ -260,10 +259,10 @@ void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(const FToo
 		OnToolInventoryAdded.Broadcast(TmpToolData);
 		bSuccess = true;
 	}
-	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory added tool guid %s."), *TmpToolData.AttributeData.ItemGuid.ToString());
+	//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory added tool guid %s."), *TmpToolData.AttributeData.ItemGuid.ToString());
 	if (bSuccess && !IsLocalController())
 	{
-		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory calling client."));
+		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory calling client."));
 		ClientAddToolToInventory(TmpToolData, TmpToolData.AttributeData.ItemGuid);
 	}
 }
@@ -282,7 +281,7 @@ void ATRPlayerControllerBase::ClientAddToolToInventory_Implementation(const FToo
 		ToolInventory.Add(ToolData.AttributeData.ItemGuid, ToolData);
 		OnToolInventoryAdded.Broadcast(ToolData);
 	}
-	UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientAddToolToInventory added tool guid %s."), *ToolData.AttributeData.ItemGuid.ToString());
+	//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientAddToolToInventory added tool guid %s."), *ToolData.AttributeData.ItemGuid.ToString());
 }
 
 bool ATRPlayerControllerBase::ClientAddToolToInventory_Validate(const FToolData& ToolData, const FGuid AddedGuid)
@@ -330,10 +329,10 @@ void ATRPlayerControllerBase::ServerEquipTool_Implementation(const FGuid ToolGui
 		EquippedTools.Add(TmpTool);
 		ApplyAttributeModifiers(TmpTool->GetEquipModifiers());
 		OnEquippedToolsChanged.Broadcast();
-		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerEquipTool tool %s equipped."), *ToolData->AttributeData.ItemDisplayName.ToString());
+		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerEquipTool tool %s equipped."), *ToolData->AttributeData.ItemDisplayName.ToString());
 		if (!IsLocalController())
 		{
-			UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerEquipTool calling client rpc."));
+			//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerEquipTool calling client rpc."));
 			ClientEquipTool(ToolGuid);
 		}
 	}
@@ -385,7 +384,7 @@ void ATRPlayerControllerBase::ClientEquipTool_Implementation(const FGuid ToolGui
 		EquippedTools.Add(TmpTool);
 		// Only need to apply modifiers on server side.
 		OnEquippedToolsChanged.Broadcast();
-		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientEquipTool tool %s equipped."), *ToolData->AttributeData.ItemDisplayName.ToString());
+		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientEquipTool tool %s equipped."), *ToolData->AttributeData.ItemDisplayName.ToString());
 	}
 }
 
@@ -617,7 +616,7 @@ void ATRPlayerControllerBase::ServerUpgradeTool_Implementation(const FGuid ToolG
 	if (FoundRate)
 	{
 		FoundRate->Rate += RateDelta.Rate;
-		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
+		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
 	}
 	FToolData TmpToolData;
 	FoundTool->ToToolData(TmpToolData);
@@ -627,7 +626,7 @@ void ATRPlayerControllerBase::ServerUpgradeTool_Implementation(const FGuid ToolG
 	}
 	if (!IsLocalController())
 	{
-		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerUpgradeTool calling client rpc."));
+		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerUpgradeTool calling client rpc."));
 		ClientUpgradeTool(ToolGuid, UpgradeType, RateDelta);
 	}
 }
@@ -677,7 +676,7 @@ void ATRPlayerControllerBase::ClientUpgradeTool_Implementation(const FGuid ToolG
 	if (FoundRate)
 	{
 		FoundRate->Rate += RateDelta.Rate;
-		UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
+		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
 	}
 	FToolData TmpToolData;
 	FoundTool->ToToolData(TmpToolData);
@@ -963,7 +962,7 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 
 bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
-	UE_LOG(LogTRGame, Log, TEXT("PlayerControllerBase UpdateFromPlayerData started."));
+	//UE_LOG(LogTRGame, Log, TEXT("PlayerControllerBase UpdateFromPlayerData started."));
 	UToolBase* TmpTool = nullptr;
 	// Attribute components
 	TArray<UActorAttributeComponent*> AttributeComps;

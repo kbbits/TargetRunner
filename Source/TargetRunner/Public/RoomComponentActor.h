@@ -57,6 +57,9 @@ public:
 
 //////////////////////////////////////  ARoomComponentActor /////////////////////////////
 
+/*
+* A simple "Prefab" system. 
+*/
 UCLASS()
 class TARGETRUNNER_API ARoomComponentActor : public AActor
 {
@@ -76,10 +79,6 @@ public:
 	// The percent (0.0-1.0) of meshes to be converted to their "alt" version.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
 		float AltMeshPercent;
-
-	// Should this move it's ISMCs to the grid manager?
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	//	bool bMoveISMCs;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FRoomComponentActorCollection> SubRoomComponents;
@@ -134,15 +133,13 @@ public:
 	UFUNCTION(BlueprintCallable, CallInEditor)
 		void RespawnRCACollections();
 
-	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	//	void SetMoveISMCs(const bool bMoveThem);
-
-	// Get all the primary (i.e. non-alt) InstancedStaticMeshComponents of this Room Component. These are the ISMCs attached directly to the RootScene.
-	// Returns the count of components in PrimaryISMCs.
+	// Get all the primary (i.e. non-alt) InstancedStaticMeshComponents of this Room Component. 
+	// These are the ISMCs attached directly to the RootScene.
+	// Returns the count of PrimaryISMCs.
 	UFUNCTION(BlueprintPure)
 		int32 GetPrimaryISMCs(TArray<UInstancedStaticMeshComponent*>& PrimaryISMCs);
 
-	// Gets all the "alt" ISMCs associated with a given primary ISMC. i.e. the primary's children.
+	// Gets all the "alt" ISMCs associated with a given primary ISMC. i.e. InstancedStaticMeshComponents attached as children to any "primary" ISMC.
 	UFUNCTION(BlueprintPure)
 		int32 GetAltISMCs(const UInstancedStaticMeshComponent* ParentISMC, TArray<UInstancedStaticMeshComponent*>& AltISMCs);
 

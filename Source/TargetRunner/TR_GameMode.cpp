@@ -45,12 +45,12 @@ void ATR_GameMode::BeginPlay()
 		if (TRGameInst) 
 		{
 			// Debug log
-			UE_LOG(LogTRGame, Log, TEXT("TRGameMode - BeginPlay setting level template"));
+			//UE_LOG(LogTRGame, Log, TEXT("TRGameMode - BeginPlay setting level template"));
 			SetNewLevelTemplate(TRGameInst->GetSelectedLevelTemplate());
 		}
 		else
 		{
-			UE_LOG(LogTRGame, Log, TEXT("TRGameMode - BeginPlay incorrect game instance class %s"), *GameInst->GetClass()->GetName());
+			UE_LOG(LogTRGame, Error, TEXT("TRGameMode - BeginPlay incorrect game instance class %s"), *GameInst->GetClass()->GetName());
 		}
 	}
 	else {
@@ -84,8 +84,8 @@ void ATR_GameMode::SetNewLevelTemplate(const FLevelTemplate& NewTemplate)
 	if (NewTemplate.LevelSeed == 0) { UE_LOG(LogTRGame, Warning, TEXT("GameMode - SetNewLevelTemplate - Template has 0 seed.")); }
 	LevelTemplate = NewTemplate;
 	// Debug log
-	UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate %s ID: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
-	UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate seed: %d"), LevelTemplate.LevelSeed);
+	//UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate %s ID: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
+	//UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate seed: %d"), LevelTemplate.LevelSeed);
 	InitGoodsDropper();
 	ReseedAllStreams(LevelTemplate.LevelSeed);
 	bLevelTemplateReady = true;
@@ -281,7 +281,7 @@ bool ATR_GameMode::InitGridManager_Implementation()
 		RoomGridManager->SpecialsToDistribute = LevelTemplate.SpecialsAvailable;
 	}
 
-	UE_LOG(LogTRGame, Log, TEXT("TRGameMode::InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)
+	//UE_LOG(LogTRGame, Log, TEXT("TRGameMode::InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)
 	return true;
 }
 
@@ -349,16 +349,16 @@ void ATR_GameMode::ReseedAllStreams_Implementation(const int32 NewSeed)
 		GeneratorRandStream.RandRange(1, INT_MAX - 1);
 		//UE_LOG(LogTRGame, Log, TEXT("    random int: %d"), GeneratorRandStream.RandRange(1, INT_MAX - 1));
 	}
-	UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - Generator seed: %d"), GeneratorRandStream.GetInitialSeed());	
+	//UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - Generator seed: %d"), GeneratorRandStream.GetInitialSeed());	
 	GridRandStream.Initialize(GeneratorRandStream.RandRange(1, INT_MAX - 1));
-	UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - Grid seed: %d"), GridRandStream.GetInitialSeed());
+	//UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - Grid seed: %d"), GridRandStream.GetInitialSeed());
 	ResourceDropperRandStream.Initialize(GeneratorRandStream.RandRange(1, INT_MAX - 1));
-	UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - ResourceDropper seed: %d"), ResourceDropperRandStream.GetInitialSeed());
+	//UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - ResourceDropper seed: %d"), ResourceDropperRandStream.GetInitialSeed());
 	if (GoodsDropper != nullptr)
 	{
 		int32 GoodsDropperSeed = GeneratorRandStream.RandRange(1, INT_MAX - 1);
 		GoodsDropper->SeedRandomStream(GoodsDropperSeed);
-		UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - GoodsDropper seed: %d"), GoodsDropperSeed);
+		//UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - GoodsDropper seed: %d"), GoodsDropperSeed);
 	}
 }
 
@@ -463,7 +463,7 @@ void ATR_GameMode::PostSeamlessTravel()
 		if (IsValid(PlayerController))
 		{
 			TotalPlayerControllersForTravel++;
-			UE_LOG(LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
+			//UE_LOG(LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
 	Super::PostSeamlessTravel();
@@ -513,10 +513,10 @@ void ATR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 			{
 				NumLoadedPlayers++;
 			}
-			UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
+			//UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
-	UE_LOG(LogTRGame, Log, TEXT("TR_GameMode::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);
+	//UE_LOG(LogTRGame, Log, TEXT("TR_GameMode::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);
 	if (NumLoadedPlayers == TotalPlayerControllersForTravel)
 	{
 		OnAllPlayersTravelComplete();

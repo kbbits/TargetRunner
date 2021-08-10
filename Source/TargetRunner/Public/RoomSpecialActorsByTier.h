@@ -46,7 +46,9 @@ public:
 		TArray<FSpecialActorChance> WeightedSpecialActorChances;
 };
 
-// Each of these records represents a single tier of potential special actors to add to the room grid.
+/*
+* Each of these records represents a single tier of potential special actors to add to the room grid.
+*/
 USTRUCT(BlueprintType)
 struct FRoomSpecialActorsByTier : public FTableRowBase
 {

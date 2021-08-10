@@ -27,7 +27,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stasis")
 		ETRStasisState GetStasisState();
 
-	// Set the item to In Stasis if it is not already InStasis.
+	// Set the item to InStasis if it is not already InStasis.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stasis")
 		void StasisSleep();
 

@@ -29,8 +29,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnNextPlayerLevelUpDataRetrieved, 
 //DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnNewPlayerToolData, const TArray<FToolData>&, NewPlayerToolData);
 
 
-// This class manages the replication of data and RPC calls to/from the server for persistent data and save/load of player data.
-// On server side, this calls GameInstance functions as well.
+/* 
+* This class manages the replication of data and RPC calls to/from the server for persistent data and save/load of player data.
+* On server side, this calls GameInstance functions as well.
+*/
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TARGETRUNNER_API UTRPersistentDataComponent : public UActorComponent
 {
@@ -118,7 +120,7 @@ public:
 		void ServerSaveLevelTemplatesData();
 	
 	// [Server]
-	// Loads level template data
+	// Loads the saved level template data
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerLoadLevelTemplatesData();
 

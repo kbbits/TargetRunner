@@ -15,7 +15,6 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelTemplatesSaved, const bool, bSuccessful);
 
 /**
- * Note GameInstance is not replicated.
  * Most functions are to be called on the server only.
  */
 UCLASS()

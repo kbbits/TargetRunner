@@ -5,9 +5,11 @@
 #include "Engine/DataTable.h"
 #include "ResourceTypeData.generated.h"
 
-// To be used in DataTables to describe details and assets for a ResourceType.
-// Row names in the table should be in format: Category.Type.SubType
-//    ex: Metal.Copper  or example with subtype:  Metal.Copper.Oxidized 
+/*
+* To be used in DataTables to describe detailsand assets for a ResourceType.
+* Row names in the table should be in format: Category.Type.SubType
+*    ex: Metal.Copper  or example with subtype:  Metal.Copper.Oxidized 
+*/ 
 USTRUCT(BlueprintType)
 struct FResourceTypeData : public FTableRowBase
 {
@@ -22,18 +24,6 @@ public:
 	// Also note, the Type portion of the code == the related GoodsType.Name.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Code;
-
-	// Required
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-	//	FName Category;
-
-	// Required - By default this will match the ResourceType.Type and the GoodsType.Name related to this resource. 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-	//	FName Type;
-
-	// Optional
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-	//	FName SubType;
 
 	// Optional. Usually the GoodsType related to a ResourceType is GoodsType.Name == ResourceType.Type and this is specified by the Code.
 	// Set this GoodsNameOverride to associate this ResourceType with a different GoodsType.

@@ -4,9 +4,6 @@
 
 // 
 // A collection of named primitive types and some templated functions for manipulating them. Useful for serialization.
-
-
-
 //
 // Named Primitive types as structs
 //

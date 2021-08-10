@@ -13,7 +13,7 @@
 #include "GoodsFunctionLibrary.generated.h"
 
 /**
- * 
+ * A collection of helper functions to manipulate GoodsQuantity and related structs.
  */
 UCLASS()
 class TARGETRUNNER_API UGoodsFunctionLibrary : public UBlueprintFunctionLibrary
@@ -79,7 +79,7 @@ public:
 	}
 
 
-	// Create a map of Name->FGoodsQuantity from a FTRNamedFloats where each key is the named float's name.
+	// Create a map of Name->FGoodsQuantity from a FTRNamedFloats, where each key is the NamedFloat's name.
 	UFUNCTION(BlueprintPure, Category = "Utilities| Goods")
 	static FORCEINLINE TMap<FName, FGoodsQuantity> NamedFloatArrayToGoodsQuantityMap(TArray<FTRNamedFloat> NamedFloatArray)
 	{
@@ -144,7 +144,7 @@ public:
 
 
 	// For an array where each item has a Chance (float) property that is > 0.0, this will pick one item from the array.
-	// Item picked is a random selection in the weighted list. 
+	// Item picked is a weighted random selection in the weighted list. 
 	// Can return nullptr if list is empty or results in negative total weight.
 	// ex: useful for ad-hock picking a GoodsDropChance from an array of GoodsDropChances.
 	template<class T>

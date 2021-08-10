@@ -70,7 +70,7 @@ public:
 
 public:
 
-	// Unique instance ID
+	// Unique instance ID of the tool
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FGuid ItemGuid;
 
@@ -82,7 +82,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		TSubclassOf<class AToolActorBase> ToolActorClass;
 
-	// The internal name (or code) for this tool.
+	// The internal name (i.e. code) for this tool.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		FName Name;
 
@@ -112,18 +112,18 @@ public:
 		FAttributeData ActivationDelay;
 
 	// The delay between tool activations for a tool with ActivationType = EToolActivationType::Auto.
-	// That is, the amount of time in seconds, between each auto-fire activation.
-	// Shots per second = (1 / FireDelay) + 1
+	// That is, the amount of time in seconds between each auto-fire activation.
+	// Shots per second = (1 / AutoFireDelay) + 1
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FAttributeData AutoFireDelay;
 
-	// Limit of activations in an auto-fire burst before tool de-activates.
+	// Limit of activations in an auto-fire burst.
 	// i.e. number of shots each time an auto-fire tool is activated.
 	// Set to 0 (default) for no limit.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FAttributeData AutoFireBurstLimit;
 
-	// The class of projectile this tool fires. Can be None.
+	// The class of projectile this tool fires.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Weapons")
 		TSubclassOf<ATRProjectileBase> ProjectileClass;
 
@@ -171,11 +171,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FNamedGoodsQuantitySet CostValue;
 
-	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostFactor
+	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostMultiplier
 	UPROPERTY(EditDefaultsOnly)
 		FTRNamedFloat UpgradeDamageCostMultiplier;
 
-	// Cost to upgrade an extraction rate by 1 percent = (BuyValue / 100) * UpgradeExtractionCostFactor
+	// Cost to upgrade an extraction rate by 1 percent = (BuyValue / 100) * UpgradeExtractionCostMultiplier
 	UPROPERTY(EditDefaultsOnly)
 		FTRNamedFloat UpgradeExtractionCostMultiplier;
 
@@ -216,11 +216,11 @@ public:
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE TArray<FGoodsQuantity> GetCostValue() { return CostValue.GoodsQuantitySet.Goods; }
 
-	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostFactor
+	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostMultplier
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE float GetUpgradeDamageCostMultiplier() { return UpgradeDamageCostMultiplier.Quantity; }
 
-	// Cost to upgrade an extraction rate by 1 percent = (BuyValue / 100) * UpgradeExtractionCostFactor
+	// Cost to upgrade an extraction rate by 1 percent = (BuyValue / 100) * UpgradeExtractionCostMultiplier
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE float GetUpgradeExtractionCostMultiplier() { return UpgradeExtractionCostMultiplier.Quantity; }
 

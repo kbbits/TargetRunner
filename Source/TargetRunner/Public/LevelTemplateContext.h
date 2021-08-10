@@ -8,6 +8,9 @@
 #include "LevelTemplateContextStruct.h"
 #include "LevelTemplateContext.generated.h"
 
+/*
+* A UObject wrapper containing a LevelTemplate struct and a collection of PlayerLevelRecords associated with the LevelTemplate.
+*/
 UCLASS(BlueprintType)
 class ULevelTemplateContext : public UObject
 {
@@ -21,6 +24,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FLevelTemplate LevelTemplate;
 
+	// Each key is a player's id Guid.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<FGuid, FPlayerLevelRecord> PlayerRecords;
 

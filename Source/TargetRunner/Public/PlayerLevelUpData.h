@@ -7,7 +7,9 @@
 
 class UToolBase;
 
-// This struct represents one row of data describing requirements for a player level up.
+/*
+* This struct represents one row of data describing requirements and awards/changes for a player level up to a given level.
+*/ 
 USTRUCT(BlueprintType)
 struct FPlayerLevelUpData : public FTableRowBase
 {

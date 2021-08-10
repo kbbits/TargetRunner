@@ -10,7 +10,8 @@
 #include "TREnemyAIController.generated.h"
 
 /**
- * 
+ * Defalt enemy AI controller.
+ * Currently most functionality is implemented in BP of this class.
  */
 UCLASS()
 class TARGETRUNNER_API ATREnemyAIController : public AAIController

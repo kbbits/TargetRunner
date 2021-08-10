@@ -10,7 +10,7 @@
 #include "LevelForgeBase.generated.h"
 
 /**
- *
+ * Factory class for generating FLevelTemplate structs populated with meaningful data according to params within this class.
  */
 UCLASS(BlueprintType, Blueprintable, Config=Game)
 class TARGETRUNNER_API ULevelForgeBase : public UObject

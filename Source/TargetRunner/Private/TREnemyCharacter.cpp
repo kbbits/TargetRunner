@@ -106,7 +106,7 @@ void ATREnemyCharacter::OnRep_StasisState_Implementation(ETRStasisState OldState
 				AIController->GetBrainComponent()->StartLogic();
 			}
 			// Handle components?
-			UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
+			//UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
 		}
 		else if (StasisState == ETRStasisState::InStasis)
 		{
@@ -117,7 +117,7 @@ void ATREnemyCharacter::OnRep_StasisState_Implementation(ETRStasisState OldState
 				AIController->GetBrainComponent()->StopLogic(FString(TEXT("Stasis")));
 			}
 			AIController->StopMovement();
-			UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Put In Stasis: %s"), *GetNameSafe(this));
+			//UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Put In Stasis: %s"), *GetNameSafe(this));
 		}
 	}
 	else
@@ -126,13 +126,13 @@ void ATREnemyCharacter::OnRep_StasisState_Implementation(ETRStasisState OldState
 		if (StasisState == ETRStasisState::Awake)
 		{
 			// Handle components?
-			UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
+			//UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
 		}
 		else if (StasisState == ETRStasisState::InStasis)
 		{
 			StopAnimMontage();
 			SetActorTickEnabled(false);
-			UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Put In Stasis: %s"), *GetNameSafe(this));
+			//UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Put In Stasis: %s"), *GetNameSafe(this));
 		}
 	}
 }

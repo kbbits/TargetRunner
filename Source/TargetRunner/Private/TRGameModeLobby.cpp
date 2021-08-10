@@ -107,7 +107,7 @@ void ATRGameModeLobby::PostSeamlessTravel()
 		if (IsValid(PlayerController))
 		{
 			TotalPlayerControllersForTravel++;
-			UE_LOG(LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
+			//UE_LOG(LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
 	Super::PostSeamlessTravel();
@@ -152,12 +152,12 @@ void ATRGameModeLobby::HandleStartingNewPlayer_Implementation(APlayerController*
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
-	if (NewPlayer->PlayerState) {
-		UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer player id %d"), NewPlayer->PlayerState->GetPlayerId());
-	}
-	else {
-		UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer no player state"));
-	}
+	//if (NewPlayer->PlayerState) {
+	//	UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer player id %d"), NewPlayer->PlayerState->GetPlayerId());
+	//}
+	//else {
+	//	UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer no player state"));
+	//}
 	APlayerController* PlayerController;
 	int32 NumLoadedPlayers = 0;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
@@ -170,7 +170,7 @@ void ATRGameModeLobby::HandleStartingNewPlayer_Implementation(APlayerController*
 			{
 				NumLoadedPlayers++;
 			}
-			UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
+			//UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
 	UE_LOG(LogTRGame, Log, TEXT("TRGameModeLobby::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);

@@ -5,6 +5,9 @@
 //#include "Engine/DataTable.h"
 #include "ResourceType.generated.h"
 
+/*
+* Describes a specific type of resource.
+*/
 USTRUCT(BlueprintType)
 struct FResourceType //: public FTableRowBase
 {
@@ -13,17 +16,18 @@ struct FResourceType //: public FTableRowBase
 public:
 
 	// Required
-	// This should be set as the row name when resource data is loaded from the data table.
+	// This should be set as the row name when resource data is loaded from a data table.
+	// This is the concatenated Category.Type.SubType of this resource type.
 	// It should be in format : Category.Type.SubType
 	//    ex: Metal.Copper  or  Metal.Copper.Oxidized
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Code;
 
-	// Required
+	// Required - the high-level category of this resource type. ex: Metal
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Category;
 
-	// Required - By default this must match the GoodsType.Name related to this resource. 
+	// Required - By default this must match the GoodsType.Name related to this resource.  ex: Copper
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Type;
 

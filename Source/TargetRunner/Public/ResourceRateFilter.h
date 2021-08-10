@@ -13,7 +13,7 @@ struct FResourceRateFilter
 
 public:
 
-	// Required, but ResourceType can be partially filled. Category, Type or SubType = "None" are treated as wildcard filters.
+	// Required, but ResourceType can be partially filled. Type or SubType = "None" are treated as wildcard filters.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FResourceType ResourceTypeFilter;
 

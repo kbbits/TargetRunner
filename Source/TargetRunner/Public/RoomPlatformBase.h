@@ -10,6 +10,9 @@
 
 class ARoomComponentActor;
 
+/*
+* Subclass of platform as a Room.
+*/
 UCLASS()
 class TARGETRUNNER_API ARoomPlatformBase : public APlatformBase
 {
@@ -144,7 +147,7 @@ public:
 	UFUNCTION(BlueprintPure)
 		ARoomPlatformBase* GetConnectedNeighbor(const ETRDirection Direction);
 
-	// Must include this in header since we are subclass of custom class?
+	// Must include this in header since we are subclass of concrete class?
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:

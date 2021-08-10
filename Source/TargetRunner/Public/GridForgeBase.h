@@ -13,7 +13,11 @@
     DECLARE_DELEGATE_OneParam(FOnGenerateGridProgress, const FProgressItem);
 
 /**
- *
+ * A factory class to generate a GridTemplate map representing a two dimensional grid of cells.
+ * Various attributes of this class describe limitations and characteristics of the grid to generate.
+ * The cell grid represents the lower-level abstraction of a "maze" grid. The grid generated is later used by 
+ * other classes for higher-level map generation. (ex: see RoomPlatformGridMgr)
+ * Subclasses of this base class are intented to generate cell grids with differing characteristics. (see GridForgePrim)
  */
 UCLASS(Blueprintable)
 class TARGETRUNNER_API UGridForgeBase : public UObject

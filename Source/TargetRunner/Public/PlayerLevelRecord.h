@@ -4,14 +4,17 @@
 #include "GoodsQuantity.h"
 #include "PlayerLevelRecord.generated.h"
 
-// Instances of these indicate a player's access and data related to the given level ID.
-// These PlayerLevelRecords are related to LevelTemplates by the level ID.
+/*
+* Instances of these indicate a player's access and data related to the given level ID.
+* These PlayerLevelRecords are related to LevelTemplates by the level ID.
+*/ 
 USTRUCT(BlueprintType)
 struct FPlayerLevelRecord : public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
+	// The player ID guid for this player level record.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FGuid PlayerGuid;
 	
@@ -27,6 +30,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FDateTime UnlockedAt;
 
+	// The number of times the player has completed a level run of this level.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 NumberOfCompletions;
 

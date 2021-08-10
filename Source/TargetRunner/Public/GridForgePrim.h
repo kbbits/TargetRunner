@@ -7,7 +7,7 @@
 #include "GridForgePrim.generated.h"
 
 /**
- *
+ * GridForge subclass that generates a connected grid using an implementation of the Prim algorithm.
  */
 UCLASS()
 class TARGETRUNNER_API UGridForgePrim : public UGridForgeBase 

@@ -182,7 +182,7 @@ void UActorAttributeComponent::AddModifiers_Implementation(const TArray<FAttribu
 			Modifiers.Add(Mod);
 			bChanged = true;
 
-			UE_LOG(LogTRGame, Log, TEXT("AttributeModifier added: %s, %s %.1f"), *Mod.AttributeCode.ToString(), *GetEnumValueAsString<EAttributeModifierType>(Mod.EffectsValue), Mod.Modifier.Value);
+			//UE_LOG(LogTRGame, Log, TEXT("AttributeModifier added: %s, %s %.1f"), *Mod.AttributeCode.ToString(), *GetEnumValueAsString<EAttributeModifierType>(Mod.EffectsValue), Mod.Modifier.Value);
 		}
 	}
 	if (bChanged)
@@ -207,7 +207,7 @@ void UActorAttributeComponent::RemoveModifiers_Implementation(const TArray<FAttr
 			if (Modifiers.RemoveSingle(Mod) > 0)
 			{
 				bChanged = true;
-				UE_LOG(LogTRGame, Log, TEXT("AttributeModifier Removed: %s, %s %.1f"), *Mod.AttributeCode.ToString(), *GetEnumValueAsString<EAttributeModifierType>(Mod.EffectsValue), Mod.Modifier.Value);
+				//UE_LOG(LogTRGame, Log, TEXT("AttributeModifier Removed: %s, %s %.1f"), *Mod.AttributeCode.ToString(), *GetEnumValueAsString<EAttributeModifierType>(Mod.EffectsValue), Mod.Modifier.Value);
 			}
 		}
 	}

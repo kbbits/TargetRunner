@@ -19,7 +19,9 @@
 UDELEGATE(BlueprintAuthorityOnly)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNodeDestroyed);
 
-// A harvestable resource. 
+/*
+* A harvestable resource.
+*/ 
 UCLASS()
 class TARGETRUNNER_API AResourceNodeBase : public AActor, public IExtractableResource, public IInspectableItem
 {
@@ -68,7 +70,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USoundBase* HitSound;
 
-	// Sound when this node is destroyed by damage.
+	// Sound when this node is destroyed.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		USoundBase* DestroyedSound;
 
@@ -90,7 +92,8 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Set (or initialize) the resource type and total resources for this node. Will also calculate and assign the resources by damage and resources on destroy.
+	// Set (or initialize) the resource type and total resources for this node. 
+	// Will also calculate and assign the resources by damage and resources on destroy.
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void SetResources(const FResourceType& NewNodeResourceType, const TArray<FResourceQuantity>& NewTotalResources, const float PercentResourcesByDamage);
 

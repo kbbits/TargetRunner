@@ -15,7 +15,7 @@ class UExtractableResource : public UInterface
 };
 
 /**
- * Represents a resource node extractable by the player.
+ * Represents a resource node extractable by the player. ex: stone, copper, iron, etc.
  */
 class TARGETRUNNER_API IExtractableResource
 {

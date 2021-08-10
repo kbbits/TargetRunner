@@ -4,6 +4,11 @@
 #include "Engine/Texture2D.h"
 #include "GoodsType.generated.h"
 
+/*
+* Represents a type of commoditiy that could be collected by the player.
+* (or used as currency, crafting ingredients, etc.)
+* Not all goods types will have specific actors if/when they are placed into the world.
+*/
 USTRUCT(BlueprintType)
 struct FGoodsType : public FTableRowBase
 {
@@ -27,7 +32,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TSoftClassPtr<AActor> ActorClass;
 
-	// The default mesh to use when placing these goods into the world. See: GoodsPickup_BP
+	// The default mesh to use when placing these goods into the world if the ActorClass property is null. See: GoodsPickup_BP
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TAssetPtr<UStaticMesh> DefaultMesh;
 

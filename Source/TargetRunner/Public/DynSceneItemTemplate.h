@@ -4,6 +4,9 @@
 #include "DynSceneryBase.h"
 #include "DynSceneItemTemplate.generated.h"
 
+/*
+* Describes an available scenery item for use as a DynScenery actor.
+*/
 USTRUCT(BlueprintType)
 struct FDynSceneItemTemplate : public FTableRowBase
 {

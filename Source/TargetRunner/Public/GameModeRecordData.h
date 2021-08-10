@@ -4,7 +4,9 @@
 #include "GameFramework/GameMode.h"
 #include "GameModeRecordData.generated.h"
 
-// This struct holds info on a set records (High scores, etc.) for a GameMode.
+/*
+* This struct holds info on a set records(High scores, etc.) for a GameMode.
+*/ 
 USTRUCT(BlueprintType)
 struct FGameModeRecordData : public FTableRowBase
 {

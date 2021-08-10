@@ -13,6 +13,9 @@
 #include "ToolData.h"
 #include "TREnemyCharacter.generated.h"
 
+/*
+* Base class of our enemy actors.
+*/
 UCLASS()
 class TARGETRUNNER_API ATREnemyCharacter : public ACharacter, public IExtractableResource, public IStasisObject
 {

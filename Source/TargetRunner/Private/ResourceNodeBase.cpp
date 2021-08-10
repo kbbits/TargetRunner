@@ -106,8 +106,8 @@ bool AResourceNodeBase::ExtractedResourcesForDamage_Implementation(const float D
 	{
 		if (UResourceFunctionLibrary::FindBestResourceRateFilter(ExtractionRates, CurResource.ResourceType, FoundRate, FoundSimilarity))
 		{
-			UE_LOG(LogTRGame, Log, TEXT("ExtractedResourcesForDamage - target resource type: %s Found resource rate: %s  %.2f"), *CurResource.ResourceType.Code.ToString(), *FoundRate.ResourceTypeFilter.Code.ToString(), FoundRate.Rate)
-				ExtractedQuantity = FMath::CeilToFloat((CurResource.Quantity * DamagePercent) * FoundRate.Rate);
+			//UE_LOG(LogTRGame, Log, TEXT("ExtractedResourcesForDamage - target resource type: %s Found resource rate: %s  %.2f"), *CurResource.ResourceType.Code.ToString(), *FoundRate.ResourceTypeFilter.Code.ToString(), FoundRate.Rate);
+			ExtractedQuantity = FMath::CeilToFloat((CurResource.Quantity * DamagePercent) * FoundRate.Rate);
 			if (ExtractedQuantity <= 0.0f) { continue; }
 			if (ExtractedQuantity > CurResource.Quantity) { ExtractedQuantity = CurResource.Quantity; }
 			ExtractedQuantities.Add(FResourceQuantity(CurResource.ResourceType, ExtractedQuantity));

@@ -18,8 +18,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHitAttributeMaximum);
 // Event dispatcher for when min or max value has changed
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeltaMinMax);
 
+// Each instance of an ActorAttributeComponent represents a single attribute for the actor. ex: Health, Energy, etc.
+// This component provides support for applying modifiers to the attribute values.
 // Changes made on server are replicated to owning client.
-// Replication is handled via the replicated AttributeData property. Notification delegates are called in the RepNotify handler.
+// Replication is handled via the replicated AttributeData and ModifiedAttributeData properties. 
+// Notification delegates are called in the RepNotify handler.
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TARGETRUNNER_API UActorAttributeComponent : public UActorComponent
 {

@@ -26,6 +26,11 @@ enum class EObjectPlacerAlign : uint8
 };
 
 
+/*
+* Used during map spawning.
+* Placed in world (usually as a child actor of a RoomComponentActor) as a proxy for a random selection of actor that will be placed into the
+* world by this ObjectPlacer. Once the ObjectPlacer has placed it's selection(s) of object actor(s) the ObjectPlacer can be destroyed.
+*/
 UCLASS()
 class TARGETRUNNER_API AObjectPlacer : public AActor
 {
@@ -48,7 +53,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		EObjectPlacerAlign PlacementAllowed;
 
-	// When using In Box targeting, this is box extents (the half-size of each dimention).
+	// When using In Box targeting, this is the box extents (the half-size of each dimention).
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPreserveRatio="True"))
 		FVector BoxExtent;
 

@@ -10,7 +10,7 @@
 #include "RoomFunctionLibrary.generated.h"
 
 /**
- * 
+ * Helper functions related to Rooms in a RoomGridTemplate.
  */
 UCLASS()
 class TARGETRUNNER_API URoomFunctionLibrary : public UBlueprintFunctionLibrary

@@ -11,8 +11,7 @@
 // Sets default values
 ATR_Character::ATR_Character(const FObjectInitializer& OI) : Super(OI)
 {
-	UE_LOG(LogTRGame, Log, TEXT("Constructing TR_Character"));
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	ResourceCollectionVolume = OI.CreateDefaultSubobject<UCapsuleComponent>(this, FName("Resource Collector"));
@@ -26,7 +25,6 @@ ATR_Character::ATR_Character(const FObjectInitializer& OI) : Super(OI)
 		ResourceCollectionVolume->OnComponentEndOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapEnd);
 	}
 	else { UE_LOG(LogTRGame, Error, TEXT("TR_Character constructor failed to create ResourceCollectionVolume component")); }
-	UE_LOG(LogTRGame, Log, TEXT("TR_Character Constructed"));
 }
 
 
@@ -66,7 +64,7 @@ void ATR_Character::SetupCollectionVolume_Implementation()
 		if (ResourceCollectionVolume->GetAttachParent() != CollectorParent)
 		{
 			ResourceCollectionVolume->AttachToComponent(CollectorParent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-			UE_LOG(LogTRGame, Log, TEXT("TR_Character SetupCollectionVolume collector volume attached to %s"), *CollectorParent->GetName());
+			//UE_LOG(LogTRGame, Log, TEXT("TR_Character SetupCollectionVolume collector volume attached to %s"), *CollectorParent->GetName());
 		}
 		ResourceCollectionVolume->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 		ResourceCollectionVolume->SetCapsuleSize(GetCapsuleComponent()->GetScaledCapsuleRadius() * 1.7f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight() * 1.2f);
@@ -77,7 +75,6 @@ void ATR_Character::SetupCollectionVolume_Implementation()
 // Called when the game starts or when spawned
 void ATR_Character::BeginPlay()
 {
-	UE_LOG(LogTRGame, Log, TEXT("TR_Character BeginPlay"));
 	Super::BeginPlay();
 	SetupCollectionVolume();
 }

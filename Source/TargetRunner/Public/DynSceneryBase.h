@@ -7,6 +7,12 @@
 #include "PlatformBase.h"
 #include "DynSceneryBase.generated.h"
 
+/*
+* Base actor class for the DynScenery system. The DynScenery system is no longer in use in the current incarnation of TR.
+* In brief, the DynScenery system provides a data-driven implementation of dynamic scene generation. 
+* DynScene actor types are selected and placed into layers (DynSceneLayer). These layers are then spawned into the world (bottom up).
+* The result is a collection of scene actors that stack on top of each other providing randomized scene generation.
+*/
 UCLASS()
 class TARGETRUNNER_API ADynSceneryBase : public AActor
 {
@@ -16,6 +22,7 @@ public:
 	// Sets default values for this actor's properties
 	ADynSceneryBase();
 
+	// The platform this DynScenery actor is on.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame, Category="DynScenery", Meta = (ExposeOnSpawn = "true"))
 		APlatformBase* Platform;
 

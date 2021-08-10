@@ -21,8 +21,10 @@ enum class EInGrid : uint8
 };
 
 
-// A validly poplulated PlatformGridMgr may only exist on the server.  The grid is not (currently) directly replicated.
-// On clients, only PlatformBase actors that exist when FillGridFromExistingPlatforms() is called will be in the grid.
+/*
+* The base class responsible for generating the map grid and spawning platforms (i.e. "rooms") into the world.
+* Most of the functionality and data is server-side only.
+*/
 UCLASS()
 class TARGETRUNNER_API APlatformGridMgr : public AActor
 {
@@ -32,7 +34,9 @@ public:
 	// Sets default values for this actor's properties
 	APlatformGridMgr();
 	
-	// Rows are along grid x axis, columns (elements in each row) are grid Y axis
+	// Rows are along grid x axis, columns (elements in each row) are grid Y axis.
+	// Also note, that the grid itself is oriented to the grid manager actor. i.e. if the grid manager is rotated 90 degrees around Z axis
+	// the grid will also be rotated 90 degrees in the world.
 	// NOTE: On clients, only PlatformBase actors that exist when FillGridFromExistingPlatforms() is called will be in the grid.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TMap<int32, FPlatformGridRow> PlatformGridMap;
@@ -42,17 +46,17 @@ public:
 		float GridCellWorldSize;
 
 	// Grid extents indicate the overall size of the grid. That is, the minimum and maxium valid grid coordinates.
-	// Min extents are negative, max extents are positive, origin is at 0,0.
-	// GridExtentMinX must be <= 0
+	// Min extents can be negative (and typically are). Max extents are usually positive, origin is at 0,0 of grid.
+	// GridExtentMinX must be < GridExtentMaxX
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 GridExtentMinX;
-	// Must be >= 0
+	// Must be > GridExtentMinX
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 GridExtentMaxX;
-	// Must be <= 0
+	// Must be < GridExtentMaxY
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 GridExtentMinY;
-	// Must be >= 0
+	// Must be > GridExtentMinY
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Meta = (ExposeOnSpawn = "true"))
 		int32 GridExtentMaxY;
 
@@ -76,6 +80,7 @@ public:
 
 	// A map of actor references initialized and used at runtime for efficiency.
 	// Only valid on server.
+	// Currently unused?
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 		TMap<FName, AActor*> GridActorCache;
 
@@ -84,7 +89,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 StasisWakeRange;
 
-	// This object, if valid, will be used as the world referece when spawning prefabs.
+	// This object, if valid, will be used as the owner and world referece when spawning map actors.
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		UObject* SpawnOwner;
 

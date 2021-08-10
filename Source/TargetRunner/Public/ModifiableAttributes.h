@@ -62,8 +62,8 @@ public:
 };
 
 /*
-	Represents a modifier that could be applied to an attriubute. (applied to an ActorAttributeComponent)
-*/
+ * Represents a modifier that could be applied to an attriubute. (applied to an ActorAttributeComponent)
+ */
 USTRUCT(BlueprintType)
 struct FAttributeModifier
 {

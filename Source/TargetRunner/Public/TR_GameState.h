@@ -10,7 +10,7 @@
 #include "TR_GameState.generated.h"
 
 /**
- * 
+ * Our GameState
  */
 UCLASS()
 class TARGETRUNNER_API ATR_GameState : public AGameState
@@ -21,16 +21,14 @@ class TARGETRUNNER_API ATR_GameState : public AGameState
 
 public:
 
-	//// Level Template from GameMode
-	//UPROPERTY(EditInstanceOnly, Replicated, BlueprintReadWrite)
-	//	FLevelTemplate CurrentLevelTemplate;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float CurrentDifficulty;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float CurrentLevelNumber;
 
+	// Data table of all valid ResourceTypes.
+	// TODO: Move this to GameInstance?
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* ResourceTypeDataTable;
 

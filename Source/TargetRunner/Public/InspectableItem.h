@@ -13,7 +13,7 @@ class UInspectableItem : public UInterface
 };
 
 /**
- * Represents an entity that has a DisplayName and InspectInfo.
+ * Represents an entity that has a DisplayName and InspectInfo to be displayed to the player when they "inspect" the item.
  */
 class TARGETRUNNER_API IInspectableItem
 {

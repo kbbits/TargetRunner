@@ -58,12 +58,12 @@ void UTRPersistentDataComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 void UTRPersistentDataComponent::OnRep_LevelTemplatesPageLoaded()
 {
-	if (GetOwnerRole() == ROLE_Authority) {
-		UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - (Server) OnRep level templates loaded %d"), LevelTemplatesPage.Num());
-	}
-	else {
-		UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - (Client) OnRep level templates loaded %d"), LevelTemplatesPage.Num());
-	}
+	//if (GetOwnerRole() == ROLE_Authority) {
+	//	UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - (Server) OnRep level templates loaded %d"), LevelTemplatesPage.Num());
+	//}
+	//else {
+	//	UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - (Client) OnRep level templates loaded %d"), LevelTemplatesPage.Num());
+	//}
 	OnNewLevelTemplatesPage.Broadcast(LevelTemplatesPage);
 }
 
@@ -134,7 +134,7 @@ void UTRPersistentDataComponent::ServerLoadLevelTemplatesData_Implementation()
 			LevelTemplatesPage.Empty();
 			LevelTemplatesPage.Append(ULevelTemplateContext::ToStructArray(TmpLTCArray));
 			LevelTemplatesRepTrigger++;
-			UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - Load level templates loaded %d"), LevelTemplatesPage.Num());
+			//UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - Load level templates loaded %d"), LevelTemplatesPage.Num());
 			// Manually call rep_notify on server
 			if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
 		}
@@ -173,11 +173,11 @@ void UTRPersistentDataComponent::ServerUnlockLevelTemplateForPlayer_Implementati
 					LevelTemplatesPage.Empty();
 					LevelTemplatesPage.Append(ULevelTemplateContext::ToStructArray(TmpLTCArray));
 					LevelTemplatesRepTrigger++;
-					UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - level template %s unlocked for player %s"), *LevelId.ToString(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
-					for (FLevelTemplateContextStruct TmpLTCS : LevelTemplatesPage)
-					{
-						UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - template now has %s player records: %d"), *TmpLTCS.LevelTemplate.LevelId.ToString(), TmpLTCS.PlayerRecords.Num());
-					}
+					//UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - level template %s unlocked for player %s"), *LevelId.ToString(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+					//for (FLevelTemplateContextStruct TmpLTCS : LevelTemplatesPage)
+					//{
+					//	UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - template now has %s player records: %d"), *TmpLTCS.LevelTemplate.LevelId.ToString(), TmpLTCS.PlayerRecords.Num());
+					//}
 
 					// Manually call rep_notify on server
 					if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
@@ -267,7 +267,7 @@ TArray<FString> UTRPersistentDataComponent::GetAllSaveProfileFilenames()
 			{
 				if (FilenameOrDirectory)
 				{
-					UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - potential file: %s."), FilenameOrDirectory);
+					//UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - potential file: %s."), FilenameOrDirectory);
 				}
 				else
 				{
@@ -280,10 +280,8 @@ TArray<FString> UTRPersistentDataComponent::GetAllSaveProfileFilenames()
 					FString CleanFilename = FPaths::GetBaseFilename(FullFilePath);
 					if (CleanFilename.EndsWith(*UTRPersistentDataComponent::LocalPlayerFilenameSuffix))
 					{
-						//CleanFilename = CleanFilename.Replace(TEXT(".sav"), TEXT(""));
-						//CleanFilename = CleanFilename.Replace(*PLAYER_FILENAME_PREFIX, TEXT(""));
 						SavesFound.Add(CleanFilename);
-						UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - found file: %s."), *CleanFilename);
+						//UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - found file: %s."), *CleanFilename);
 					}
 				}
 			}
@@ -294,7 +292,7 @@ TArray<FString> UTRPersistentDataComponent::GetAllSaveProfileFilenames()
 	//////////////////////////////////////////////////////////////////////////////
 
 	const FString SavesFolder = FPaths::ProjectSavedDir() + TEXT("SaveGames");
-	UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - checking dir: %s."), *SavesFolder)
+	//UE_LOG(LogTRGame, Log, TEXT("GetAllSaveProfileNames - checking dir: %s."), *SavesFolder)
 	if (!SavesFolder.IsEmpty())
 	{
 		FFindSavesVisitor Visitor;
@@ -342,20 +340,13 @@ void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
 		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
 		if (TRPlayerState)
 		{
-			// Try to load existing save
-			//UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(GetPlayerSaveFilename(), 0));
-			//if (SaveGame == nullptr || !SaveGame->PlayerSaveData.PlayerGuid.IsValid())
-			//{
-			//	// Create a new one if existing not found
-			//	SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
-			//}
 			// Create a new save each time
 			UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
 			// Get the data from our owning controller.
 			TRPlayerController->GetPlayerSaveData(SaveGame->PlayerSaveData);
-			UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Saving player data. Guid: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
-			/** TODO remove this debug logging */
-			if (SaveGame->PlayerSaveData.GoodsInventory.Num() == 0)
+			//UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Saving player data. Guid: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
+			// Begin debug inventory logging
+			/*if (SaveGame->PlayerSaveData.GoodsInventory.Num() == 0)
 			{
 				UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
 			}
@@ -366,11 +357,11 @@ void UTRPersistentDataComponent::ServerSavePlayerData_Implementation()
 				{
 					UE_LOG(LogTRGame, Log, TEXT("     %s: %f"), *InvElem.Name.ToString(), InvElem.Quantity);
 				}
-			}
-			/** End debug inventory logging */
+			}*/
+			// End debug inventory logging 
 			if (UGameplayStatics::SaveGameToSlot(SaveGame, GetPlayerSaveFilename(), 0))
 			{
-				UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Player data saved to: %s"), *GetPlayerSaveFilename());
+				UE_LOG(LogTRGame, Log, TEXT("ServerSavePlayerData - Player data for Guid %s saved to: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits), *GetPlayerSaveFilename());
 			}
 			else
 			{
@@ -445,9 +436,9 @@ void UTRPersistentDataComponent::ServerLoadPlayerDataByGuid_Implementation(const
 						}
 						else
 						{
-							UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent - Loading player data. Guid: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
-							// TODO remove this debug logging
-							if (SaveGame->PlayerSaveData.GoodsInventory.Num() == 0)
+							//UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent - Loading player data. Guid: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
+							// Begin debug inventory logging
+							/* if (SaveGame->PlayerSaveData.GoodsInventory.Num() == 0)
 							{
 								UE_LOG(LogTRGame, Log, TEXT("    GoodsInventory is empty."));
 							}
@@ -458,7 +449,8 @@ void UTRPersistentDataComponent::ServerLoadPlayerDataByGuid_Implementation(const
 								{
 									UE_LOG(LogTRGame, Log, TEXT("    %s: %f"), *InvElem.Name.ToString(), InvElem.Quantity);
 								}
-							}							
+							} */
+							// End debug inventory logging
 							// Update data on server
 							TRPlayerController->UpdateFromPlayerSaveData(SaveGame->PlayerSaveData);
 							if (TRPlayerController->IsLocalController()) 
@@ -473,15 +465,15 @@ void UTRPersistentDataComponent::ServerLoadPlayerDataByGuid_Implementation(const
 							}
 							else
 							{
-								UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ServerLoadPlayerData going to echo existing to client with ClientEchoLoadPlayerData"));
+								//UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ServerLoadPlayerData going to echo existing to client with ClientEchoLoadPlayerData"));
 								// Call client to update data
 								ClientEchoLoadPlayerData(SaveGame->PlayerSaveData);
 							}
-							UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - loaded player data from: %s"), *PlayerSaveFilename);
+							UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - loaded player data for guid %s from: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits), *PlayerSaveFilename);
 						}						
 					}
 					else {
-						UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - error loading save file: %s"), *PlayerSaveFilename);
+						UE_LOG(LogTRGame, Error, TEXT("ServerLoadPlayerData - error loading save file: %s"), *PlayerSaveFilename);
 					}
 				}
 				else 
@@ -505,12 +497,12 @@ void UTRPersistentDataComponent::ServerLoadPlayerDataByGuid_Implementation(const
 					}
 					else
 					{
-						UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ServerLoadPlayerData going to echo new to client with ClientEchoLoadPlayerData"));
+						//UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ServerLoadPlayerData going to echo new to client with ClientEchoLoadPlayerData"));
 						// Call client to update data
 						TRPlayerController->GetPlayerSaveData(NewSaveData);
 						ClientEchoLoadPlayerData(NewSaveData);
 					}
-					UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - no save file found, setting new player guid: %s."), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+					//UE_LOG(LogTRGame, Log, TEXT("ServerLoadPlayerData - no save file found, setting new player guid: %s."), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
 				}
 				OnPlayerDataLoaded.Broadcast();
 			}
@@ -541,7 +533,7 @@ void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const F
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
 	if (TRPlayerController)
 	{
-		UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ClientEchoLoadPlayerData - update player data for: %s."), *PlayerSaveData.PlayerGuid.ToString());
+		//UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ClientEchoLoadPlayerData - update player data for: %s."), *PlayerSaveData.PlayerGuid.ToString());
 		// Controler UpdateFromPlayerSaveData - calls PlayerState.UpdateFromPlayerSaveData
 		TRPlayerController->UpdateFromPlayerSaveData(PlayerSaveData);		
 	}
