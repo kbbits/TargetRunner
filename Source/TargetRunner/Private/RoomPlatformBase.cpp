@@ -260,14 +260,17 @@ bool ARoomPlatformBase::SpawnContents_Implementation()
 	{
 		if (!SpawnResources())
 		{
+			UE_LOG(LogTRGame, Log, TEXT("RoomPlatformBase %s SpawnResources failed"), *GetName());
 			return false;
 		}
 		if (!SpawnSpecials())
 		{
+			UE_LOG(LogTRGame, Log, TEXT("RoomPlatformBase %s SpawnSpecials failed"), *GetName());
 			return false;
 		}
 		if (!SpawnClutter())
 		{
+			UE_LOG(LogTRGame, Log, TEXT("RoomPlatformBase %s SpawnClutter failed"), *GetName());
 			return false;
 		}
 		DestroySpecialPlacers();
@@ -323,7 +326,7 @@ bool ARoomPlatformBase::SpawnSpecials_Implementation()
 		}
 		else
 		{
-			UE_LOG(LogTRGame, Warning, TEXT("%s - SpawnSpecials no valid placer for %s in room (%d, %d)"), *GetNameSafe(this), *GetNameSafe(Itr->Get()), GridX, GridY);
+			UE_LOG(LogTRGame, Warning, TEXT("%s - SpawnSpecials invalid placer for %s in room (%d, %d)"), *GetNameSafe(this), *GetNameSafe(Itr->Get()), GridX, GridY);
 		}
 		Placers.RemoveAt(Index);
 	}
@@ -335,8 +338,13 @@ bool ARoomPlatformBase::SpawnClutter_Implementation()
 {
 	TArray<AActor*> Placers;
 	AObjectPlacerProxyBoxClutter* Placer;
-	bool bSuccess;
-	AActor* NewClutterActor;
+	//bool bSuccess;
+	//AActor* NewClutterActor;
+	TArray<AActor*> NewClutterActors;
+	FRandomStream RandStream;
+	RandStream.GenerateNewSeed();
+
+	UE_LOG(LogTRGame, Log, TEXT("%s - SpawnClutter in room (%d, %d)"), *GetNameSafe(this), GridX, GridY);
 
 	// Find all the special actor object placers.
 	PlatformControlZone->GetOverlappingActors(Placers, AObjectPlacerProxyBoxClutter::StaticClass());
@@ -345,7 +353,7 @@ bool ARoomPlatformBase::SpawnClutter_Implementation()
 		UE_LOG(LogTRGame, Warning, TEXT("%s - SpawnClutter no AObjectPlacerProxyBoxClutter placers found in room (%d, %d)"), *GetNameSafe(this), GridX, GridY);
 		return true;
 	}
-	// For each clutter placer, have it place one
+	// For each clutter placer, have it place it's actors
 	for (AActor* PlacerActor : Placers)
 	{
 		Placer = Cast<AObjectPlacerProxyBoxClutter>(PlacerActor);
@@ -355,8 +363,9 @@ bool ARoomPlatformBase::SpawnClutter_Implementation()
 				UE_LOG(LogTRGame, Warning, TEXT("Clutter object placer %s has invalid ClassToPlace"), *Placer->GetName());
 				continue;
 			}
-			NewClutterActor = Placer->PlaceOne(PlatformRandStream, this, bSuccess);
-			if (NewClutterActor)
+			//NewClutterActor = Placer->PlaceOne(PlatformRandStream, this, bSuccess);
+			NewClutterActors = Placer->PlaceAll(RandStream, nullptr);
+			for (AActor* NewClutterActor : NewClutterActors)
 			{
 				PlatformActorCache.Add(FName(FString::Printf(TEXT("Clutter_%s"), *FGuid::NewGuid().ToString())), NewClutterActor);
 			}

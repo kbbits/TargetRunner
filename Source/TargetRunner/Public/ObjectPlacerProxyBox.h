@@ -32,21 +32,31 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPreserveRatio = "True"))
 		FVector BoxExtent;
 
+	// Distance between bounds of placed actors. Default = 0.0
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float ActorSpacing;
+
 protected:
 
 	// Root scene for the node
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly)
 		USceneComponent* RootScene;
 
 	// A visual aid for where the box target rests.
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 		UBoxComponent* BoxTarget;
 
 	// Indicates location and "up" (+Z) of the placed target actor.
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 		UArrowComponent* FacingArrow;
 
-	// Rotation applied to placed actor before it is placed in the oriented target box.
+	UPROPERTY(VisibleAnywhere)
+		UArrowComponent* PlaceAxisPos;
+
+	UPROPERTY(VisibleAnywhere)
+		UArrowComponent* PlaceAxisNeg;
+
+	// Rotation applied to a placed actor before it is placed in the oriented target box.
 	// This initial rotation should result in the "top" of the actor being aligned towards +Z.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FRotator InitialRotation;
@@ -55,11 +65,18 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 		int32 PlacedObjects;
 
-#if WITH_EDITORONLY_DATA
-	// When used in-editor, we track actors we've placed so they can be destroyed when this instance is.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FVector DefaultExtentHint;
+
+	// Objects this placer has placed
+	// When in-editor, these objects will be destroyed when this placer instance is.
 	UPROPERTY()
 		TArray<TWeakObjectPtr<AActor>> PlacedObjectRefs;
-#endif
+
+	// "left" bounds extent of our spawned objects. (i.e. min offset along x or y spawn location)
+	float SpawnOffsetMin;
+	// "right" bounds extent of our spawned objects. (i.e. max offset along x or y spawn location)
+	float SpawnOffsetMax;
 
 protected:
 	// Called when the game starts or when spawned
@@ -81,16 +98,26 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Places one actor
+	// Returns a pointer to the actor placed.
 	UFUNCTION(BlueprintCallable, Meta = (UnsafeDuringActorConstruction = "true"))
-		AActor* PlaceOne(UPARAM(ref) FRandomStream& RandStream, const AActor* PlacedObjectOwner, bool& bPlacedSuccessfully);
+		AActor* PlaceOne(UPARAM(ref) FRandomStream& RandStream, const AActor* PlacedObjectOwner, bool& bPlacedSuccessfully, const FVector& ExtentHint = FVector(0.f, 0.f, 0.f));
+
+	// Places actors until target box is filled along it's longest axis.
+	// Returns an array of pointers to the actors placed.
+	UFUNCTION(BlueprintCallable, Meta = (UnsafeDuringActorConstruction = "true"))
+		TArray<AActor*> PlaceAll(UPARAM(ref) FRandomStream& RandStream, const AActor* PlacedObjectOwner, const int32 MaxPlacements = 10, const FVector& ExtentHint = FVector(0.f, 0.f, 0.f));
 
 #if WITH_EDITOR
 	UFUNCTION(CallInEditor)
 		void TryPlaceOne();
 
 	UFUNCTION(CallInEditor)
-		void ClearPlaced();
+		void TryPlaceAll();
 #endif
+
+	UFUNCTION(CallInEditor)
+		void ClearPlaced();
 
 	// Returns the class that this placer should place.
 	// Base class implementation just returns DefaultClassToPlace.
@@ -98,11 +125,11 @@ public:
 		TSubclassOf<AActor> GetClassToPlace();
 
 	UFUNCTION(BlueprintPure)
-		FTransform GetInitialPlaceTransform(UPARAM(ref) FRandomStream& RandStream);
+		bool GetInitialPlaceTransform(UPARAM(ref) FRandomStream& RandStream, FTransform& PlaceTransform, const FVector& ExtentHint = FVector(50.f, 50.f, 50.f));
 
 	// Do the given extents fit fully within this instance's target box?
 	UFUNCTION(BlueprintPure)
-		bool FitsIntoBoxBounds(const FVector& Extents);
+		bool FitsIntoBoxBounds(const FVector& Extents, const bool bIgnoreZ = false);
 };
 
 

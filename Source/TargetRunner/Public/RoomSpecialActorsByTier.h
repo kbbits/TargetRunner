@@ -72,7 +72,7 @@ public:
 * Each of these records represents a single group of potential special actors to add to the room grid.
 * These are grouped by bounds extents.
 */
-USTRUCT(BlueprintType)
+/*USTRUCT(BlueprintType)
 struct FSpecialActorsByBounds : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -89,3 +89,4 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FSpecialActorsChanceSet> SpecialActorChances;
 };
+*/
