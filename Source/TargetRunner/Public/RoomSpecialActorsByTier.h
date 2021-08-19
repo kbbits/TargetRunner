@@ -66,3 +66,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FSpecialActorsChanceSet> SpecialActorChances;
 };
+
+
+/*
+* Each of these records represents a single group of potential special actors to add to the room grid.
+* These are grouped by bounds extents.
+*/
+USTRUCT(BlueprintType)
+struct FSpecialActorsByBounds : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	FSpecialActorsByBounds()
+	{
+		Bounds = FVector(100.f, 100.f, 100.f);
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FVector Bounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TArray<FSpecialActorsChanceSet> SpecialActorChances;
+};

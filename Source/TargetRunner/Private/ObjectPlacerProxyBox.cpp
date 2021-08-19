@@ -43,7 +43,7 @@ void AObjectPlacerProxyBox::UpdateComponents()
 	}
 	if (FacingArrow)
 	{
-		FacingArrow->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f).Quaternion());
+		FacingArrow->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f).Quaternion());
 		FacingArrow->SetRelativeLocation(FVector(0.0f, 0.0f, -BoxExtent.Z));
 	}
 }
@@ -150,7 +150,7 @@ FTransform AObjectPlacerProxyBox::GetInitialPlaceTransform(FRandomStream& RandSt
 {
 	FTransform PlaceTransform = FTransform::Identity;
 	PlaceTransform.SetLocation(FacingArrow->GetComponentLocation());
-	PlaceTransform.SetRotation(FacingArrow->GetComponentRotation().Quaternion() * InitialRotation.Quaternion());
+	PlaceTransform.SetRotation(GetActorRotation().Quaternion() * InitialRotation.Quaternion());
 	return PlaceTransform;
 }
 

@@ -345,7 +345,7 @@ bool ARoomPlatformBase::SpawnClutter_Implementation()
 		UE_LOG(LogTRGame, Warning, TEXT("%s - SpawnClutter no AObjectPlacerProxyBoxClutter placers found in room (%d, %d)"), *GetNameSafe(this), GridX, GridY);
 		return true;
 	}
-	// For each special actor to place, pick a placer and have it place one.
+	// For each clutter placer, have it place one
 	for (AActor* PlacerActor : Placers)
 	{
 		Placer = Cast<AObjectPlacerProxyBoxClutter>(PlacerActor);

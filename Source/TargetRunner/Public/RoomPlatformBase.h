@@ -99,7 +99,7 @@ public:
 		bool SpawnCeiling();
 
 	// [Server]
-	// Spawns room contents. By default this calls SpawnResources and SpawnSpecials.
+	// Spawns room contents. By default this calls SpawnResources, SpawnSpecials and SpawnClutter.
 	// If you override this, remember to call Parent.
 	// Call this on server!
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)

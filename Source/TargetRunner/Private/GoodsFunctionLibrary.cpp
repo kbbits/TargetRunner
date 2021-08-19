@@ -6,6 +6,7 @@
 TArray<FGoodsQuantity> UGoodsFunctionLibrary::MultiplyGoodsQuantities(const TArray<FGoodsQuantity> GoodsQuantities, const float Multiplier, const bool bTruncateQuantities)
 {
 	TArray<FGoodsQuantity> NewQuantities;
+	NewQuantities.Reserve(GoodsQuantities.Num());
 	for (FGoodsQuantity CurQuantity : GoodsQuantities) 
 	{
 		if (bTruncateQuantities) {
@@ -20,21 +21,32 @@ TArray<FGoodsQuantity> UGoodsFunctionLibrary::MultiplyGoodsQuantities(const TArr
 
 TArray<FGoodsQuantity> UGoodsFunctionLibrary::AddGoodsQuantities(const TArray<FGoodsQuantity>& GoodsQuantitiesOne, const TArray<FGoodsQuantity>& GoodsQuantitiesTwo, const bool bNegateGoodsQuantitiesTwo)
 {
-	// May actually be better to just loop through both instead of converting to map first, then back again.
-	TMap<FName, float> SummedQuantities = GoodsQuantityArrayToNameFloatMap(GoodsQuantitiesOne);
+	TArray<FGoodsQuantity> TotalGoods;
+	FGoodsQuantity* TmpGoodsQuantity;
+	TotalGoods.Reserve(GoodsQuantitiesOne.Num() + GoodsQuantitiesTwo.Num());
+	for (FGoodsQuantity Goods : GoodsQuantitiesOne)
+	{
+		TmpGoodsQuantity = TotalGoods.FindByKey(Goods.Name);
+		if (TmpGoodsQuantity) {
+			TmpGoodsQuantity->Quantity = TmpGoodsQuantity->Quantity + Goods.Quantity;
+		}
+		else{
+			TotalGoods.Add(FGoodsQuantity(Goods.Name, Goods.Quantity));
+		}
+	}
 	for (FGoodsQuantity GoodsTwo : GoodsQuantitiesTwo)
 	{
 		float Delta = bNegateGoodsQuantitiesTwo ? -1.0f * GoodsTwo.Quantity : GoodsTwo.Quantity;
-		if (SummedQuantities.Contains(GoodsTwo.Name))
-		{
-			SummedQuantities[GoodsTwo.Name] = SummedQuantities[GoodsTwo.Name] + Delta;
+		TmpGoodsQuantity = TotalGoods.FindByKey(GoodsTwo.Name);
+		if (TmpGoodsQuantity) {
+			TmpGoodsQuantity->Quantity = TmpGoodsQuantity->Quantity + Delta;
 		}
 		else
 		{
-			SummedQuantities.Add(GoodsTwo.Name, Delta);
+			TotalGoods.Add(FGoodsQuantity(GoodsTwo.Name, GoodsTwo.Quantity));
 		}
 	}
-	return NameQuantityMapToGoodsQuantityArray(SummedQuantities);
+	return TotalGoods;
 }
 
 FGoodsQuantity UGoodsFunctionLibrary::GoodsQuantityFromRange(FRandomStream& RandStream, const FGoodsQuantityRange& QuantityRange, const float QuantityScale /* 0.0 - 1.0 */)

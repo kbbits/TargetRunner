@@ -43,6 +43,19 @@ void UTRGameInstance::SaveAllPlayerData()
 	}
 }
 
+void UTRGameInstance::ReloadAllPlayerData()
+{
+	ATRPlayerControllerBase* PController = nullptr;
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		PController = Cast<ATRPlayerControllerBase>(*Iterator);
+		if (IsValid(PController))
+		{
+			PController->PersistentDataComponent->ServerLoadPlayerData();
+		}
+	}
+}
+
 
 ULevelTemplateContext* UTRGameInstance::GenerateNewLevelTemplate(const float Tier, const int32 DifficultyLevel)
 {

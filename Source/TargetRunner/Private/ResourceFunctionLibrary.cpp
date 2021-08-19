@@ -117,7 +117,7 @@ bool UResourceFunctionLibrary::FindResourceRateFilter(const TArray<FResourceRate
 		else
 		{
 			matchRank = static_cast<uint8>(TmpDegree);
-			if (matchRank > minDegree && matchRank > bestDegree)
+			if (matchRank >= minDegree && matchRank > bestDegree)
 			{
 				BestMatch = RateFilter;
 				BestMatchDegree = TmpDegree;
@@ -150,14 +150,14 @@ bool UResourceFunctionLibrary::FindBestResourceRateFilter(const TArray<FResource
 		if (TmpDegree == ETRResourceMatch::Type && !RateFilter.ResourceTypeFilter.SubType.IsNone()) { continue; }
 		if (static_cast<uint8>(TmpDegree) >= MinDegree && RateFilter.Rate > BestRate.Rate)
 		{
-			//UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - Found match %s -- %s"), *TargetType.Code.ToString(), *RateFilter.ResourceTypeFilter.Code.ToString());
+			UE_LOG(LogTRGame, Log, TEXT("FindBestResourceRateFilter - Found match %s -- %s"), *TargetType.Code.ToString(), *RateFilter.ResourceTypeFilter.Code.ToString());
 			BestRate = RateFilter;
 			BestMatchDegree = TmpDegree;
 		}
 	}
 	if (BestMatchDegree != ETRResourceMatch::None)
 	{
-		//UE_LOG(LogTRGame, Log, TEXT("FindResourceRateFilter - best matching rate %s %.2f"), *BestRate.ResourceTypeFilter.Code.ToString(), BestRate.Rate);
+		UE_LOG(LogTRGame, Log, TEXT("FindBestResourceRateFilter - best matching rate %s %.2f"), *BestRate.ResourceTypeFilter.Code.ToString(), BestRate.Rate);
 		FoundRate = BestRate;
 		FoundMatchDegree = BestMatchDegree;
 		return true;

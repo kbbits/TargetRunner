@@ -11,10 +11,12 @@ ARoomComponentActor::ARoomComponentActor()
 	bAllChildISMsCopiedOut = false;
 	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
 	SetRootComponent(RootScene);
+#if WITH_EDITORONLY_DATA
 	UBlueprint* Blueprint = Cast<UBlueprint>(GetClass()->ClassGeneratedBy);
 	if (Blueprint) {
 		Blueprint->bRunConstructionScriptOnDrag = false;
 	}
+#endif
 }
 
 
@@ -62,6 +64,10 @@ bool ARoomComponentActor::SpawnRCACollections()
 	// Spawn a collection actor for each in our collection
 	for (FRoomComponentActorCollection RCACollection : SubRoomComponents)
 	{
+		if (RCACollection.RoomComponentActors.Num() == 0) {
+			UE_LOG(LogTRGame, Warning, TEXT("RoomComponentActor %s skipping collection because it contains no RCA entries."), *GetName());
+			continue;
+		}
 		SpawnTransform = RCACollection.LocalTransform * GetTransform();
 		//UE_LOG(LogTRGame, Log, TEXT("    RoomComponentActor %s start spawning collection (contains %d RCAs)"), *GetName(), RCACollection.RoomComponentActors.Num());
 		CollectionActor = GetWorld()->SpawnActorDeferred<ARoomComponentActorCollectionActor>(ARoomComponentActorCollectionActor::StaticClass(), SpawnTransform, SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
@@ -385,10 +391,12 @@ ARoomComponentActorCollectionActor::ARoomComponentActorCollectionActor()
 	PickedRoomComponentActor_CAC->SetupAttachment(RootScene);
 	bool bFound = false;
 	PickedClass = NULL;
+#if WITH_EDITORONLY_DATA
 	UBlueprint* Blueprint = Cast<UBlueprint>(GetClass()->ClassGeneratedBy);
 	if (Blueprint) {
 		Blueprint->bRunConstructionScriptOnDrag = false;
 	}
+#endif
 }
 
 

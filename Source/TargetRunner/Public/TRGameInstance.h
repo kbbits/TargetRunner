@@ -93,6 +93,12 @@ public:
 		void SaveAllPlayerData();
 
 	// [Server Only]
+	// Loads player data for all PCs
+	// Loading is managed through each PC's PDC.
+	UFUNCTION(BlueprintCallable)
+		void ReloadAllPlayerData();
+
+	// [Server Only]
 	UFUNCTION(BlueprintCallable)
 		ULevelTemplateContext* GenerateNewLevelTemplate(const float Tier, const int32 DifficultyLevel);
 

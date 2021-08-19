@@ -20,6 +20,7 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 {
 	bLevelTemplateReady = false;
 	ClutterGoodsLevelScaleExp = 0.25f;
+	ClutterResourceLevelScaleExp = 0.25f;
 	GeneratorRandStream.Reset();
 	GridRandStream.Reset();
 	GoodsDropper = CreateDefaultSubobject<UGoodsDropper>(TEXT("GoodsDropper"));
@@ -166,6 +167,7 @@ void ATR_GameMode::GetClutterDropResources(TArray<FResourceQuantity>& DroppedRes
 	float DifficultyLevel;
 	FResourceType TmpResourceType;
 	TArray<FGoodsQuantity> DroppedGoods;
+	TArray<FGoodsQuantity> EmptyGoods;
 	DroppedResources.Empty();
 	if (bLevelTemplateReady)
 	{
@@ -180,7 +182,8 @@ void ATR_GameMode::GetClutterDropResources(TArray<FResourceQuantity>& DroppedRes
 	if (GoodsDropper)
 	{
 		// Get resources by using goods droppper to drop resource code named goods.
-		DroppedGoods.Append(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName));
+		// Use AddGoodsQuantities to consolidate duplicate entries.
+		DroppedGoods.Append(UGoodsFunctionLibrary::AddGoodsQuantities(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName), EmptyGoods));
 		// Translate each of those goods to a resource quantity
 		for (FGoodsQuantity CurGoods : DroppedGoods)
 		{
