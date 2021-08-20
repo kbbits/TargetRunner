@@ -32,9 +32,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPreserveRatio = "True"))
 		FVector BoxExtent;
 
-	// Distance between bounds of placed actors. Default = 0.0
+	// Min distance between bounds of placed actors. Default = 25.0
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float ActorSpacing;
+		float ActorSpacingMin;
+
+	// Max distance between bounds of placed actors. Default = 50.0
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float ActorSpacingMax;
 
 protected:
 
@@ -125,11 +129,15 @@ public:
 		TSubclassOf<AActor> GetClassToPlace();
 
 	UFUNCTION(BlueprintPure)
-		bool GetInitialPlaceTransform(UPARAM(ref) FRandomStream& RandStream, FTransform& PlaceTransform, const FVector& ExtentHint = FVector(50.f, 50.f, 50.f));
+		bool GetInitialPlaceTransform(UPARAM(ref) FRandomStream& RandStream, FTransform& PlaceTransform, const float ActorSpacing, const FVector& ExtentHint = FVector(50.f, 50.f, 50.f));
 
 	// Do the given extents fit fully within this instance's target box?
 	UFUNCTION(BlueprintPure)
-		bool FitsIntoBoxBounds(const FVector& Extents, const bool bIgnoreZ = false);
+		bool FitsIntoBoxBounds(const FVector& Extents, const float ActorSpacing, const bool bIgnoreZ = false);
+
+	// Returns a value between ActorSpacingMin and ActorSpacingMax.
+	UFUNCTION(BlueprintCallable)
+		float GetActorSpacing(UPARAM(ref) FRandomStream& RandStream);
 };
 
 

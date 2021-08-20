@@ -814,8 +814,11 @@ bool ATRPlayerControllerBase::ServerAddLevelUpGoods_Validate(const FGoodsQuantit
 
 void ATRPlayerControllerBase::ClientOnPlayerLevelUp_Implementation(const FPlayerLevelUpData& LevelUpData)
 {
-	// Base class just calls OnPlayerLevelUp event
-	OnPlayerLevelUp.Broadcast(LevelUpData);
+	if (GetLocalRole() < ROLE_Authority) 
+	{
+		// Base class just calls OnPlayerLevelUp event
+		OnPlayerLevelUp.Broadcast(LevelUpData);
+	}
 }
 
 bool ATRPlayerControllerBase::ClientOnPlayerLevelUp_Validate(const FPlayerLevelUpData& LevelUpData)

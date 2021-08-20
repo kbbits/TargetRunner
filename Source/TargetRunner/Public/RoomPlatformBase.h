@@ -152,6 +152,15 @@ public:
 
 protected:
 
-	// Helper to cleanup special actor ObjectPlacers.
-	void DestroySpecialPlacers();
+	// Helper to cleanup resource ObjectPlacers.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void DestroyResourcePlacers(const bool bDestroySpawns = false);
+
+	// Helper to cleanup special ObjectPlacers.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void DestroySpecialPlacers(const bool bDestroySpawns = false);
+
+	// Helper to cleanup clutter ObjectPlacers.
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+		void DestroyClutterPlacers(const bool bDestroySpawns = false);
 };

@@ -16,7 +16,8 @@ AObjectPlacerProxyBox::AObjectPlacerProxyBox()
 
 	BoxExtent = FVector(100.0f, 100.0f, 100.0f);
 	DefaultExtentHint = FVector(50.f, 50.f, 50.f);
-	ActorSpacing = 0.f;
+	ActorSpacingMin = 25.f;
+	ActorSpacingMax = 50.f;
 	SpawnOffsetMin = 0.f;
 	SpawnOffsetMax = 0.f;
 	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("Root Scene"));
@@ -82,8 +83,8 @@ void AObjectPlacerProxyBox::UpdateComponents()
 			PlaceAxisNeg->ArrowLength = BoxExtent.X;
 			PlaceAxisNeg->SetRelativeRotation(FRotator(0.f, 180.f, 0.f).Quaternion());
 		}
-		PlaceAxisPos->SetRelativeLocation(FVector(0.f, 0.f, -BoxExtent.Z));
-		PlaceAxisNeg->SetRelativeLocation(FVector(0.f, 0.f, -BoxExtent.Z));
+		//PlaceAxisPos->SetRelativeLocation(FVector(0.f, 0.f, -BoxExtent.Z));
+		//PlaceAxisNeg->SetRelativeLocation(FVector(0.f, 0.f, -BoxExtent.Z));
 		PlaceAxisPos->MarkRenderStateDirty();
 		PlaceAxisNeg->MarkRenderStateDirty();
 	}
@@ -99,8 +100,7 @@ void AObjectPlacerProxyBox::BeginDestroy()
 void AObjectPlacerProxyBox::Destroyed()
 {
 #if WITH_EDITOR
-	
-	ClearPlaced();
+	//ClearPlaced();
 #endif
 	Super::Destroyed();
 }
@@ -140,6 +140,7 @@ AActor* AObjectPlacerProxyBox::PlaceOne(FRandomStream& RandStream, const AActor*
 	FVector Direction;
 	float Penetration;
 	float Offset;
+	float ActorSpacing = GetActorSpacing(RandStream);
 	FVector Origin;
 	FVector Extent;
 	FVector FinalExtentHint = ExtentHint.IsZero() ? DefaultExtentHint : ExtentHint;
@@ -155,8 +156,8 @@ AActor* AObjectPlacerProxyBox::PlaceOne(FRandomStream& RandStream, const AActor*
 	}
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	if (PlacedObjectOwner) { SpawnParams.Owner = const_cast<AActor*>(PlacedObjectOwner); }
-	if (!GetInitialPlaceTransform(RandStream, SpawnTransform, FinalExtentHint)) {
-		UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s PlaceOne - found no valid initial spawn location."), *GetName());
+	if (!GetInitialPlaceTransform(RandStream, SpawnTransform, ActorSpacing, FinalExtentHint)) {
+		//UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s PlaceOne - found no valid initial spawn location."), *GetName());
 		return nullptr;
 	}
 	TmpPlacedObject = GetWorld()->SpawnActor<AActor>(ClassToPlace, SpawnTransform, SpawnParams);
@@ -193,7 +194,7 @@ AActor* AObjectPlacerProxyBox::PlaceOne(FRandomStream& RandStream, const AActor*
 		// Check if spawned bounds exceed our box extents
 		//if (Offset + ((Extent * Direction).GetAbsMax() * 2) + ActorSpacing > (ScaledBoxExtent * Direction).GetAbsMax()) { 
 		//if (FVector::DistXY(BoxTarget->GetComponentLocation(), Origin + BoxTarget->GetComponentRotation().RotateVector(Extent * Direction)) > (ScaledBoxExtent * Direction).GetAbsMax())
-		if (!FitsIntoBoxBounds(Extent))
+		if (!FitsIntoBoxBounds(Extent, ActorSpacing))
 		{
 			// If it endedup outside our box extents, destroy it and return null;
 			TmpPlacedObject->Destroy();
@@ -214,7 +215,7 @@ AActor* AObjectPlacerProxyBox::PlaceOne(FRandomStream& RandStream, const AActor*
 					SpawnOffsetMin = (FVector::DistXY(FacingArrow->GetComponentLocation(), Origin) + (Extent * Direction).GetAbsMax());
 				}
 			}
-			UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s PlaceOne - placed actor %s at %s. New offsets: Min %.1f  Max %.1f"), *GetName(), *TmpPlacedObject->GetName(), *TmpPlacedObject->GetActorLocation().ToString(), SpawnOffsetMin, SpawnOffsetMax);
+			//UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s PlaceOne - placed actor %s at %s. New offsets: Min %.1f  Max %.1f"), *GetName(), *TmpPlacedObject->GetName(), *TmpPlacedObject->GetActorLocation().ToString(), SpawnOffsetMin, SpawnOffsetMax);
 			PlacedObjectRefs.Add(TmpPlacedObject);
 			bPlacedSuccessfully = true;
 			PlacedObjects++;
@@ -262,7 +263,7 @@ void AObjectPlacerProxyBox::TryPlaceAll()
 
 void AObjectPlacerProxyBox::ClearPlaced()
 {
-	UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s ClearPlaced - destroying %d placed actors"), *GetName(), PlacedObjectRefs.Num());
+	//UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s ClearPlaced - destroying %d placed actors"), *GetName(), PlacedObjectRefs.Num());
 	for (TWeakObjectPtr<AActor> WeakActor : PlacedObjectRefs)
 	{
 		if (WeakActor.IsValid() && WeakActor.Get())
@@ -286,14 +287,14 @@ TSubclassOf<AActor> AObjectPlacerProxyBox::GetClassToPlace_Implementation()
  * Places spawns starting at box extent center, then alternates between left of center (-SpawnOffsetMin) and right of center (SpawnOffsetMax), 
  * along the longest X or Y axis of the BoxExtent (along X if they are equal).
  */
-bool AObjectPlacerProxyBox::GetInitialPlaceTransform(FRandomStream& RandStream, FTransform& PlaceTransform, const FVector& ExtentHint)
+bool AObjectPlacerProxyBox::GetInitialPlaceTransform(FRandomStream& RandStream, FTransform& PlaceTransform, const float ActorSpacing, const FVector& ExtentHint)
 {
 	FVector Direction;
 	FVector ScaledBoxExtent = BoxTarget->GetScaledBoxExtent();
 	float Offset;
 	PlaceTransform = FTransform::Identity;
 	// Check if this would end up outside our box extents.
-	if (!FitsIntoBoxBounds(ExtentHint)) {
+	if (!FitsIntoBoxBounds(ExtentHint, ActorSpacing)) {
 		return false;
 	}
 	if (PlacedObjects % 2 == 0.f) {
@@ -314,12 +315,12 @@ bool AObjectPlacerProxyBox::GetInitialPlaceTransform(FRandomStream& RandStream, 
 		PlaceTransform.SetLocation(FacingArrow->GetComponentLocation() + (BoxTarget->GetComponentRotation().RotateVector(Direction) * Offset));
 	}	
 	PlaceTransform.SetRotation(BoxTarget->GetComponentRotation().Quaternion() * InitialRotation.Quaternion());
-	UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s GetInitialPlaceTransform - using offset %.1f (rotated: %s) found location %s."), *GetName(), Offset, *(BoxTarget->GetComponentRotation().RotateVector(Direction) * Offset).ToString(), *PlaceTransform.GetLocation().ToString());
+	//UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s GetInitialPlaceTransform - using offset %.1f (rotated: %s) found location %s."), *GetName(), Offset, *(BoxTarget->GetComponentRotation().RotateVector(Direction) * Offset).ToString(), *PlaceTransform.GetLocation().ToString());
 	return true;
 }
 
 
-bool AObjectPlacerProxyBox::FitsIntoBoxBounds(const FVector& ActorExtents, const bool bIgnoreZ)
+bool AObjectPlacerProxyBox::FitsIntoBoxBounds(const FVector& ActorExtents, const float ActorSpacing, const bool bIgnoreZ)
 {
 	FVector ScaledBoxExtent = BoxTarget->GetScaledBoxExtent();
 	if (ActorExtents.X > ScaledBoxExtent.X || ActorExtents.Y > ScaledBoxExtent.Y) {
@@ -343,8 +344,14 @@ bool AObjectPlacerProxyBox::FitsIntoBoxBounds(const FVector& ActorExtents, const
 	}
 	ExtentMult = Offset == 0.f ? 1.f : 2.f;
 	if (Offset + ((ActorExtents * Direction).GetAbsMax() * ExtentMult) + (ActorSpacing * (ExtentMult - 1)) > (ScaledBoxExtent * Direction).GetAbsMax()) {
-		UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s FitsIntoBoxBounds - extents %s do not fit %s with offset %.1f."), *GetName(), *ActorExtents.ToString(), *ScaledBoxExtent.ToString(), Offset);
+		UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s FitsIntoBoxBounds - extents %s do not fit %s with offset %.1f (spacing: %.1f)."), *GetName(), *ActorExtents.ToString(), *ScaledBoxExtent.ToString(), Offset, ActorSpacing);
 		return false;
 	}
 	return true;
+}
+
+
+float AObjectPlacerProxyBox::GetActorSpacing(FRandomStream& RandStream)
+{
+	return RandStream.FRandRange(ActorSpacingMin, ActorSpacingMax);
 }

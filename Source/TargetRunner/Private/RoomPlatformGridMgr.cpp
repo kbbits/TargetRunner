@@ -321,7 +321,7 @@ void ARoomPlatformGridMgr::SpawnRooms_Implementation()
 		ARoomPlatformBase* RoomPlatform = Cast<ARoomPlatformBase>(GetPlatformInGrid(RoomCoord, bFound));
 		if (RoomPlatform != nullptr)
 		{
-			RoomPlatform->SpawnContents(); // calls SpawnResources & SpawnSpecials
+			RoomPlatform->SpawnContents(); // calls SpawnResources, SpawnSpecials, SpawnClutter
 		}
 	}
 	if (GetLocalRole() == ROLE_Authority)
@@ -329,6 +329,11 @@ void ARoomPlatformGridMgr::SpawnRooms_Implementation()
 		// Have the clients update their grid maps
 		//ClientFillGridFromExistingPlatforms();
 	}
+}
+
+void ARoomPlatformGridMgr::SpawnRoomsEd_Implementation()
+{
+	SpawnRooms();
 }
 
 

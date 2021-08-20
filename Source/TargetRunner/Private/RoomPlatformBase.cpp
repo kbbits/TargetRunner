@@ -148,6 +148,9 @@ void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
 
 void ARoomPlatformBase::DestroyPlatformImpl()
 {
+	DestroyResourcePlacers(true);
+	DestroySpecialPlacers(true);
+	DestroyClutterPlacers(true);
 	Super::DestroyPlatformImpl();
 }
 
@@ -263,22 +266,26 @@ bool ARoomPlatformBase::SpawnContents_Implementation()
 			UE_LOG(LogTRGame, Log, TEXT("RoomPlatformBase %s SpawnResources failed"), *GetName());
 			return false;
 		}
+		DestroyResourcePlacers();
 		if (!SpawnSpecials())
 		{
 			UE_LOG(LogTRGame, Log, TEXT("RoomPlatformBase %s SpawnSpecials failed"), *GetName());
 			return false;
 		}
+		DestroySpecialPlacers();
 		if (!SpawnClutter())
 		{
 			UE_LOG(LogTRGame, Log, TEXT("RoomPlatformBase %s SpawnClutter failed"), *GetName());
 			return false;
-		}
-		DestroySpecialPlacers();
+		}		
+		DestroyClutterPlacers();
 		return true;
 	}
 	else
 	{
+		DestroyResourcePlacers();
 		DestroySpecialPlacers();
+		DestroyClutterPlacers();
 		return true;
 	}
 }
@@ -463,7 +470,34 @@ ARoomPlatformBase* ARoomPlatformBase::GetConnectedNeighbor(const ETRDirection Di
 }
 
 
-void ARoomPlatformBase::DestroySpecialPlacers()
+void ARoomPlatformBase::DestroyResourcePlacers_Implementation(const bool bDestroySpawns)
+{
+	TArray<AActor*> AllPlacers;
+	AObjectPlacerResource* Placer;
+	// Find all the special actor object placers.
+	PlatformControlZone->GetOverlappingActors(AllPlacers, AObjectPlacerResource::StaticClass());
+	for (AActor* PlacerActor : AllPlacers)
+	{
+		Placer = Cast<AObjectPlacerResource>(PlacerActor);
+		if (Placer) {
+			if (bDestroySpawns) { Placer->ClearPlaced(); }
+			Placer->Destroy();
+		}
+	}
+	TInlineComponentArray<UChildActorComponent*> CACs;
+	TSubclassOf<AActor> ChildClass;
+	GetComponents(CACs, false);
+	for (UChildActorComponent* CAC : CACs)
+	{
+		if (CAC->GetChildActorClass().Get()->IsChildOf(AObjectPlacerResource::StaticClass()))
+		{
+			CAC->SetChildActorClass(nullptr);
+		}
+	}
+}
+
+
+void ARoomPlatformBase::DestroySpecialPlacers_Implementation(const bool bDestroySpawns)
 {
 	TArray<AActor*> AllPlacers;
 	AObjectPlacerSpecialActor* Placer;
@@ -472,7 +506,47 @@ void ARoomPlatformBase::DestroySpecialPlacers()
 	for (AActor* PlacerActor : AllPlacers)
 	{
 		Placer = Cast<AObjectPlacerSpecialActor>(PlacerActor);
-		if (Placer) { Placer->Destroy(); }
+		if (Placer) {
+			if (bDestroySpawns) { Placer->ClearPlaced(); }
+			Placer->Destroy(); 
+		}
+	}
+	TInlineComponentArray<UChildActorComponent*> CACs;
+	TSubclassOf<AActor> ChildClass;
+	GetComponents(CACs, false);
+	for (UChildActorComponent* CAC : CACs)
+	{
+		if (CAC->GetChildActorClass().Get()->IsChildOf(AObjectPlacerSpecialActor::StaticClass()))
+		{
+			CAC->SetChildActorClass(nullptr);
+		}
+	}
+}
+
+
+void ARoomPlatformBase::DestroyClutterPlacers_Implementation(const bool bDestroySpawns)
+{
+	TArray<AActor*> AllPlacers;
+	AObjectPlacerProxyBoxClutter* Placer;
+	// Find all the clutter object placers.
+	PlatformControlZone->GetOverlappingActors(AllPlacers, AObjectPlacerProxyBoxClutter::StaticClass());
+	for (AActor* PlacerActor : AllPlacers)
+	{
+		Placer = Cast<AObjectPlacerProxyBoxClutter>(PlacerActor);
+		if (Placer) {
+			if (bDestroySpawns) { Placer->ClearPlaced(); }
+			Placer->Destroy(); 
+		}
+	}
+	TInlineComponentArray<UChildActorComponent*> CACs;
+	TSubclassOf<AActor> ChildClass;
+	GetComponents(CACs, false);
+	for (UChildActorComponent* CAC : CACs)
+	{
+		if (CAC->GetChildActorClass().Get()->IsChildOf(AObjectPlacerProxyBoxClutter::StaticClass()))
+		{
+			CAC->SetChildActorClass(nullptr);
+		}
 	}
 }
 

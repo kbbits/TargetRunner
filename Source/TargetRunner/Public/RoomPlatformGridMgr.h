@@ -120,8 +120,14 @@ public:
 		ARoomPlatformBase* GetRoomNeighbor(const FVector2D& RoomCoords, const ETRDirection DirectionToNeighbor);
 
 	// Spawns all rooms in the room template grid
-	UFUNCTION(BlueprintNativeEvent, CallInEditor)
+	UFUNCTION(BlueprintNativeEvent)
 		void SpawnRooms();
+
+#if WITH_EDITOR
+	// Spawns all rooms - for in-editor use.
+	UFUNCTION(BlueprintNativeEvent, CallInEditor)
+		void SpawnRoomsEd();
+#endif
 
 	// Spawn the room from the room template grid with the given coordinates.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

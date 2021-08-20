@@ -78,7 +78,7 @@ void AObjectPlacer::BeginDestroy()
 void AObjectPlacer::Destroyed()
 {
 #if WITH_EDITOR
-	ClearPlaced();
+	//ClearPlaced();
 #endif
 	Super::Destroyed();
 }
@@ -172,6 +172,7 @@ void AObjectPlacer::ClearPlaced()
 		}
 	}
 	PlacedObjectRefs.Empty();
+	PlacedObjects = 0;
 }
 #endif
 
