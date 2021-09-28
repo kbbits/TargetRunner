@@ -2,7 +2,7 @@
 [Working title]
 
 VR and First Person multiplayer target shooting. Written in c++ and Blueprint. Tested with HTC Vive.
-UnrealEngine 4.23
+UnrealEngine 4.26
 
 ![FP view](./ProjectDoc/Images/tr_cap01.png)
 
