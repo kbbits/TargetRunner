@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "TargetRunner.h"
 #include "ObjectPlacerProxyBox.h"
+#include "TargetRunner.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 // for intellisense
@@ -27,19 +27,25 @@ AObjectPlacerProxyBox::AObjectPlacerProxyBox()
 	FacingArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("FacingArrow"));
 	FacingArrow->SetupAttachment(BoxTarget);
 	FacingArrow->bIsScreenSizeScaled = false;
+#if WITH_EDITOR_DATAONLY
 	FacingArrow->bUseInEditorScaling = false;
+#endif
 	//FacingArrow->ArrowSize = 1.f;
 	PlaceAxisPos = CreateDefaultSubobject<UArrowComponent>(TEXT("PlacingAxis+"));
 	PlaceAxisPos->SetupAttachment(BoxTarget);
 	PlaceAxisPos->SetArrowColor(FLinearColor::Green);
 	PlaceAxisPos->bIsScreenSizeScaled = false;
+#if WITH_EDITOR_DATAONLY
 	PlaceAxisPos->bUseInEditorScaling = false;
+#endif
 	//PlaceAxisPos->ArrowSize = 1.f;
 	PlaceAxisNeg = CreateDefaultSubobject<UArrowComponent>(TEXT("PlacingAxis-"));
 	PlaceAxisNeg->SetupAttachment(BoxTarget);
 	PlaceAxisNeg->SetArrowColor(FLinearColor::Yellow);
 	PlaceAxisNeg->bIsScreenSizeScaled = false;
+#if WITH_EDITOR_DATAONLY
 	PlaceAxisNeg->bUseInEditorScaling = false;
+#endif
 	//PlaceAxisNeg->ArrowSize = 1.f;
 	UpdateComponents();
 }

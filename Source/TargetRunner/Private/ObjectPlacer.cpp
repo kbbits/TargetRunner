@@ -162,6 +162,7 @@ void AObjectPlacer::TryPlaceOne()
 	PlacedObjectRefs.Add(PlacedActor);
 }
 
+
 void AObjectPlacer::ClearPlaced()
 {
 	for (TWeakObjectPtr<AActor> WeakActor : PlacedObjectRefs)
@@ -175,7 +176,6 @@ void AObjectPlacer::ClearPlaced()
 	PlacedObjects = 0;
 }
 #endif
-
 
 FTransform AObjectPlacer::GetPlaceTransform(FRandomStream& RandStream, bool& bFound)
 {

@@ -480,7 +480,9 @@ void ARoomPlatformBase::DestroyResourcePlacers_Implementation(const bool bDestro
 	{
 		Placer = Cast<AObjectPlacerResource>(PlacerActor);
 		if (Placer) {
+#if WITH_EDITOR
 			if (bDestroySpawns) { Placer->ClearPlaced(); }
+#endif
 			Placer->Destroy();
 		}
 	}
@@ -507,7 +509,9 @@ void ARoomPlatformBase::DestroySpecialPlacers_Implementation(const bool bDestroy
 	{
 		Placer = Cast<AObjectPlacerSpecialActor>(PlacerActor);
 		if (Placer) {
+#if WITH_EDITOR
 			if (bDestroySpawns) { Placer->ClearPlaced(); }
+#endif
 			Placer->Destroy(); 
 		}
 	}
@@ -534,7 +538,9 @@ void ARoomPlatformBase::DestroyClutterPlacers_Implementation(const bool bDestroy
 	{
 		Placer = Cast<AObjectPlacerProxyBoxClutter>(PlacerActor);
 		if (Placer) {
+#if WITH_EDITOR
 			if (bDestroySpawns) { Placer->ClearPlaced(); }
+#endif
 			Placer->Destroy(); 
 		}
 	}

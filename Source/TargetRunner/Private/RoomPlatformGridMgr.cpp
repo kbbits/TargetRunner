@@ -331,10 +331,12 @@ void ARoomPlatformGridMgr::SpawnRooms_Implementation()
 	}
 }
 
+#if WITH_EDITOR
 void ARoomPlatformGridMgr::SpawnRoomsEd_Implementation()
 {
 	SpawnRooms();
 }
+#endif
 
 
 void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
