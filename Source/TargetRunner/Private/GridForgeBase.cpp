@@ -3,6 +3,7 @@
 
 #include "GridForgeBase.h"
 #include "RoomTemplate.h"
+#include "RoomFunctionLibrary.h"
 #include "TrEnums.h"
 #include "TRMath.h"
 #include "..\Public\GridForgeBase.h"
@@ -302,6 +303,17 @@ void UGridForgeBase::TranslateCellGridToRoomGrid(UPARAM(ref)FRandomStream& RandS
 	{
 		CurCell = GetCell(BlackoutCoords, bFound);
 		if (CurCell != nullptr) { TranslateCellToRoom(RandStream, CurCell, RoomGridTemplate); }
+	}
+	// Get exit info for each room
+	TArray<FVector2D> AllRoomCoords;
+	URoomFunctionLibrary::GetAllRoomTemplateCoords(RoomGridTemplate, AllRoomCoords, true);
+	for (FVector2D RoomCoords : AllRoomCoords)
+	{
+		FRoomTemplate* TmpRoom = URoomFunctionLibrary::GetRoom(RoomGridTemplate, RoomCoords.IntPoint());
+		if (TmpRoom)
+		{
+			TmpRoom->ExitInfo = URoomFunctionLibrary::GetRoomExitInfo(RoomGridTemplate, RoomCoords.IntPoint());
+		}
 	}
 }
 

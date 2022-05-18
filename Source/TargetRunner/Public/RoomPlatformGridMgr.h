@@ -120,6 +120,7 @@ public:
 		ARoomPlatformBase* GetRoomNeighbor(const FVector2D& RoomCoords, const ETRDirection DirectionToNeighbor);
 
 	// Spawns all rooms in the room template grid
+	// NOTE: Current BP logic does not call this. It uses a "Delayed" spawn pattern. (See BP)
 	UFUNCTION(BlueprintNativeEvent)
 		void SpawnRooms();
 
@@ -153,11 +154,11 @@ public:
 	//	TSoftObjectPtr<UPrefabricatorAssetInterface> GetRoomComponentPrefab(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound);
 
 	// Pick a floor or ceiling component type for the given exit layout.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION()
 		TSubclassOf<ARoomComponentActor> GetRoomComponentActorInLayoutMap(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound);
 	
 	// Pick a wall or door component type for the room at the given coords.
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	UFUNCTION()
 		TSubclassOf<ARoomComponentActor> GetRoomComponentActorInArray(const ETRRoomComponentType Type, const FIntPoint RoomCoords, bool& bFound);
 
 	// Pick room component of the given type for the room at the given coords.

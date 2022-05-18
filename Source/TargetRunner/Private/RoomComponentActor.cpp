@@ -49,35 +49,62 @@ bool ARoomComponentActor::FilterRCACollections()
 bool ARoomComponentActor::SpawnRCACollections()
 {
 	if (SpawnedCollections.Num() > 0) {
-		//UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s SpawnRCACollections - %d collections already spawned"), *GetName(), SpawnedCollections.Num());
+		UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s SpawnRCACollections - %d collections already spawned"), *GetName(), SpawnedCollections.Num());
 		return true;
 	}
 	if (!GetWorld()) {
 		return false;
 	}
 	FilterRCACollections();
-	//UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s SpawnRCACollections spawning %d collections"), *GetName(), SubRoomComponents.Num());
+	if (SubRoomComponents.Num() > 0) {
+		UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s SpawnRCACollections spawning %d collections"), *GetName(), SubRoomComponents.Num());
+	}
+	int32 Count = 0;
 	ARoomComponentActorCollectionActor* CollectionActor = nullptr;
 	FTransform SpawnTransform;
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.Owner = this;
+	/*
+	if (GetOwner()) {
+		SpawnParams.Owner = GetOwner();
+	}
+	else 
+	{
+		if (GetParentActor())
+		{
+			if (GetParentActor()->GetOwner()) {
+				SpawnParams.Owner = GetParentActor()->GetOwner();
+			}
+			else {
+				SpawnParams.Owner = GetParentActor();
+			}
+		}
+	}
+	*/
 	// Spawn a collection actor for each in our collection
 	for (FRoomComponentActorCollection RCACollection : SubRoomComponents)
 	{
-		if (RCACollection.RoomComponentActors.Num() == 0) {
+		Count++;
+		if (RCACollection.RoomComponentActors.Num() == 0) 
+		{
 			UE_LOG(LogTRGame, Warning, TEXT("RoomComponentActor %s skipping collection because it contains no RCA entries."), *GetName());
 			continue;
 		}
+		//SpawnTransform = RCACollection.LocalTransform * GetTransform();
 		SpawnTransform = RCACollection.LocalTransform * GetTransform();
-		//UE_LOG(LogTRGame, Log, TEXT("    RoomComponentActor %s start spawning collection (contains %d RCAs)"), *GetName(), RCACollection.RoomComponentActors.Num());
+		UE_LOG(LogTRGame, Log, TEXT("    RoomComponentActor %s start spawning collection %d (contains %d RCAs)"), *GetName(), Count, RCACollection.RoomComponentActors.Num());
 		CollectionActor = GetWorld()->SpawnActorDeferred<ARoomComponentActorCollectionActor>(ARoomComponentActorCollectionActor::StaticClass(), SpawnTransform, SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
-		if (CollectionActor) {
+		if (CollectionActor) 
+		{
+			UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor setting RCACollection owner to %s"), *SpawnParams.Owner->GetName());
+			CollectionActor->SetOwner(SpawnParams.Owner);
 			CollectionActor->RoomComponentActorCollection = RCACollection;
 			CollectionActor->RandSeed = RandStream.RandRange(1, INT_MAX - 1);
 			//UE_LOG(LogTRGame, Log, TEXT("    RoomComponentActor %s finish spawning collection %s (contains %d RCAs) with seed %d"), *GetName(), *CollectionActor->GetName(), CollectionActor->RoomComponentActorCollection.RoomComponentActors.Num(),  CollectionActor->RandSeed);
 			UGameplayStatics::FinishSpawningActor(CollectionActor, CollectionActor->GetTransform());
-			CollectionActor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-			//UE_LOG(LogTRGame, Log, TEXT("    RoomComponentActor %s finished spawning collection %s"), *GetName(), *CollectionActor->GetName());
+			CollectionActor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform); // FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			UE_LOG(LogTRGame, Log, TEXT("    RoomComponentActor %s finished spawning collection %s"), *GetName(), *CollectionActor->GetName());
 			SpawnedCollections.Add(CollectionActor);
 		}
 	}
@@ -108,9 +135,12 @@ void ARoomComponentActor::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 	AActor* Parent = GetParentActor();
+	if (Parent == nullptr) {
+		Parent = GetAttachParentActor();
+	}
 	if (Parent && RandSeed == 0)
 	{
-		// If we were created by a collection actor, get seed from them.
+		// If we have a perent collection actor, get seed from them.
 		ARoomComponentActorCollectionActor* CollectionActor = Cast<ARoomComponentActorCollectionActor>(Parent);
 		if (CollectionActor) {
 			RandSeed = CollectionActor->GetRandSeedForChild();
@@ -127,9 +157,12 @@ void ARoomComponentActor::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 	AActor* Parent = GetParentActor();
+	if (Parent == nullptr) {
+		Parent = GetAttachParentActor();
+	}
 	if (Parent && RandSeed == 0)
 	{
-		// If we were created by a collection actor, get seed from them.
+		// If we have a parent collection actor, get seed from them.
 		ARoomComponentActorCollectionActor* CollectionActor = Cast<ARoomComponentActorCollectionActor>(Parent);
 		if (CollectionActor) {
 			RandSeed = CollectionActor->GetRandSeedForChild();
@@ -139,7 +172,18 @@ void ARoomComponentActor::OnConstruction(const FTransform& Transform)
 		RandStream.Initialize(RandSeed);
 	}
 	//UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s OnConstruction. RandSeed: %d Location: %s"), *GetName(), RandSeed, *GetActorLocation().ToString());
-	RespawnRCACollections();
+	if (GetWorld()->WorldType == EWorldType::Game) {
+		SpawnRCACollections();
+	}
+	else {
+		RespawnRCACollections();
+	}
+}
+
+
+void ARoomComponentActor::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 
@@ -192,13 +236,17 @@ bool ARoomComponentActor::CanContainRoomComponentClass(const TSubclassOf<ARoomCo
 
 void ARoomComponentActor::DestroyRCACollections()
 {
-	//UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s DestroyRCACollections destroying %d collections"), *GetName(), SpawnedCollections.Num());
+	UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s DestroyRCACollections destroying %d collections"), *GetName(), SpawnedCollections.Num());
 	TWeakObjectPtr<ARoomComponentActorCollectionActor> CollectionActor;
 	for (int32 i = 0; i < SpawnedCollections.Num(); i++)
 	{
 		CollectionActor = SpawnedCollections[i];
 		if (CollectionActor.IsValid()) {
-			//UE_LOG(LogTRGame, Log, TEXT("    Destroying %s"), *CollectionActor.Get()->GetName());
+			UE_LOG(LogTRGame, Log, TEXT("    %s Destroying %s"), *GetName(), *CollectionActor.Get()->GetName());
+			//if (IsValid(CollectionActor.Get()->PickedRoomComponentActor_CAC->GetChildActor())) {
+			//	CollectionActor.Get()->PickedRoomComponentActor_CAC->DestroyChildActor();
+			//}
+			CollectionActor.Get()->Reset();
 			CollectionActor.Get()->Destroy();			
 		}
 	}
@@ -208,7 +256,7 @@ void ARoomComponentActor::DestroyRCACollections()
 
 void ARoomComponentActor::RespawnRCACollections()
 {
-	//UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s RespawnRCACollections"), *GetName());
+	UE_LOG(LogTRGame, Log, TEXT("RoomComponentActor %s RespawnRCACollections"), *GetName());
 	DestroyRCACollections();
 	if (RandSeed > 0 && RandStream.GetInitialSeed() != RandSeed) {
 		RandStream.Initialize(RandSeed);
@@ -389,6 +437,12 @@ ARoomComponentActorCollectionActor::ARoomComponentActorCollectionActor()
 	PickedRoomComponentActor_CAC = CreateDefaultSubobject<UChildActorComponent>(TEXT("PickedRoomComponent"));
 	PickedRoomComponentActor_CAC->SetChildActorClass(NULL);
 	PickedRoomComponentActor_CAC->SetupAttachment(RootScene);
+	//AddInstanceComponent(PickedRoomComponentActor_CAC);
+	//PickedRoomComponentActor_CAC->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	if (PickedRoomComponentActor_CAC->GetOwner() == nullptr) {
+		UE_LOG(LogTRGame, Error, TEXT("RCACollectionActor child CAC owner is null."));
+	}
+	//PickedRoomComponentActor_CAC->RegisterComponent();
 	bool bFound = false;
 	PickedClass = NULL;
 #if WITH_EDITORONLY_DATA
@@ -402,7 +456,7 @@ ARoomComponentActorCollectionActor::ARoomComponentActorCollectionActor()
 
 void ARoomComponentActorCollectionActor::BeginPlay()
 {
-	
+	Super::BeginPlay();
 }
 
 
@@ -431,8 +485,7 @@ void ARoomComponentActorCollectionActor::OnConstruction(const FTransform& Transf
 #if WITH_EDITOR
 void ARoomComponentActorCollectionActor::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-	
+	Super::PostEditChangeProperty(PropertyChangedEvent);	
 }
 #endif
 
@@ -450,21 +503,87 @@ void ARoomComponentActorCollectionActor::PickAndInit()
 	RandStream.Initialize(RandSeed);
 	Reset();
 	GetRoomComponentActorClass(bFound);
-	if (bFound && IsValid(PickedClass) && PickedRoomComponentActor_CAC->GetChildActorClass() != PickedClass) {
-		if (IsValid(PickedRoomComponentActor_CAC->GetChildActor())) {
-			PickedRoomComponentActor_CAC->DestroyChildActor();
-		}
-		PickedRoomComponentActor_CAC->SetChildActorClass(PickedClass);
-		PickedRoomComponentActor_CAC->CreateChildActor();
-		ARoomComponentActor* ChildRCA = Cast<ARoomComponentActor>(PickedRoomComponentActor_CAC->GetChildActor());
-		if (ChildRCA) {
-			//ChildRCA->RespawnRCACollections();
-			//UE_LOG(LogTRGame, Log, TEXT("RCACollection %s created child component for RCA %s. Child RandSeed: %d"),
-			//	*GetName(),
-			//	*ChildRCA->GetName(),
-			//	ChildRCA->RandSeed);
+	if (GetWorld()->WorldType == EWorldType::Game) // || GetWorld()->WorldType == EWorldType::GamePreview
+	{
+		if (bFound && IsValid(PickedClass) && (ChildRCA == nullptr || ChildRCA->GetClass() != PickedClass))
+		{
+			UE_LOG(LogTRGame, Log, TEXT("RCACollection child spawning as actor"));
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			SpawnParams.Owner = GetOwner() == nullptr ? this : GetOwner();
+			//FTransform SpawnTransform = PickedRoomComponentActor_CAC->GetComponentTransform();
+			FTransform SpawnTransform = GetTransform();// PickedRoomComponentActor_CAC->GetRelativeTransform()* GetTransform(); //PickedRoomComponentActor_CAC->GetComponentTransform();
+			UE_LOG(LogTRGame, Log, TEXT("RCACollection %s PickAndInit - Spawning child RCA class %s"), *GetName(), *PickedClass->GetName());
+			ChildRCA = GetWorld()->SpawnActorDeferred<ARoomComponentActor>(PickedClass, SpawnTransform, SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
+			if (ChildRCA)
+			{
+				if (GetOwner()) {
+					UE_LOG(LogTRGame, Log, TEXT("RCACollection %s PickAndInit - Setting %s child RCA owner to collection owner %s"), *GetName(), *ChildRCA->GetName(), *GetOwner()->GetName());
+					ChildRCA->SetOwner(GetOwner());
+				}
+				else {
+					UE_LOG(LogTRGame, Log, TEXT("RCACollection %s PickAndInit - Setting %s child RCA owner to this collection."), *GetName(), *ChildRCA->GetName());
+					ChildRCA->SetOwner(this);
+				}
+				ChildRCA->RandSeed = GetRandSeedForChild();
+				UGameplayStatics::FinishSpawningActor(ChildRCA, ChildRCA->GetTransform());
+				//if (GetAttachParentActor()) {
+				//	ChildRCA->AttachToActor(GetAttachParentActor(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+				//}
+				//else {
+				ChildRCA->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform); // FAttachmentTransformRules::SnapToTargetNotIncludingScale
+				//}
+			}
+			else {
+				UE_LOG(LogTRGame, Error, TEXT("RCACollection %s PickAndInit - Error spawning child RCA"), *GetName());
+			}
 		}
 	}
+	else
+	{
+		if (bFound && IsValid(PickedClass) && PickedRoomComponentActor_CAC->GetChildActorClass() != PickedClass) 
+		{
+			UE_LOG(LogTRGame, Log, TEXT("RCACollection child spawning as child actor component"));
+			if (IsValid(PickedRoomComponentActor_CAC->GetChildActor())) {
+				PickedRoomComponentActor_CAC->DestroyChildActor();
+			}
+			PickedRoomComponentActor_CAC->SetChildActorClass(PickedClass);
+			PickedRoomComponentActor_CAC->CreateChildActor();
+			ARoomComponentActor* CAC_ChildRCA = Cast<ARoomComponentActor>(PickedRoomComponentActor_CAC->GetChildActor());
+			if (CAC_ChildRCA)
+			{
+				/*
+				if (GetOwner()) {
+					UE_LOG(LogTRGame, Log, TEXT("RCACollection %s setting Child CAC owner to it's owner %s."), *GetName(), *GetOwner()->GetName());
+					CAC_ChildRCA->SetOwner(GetOwner());
+				}
+				else {
+					UE_LOG(LogTRGame, Log, TEXT("RCACollection %s has null owner. Setting Child CAC owner to this collection."), *GetName());
+					CAC_ChildRCA->SetOwner(this);
+				}*/
+				//CAC_ChildRCA->SetOwner(this);
+				CAC_ChildRCA->RandSeed = GetRandSeedForChild();
+				//CAC_ChildRCA->RespawnRCACollections();
+				UE_LOG(LogTRGame, Log, TEXT("RCACollection %s created child component for RCA %s. Child RandSeed: %d"),
+					*GetName(),
+					*CAC_ChildRCA->GetName(),
+					CAC_ChildRCA->RandSeed);
+			}
+			else {
+				UE_LOG(LogTRGame, Error, TEXT("RCACollection %s - Child actor of class %s on CAC not valid."), *GetName(), *PickedClass->GetName());
+			}
+		}
+	}
+	if (!bFound) 
+	{
+		if (PickedClass != nullptr) {
+			UE_LOG(LogTRGame, Error, TEXT("RCACollection::PickAndInit - RCA collection %s, class %s not found."), *GetName(), *PickedClass->GetName());
+		}
+		else {
+			UE_LOG(LogTRGame, Error, TEXT("RCACollection::PickAndInit - RCA collection %s picked class was null"), *GetName());
+		}
+	}
+	bInitTried = true;
 }
 
 
@@ -473,7 +592,8 @@ TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::PickRoomCom
 	if (IsValid(PickedClass) && PickedClass != ARoomComponentActor::StaticClass()) {
 		return PickedClass;
 	}
-	if (RoomComponentActorCollection.RoomComponentActors.Num() == 0) {
+	if (RoomComponentActorCollection.RoomComponentActors.Num() == 0) 
+	{
 		UE_LOG(LogTRGame, Log, TEXT("RCACollection cannot PickRCA class, collection %s contains no entries."), *GetName());
 		bFoundValid = false;
 		PickedClass = NULL;
@@ -483,7 +603,8 @@ TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::PickRoomCom
 	// Sum total weight
 	for (const FRoomComponentActorCollectionItem CollectionItem : RoomComponentActorCollection.RoomComponentActors)
 	{
-		if (!IsValid(CollectionItem.RCAClass)) {
+		if (!IsValid(CollectionItem.RCAClass)) 
+		{
 			UE_LOG(LogTRGame, Warning, TEXT("RCACollection Invalid RCA class in collection %s"), *GetName());
 			bFoundValid = false;
 			PickedClass = NULL;
@@ -496,7 +617,8 @@ TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::PickRoomCom
 	{
 		bFoundValid = true;
 		PickedClass = RoomComponentActorCollection.RoomComponentActors[RandStream.RandRange(0, RoomComponentActorCollection.RoomComponentActors.Num() - 1)].RCAClass;
-		if (IsValid(PickedClass)) {
+		if (IsValid(PickedClass)) 
+		{
 			//UE_LOG(LogTRGame, Log, TEXT("RCACollection %s picked room component %s from %d choice(s)"),
 			//	*GetName(),
 			//	*PickedClass->GetName(),
@@ -512,7 +634,8 @@ TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::PickRoomCom
 		for (const FRoomComponentActorCollectionItem CollectionItem : RoomComponentActorCollection.RoomComponentActors)
 		{
 			TotalWeight += FMath::Max(0.0f, CollectionItem.Weight);
-			if (PickedWeight <= TotalWeight) {
+			if (PickedWeight <= TotalWeight) 
+			{
 				bFoundValid = true;
 				PickedClass = CollectionItem.RCAClass;
 				//UE_LOG(LogTRGame, Log, TEXT("RCACollection %s picked room component %s from %d choices (picked weight: %f)"),
@@ -524,6 +647,7 @@ TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::PickRoomCom
 			}
 		}
 	}
+	UE_LOG(LogTRGame, Error, TEXT("RCACollection::PickRoomComponentActorClass - Found no valid class."))
 	bFoundValid = false;
 	PickedClass = NULL;
 	return PickedClass;
@@ -540,6 +664,11 @@ TSubclassOf<ARoomComponentActor> ARoomComponentActorCollectionActor::GetRoomComp
 void ARoomComponentActorCollectionActor::Reset()
 {
 	PickedClass = NULL;
+	if (ChildRCA) 
+	{
+		ChildRCA->Destroy();
+		ChildRCA = nullptr;
+	}
 }
 
 
@@ -548,9 +677,16 @@ bool ARoomComponentActorCollectionActor::AllISMsCopiedOut()
 	if (!IsValid(PickedClass)) {
 		return false;
 	}
-	ARoomComponentActor* ChildRCA = Cast<ARoomComponentActor>(PickedRoomComponentActor_CAC->GetChildActor());
-	if (!IsValid(ChildRCA)) {
+	if (bInitTried) 
+	{
+		//ARoomComponentActor* ChildRCA = Cast<ARoomComponentActor>(PickedRoomComponentActor_CAC->GetChildActor());
+		//if (!IsValid(ChildRCA)) {
+		//	return true;
+		//}
+		if (IsValid(ChildRCA)) {
+			return ChildRCA->AllISMsCopiedOut();
+		}
 		return true;
 	}
-	return ChildRCA->AllISMsCopiedOut();
+	return false;
 }

@@ -105,9 +105,14 @@ int32 URoomFunctionLibrary::GetRoomTemplateGridAsArrays(const FRoomGridTemplate&
 	return RoomCoords.Num();
 }
 
+
 FRoomExitInfo URoomFunctionLibrary::GetRoomExitInfo(const FRoomGridTemplate& RoomGridTemplate, const FIntPoint& RoomCoords)
 {
 	FRoomGridTemplate RGT = const_cast<FRoomGridTemplate&>(RoomGridTemplate);
+	if (RGT.Grid.Num() == 0) {
+		UE_LOG(LogTRGame, Error, TEXT("RoomFunctionLibrary::GetRoomExitInfo - RoomGridTemplate is empty"));
+		return FRoomExitInfo();
+	}
 	FRoomExitInfo ExitInfo;
 	int32 ExitCount = 0;
 	ETRDirection LastDoorOrientation = ETRDirection::North;

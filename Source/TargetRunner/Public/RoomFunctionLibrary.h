@@ -42,7 +42,7 @@ public:
 		static bool GetRoom(UPARAM(ref) FRoomGridTemplate RoomGridTemplate, const FIntPoint& RoomCoords, FRoomTemplate& Rooom);
 	static FRoomTemplate* GetRoom(UPARAM(ref) FRoomGridTemplate& RoomGridTemplate, const FIntPoint& RoomCoords);
 
-	UFUNCTION(BlueprintPure, Category = "Room Template Functions")
+	UFUNCTION()
 		static FRoomExitInfo GetRoomExitInfo(const FRoomGridTemplate& RoomGridTemplate, const FIntPoint& RoomCoords);
 
 	// Returns the WallState of the room for the wall in the given direction. ex: Direction == North, gets the North wall state.

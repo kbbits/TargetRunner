@@ -4,6 +4,7 @@
 //#include "Engine/DataTable.h"
 #include "TrEnums.h"
 #include "ResourceQuantity.h"
+#include "RoomExitInfo.h"
 #include "RoomTemplate.generated.h"
 
 USTRUCT(BlueprintType)
@@ -25,6 +26,12 @@ public:
 		ETRWallState SouthWall;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		ETRWallState WestWall;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
+		TArray<ETRWallState> WallTemplate;
+
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
+		FRoomExitInfo ExitInfo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		int32 Group;

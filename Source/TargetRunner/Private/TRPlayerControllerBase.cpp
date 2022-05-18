@@ -915,7 +915,7 @@ void ATRPlayerControllerBase::ClientUpdateRoomGridTemplate_Implementation(const 
 	{
 		GridManager->DestroyGrid();
 		GridManager->SetRoomGridTemplateData(UpdatedTemplate, RoomCoords, RoomTemplates);
-		GridManager->SpawnRooms();
+		//GridManager->SpawnRooms();
 	}
 	else
 	{
@@ -974,12 +974,15 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	{
 		Attr->UpdateFromAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
-	// Inventory
-	GoodsInventory->ServerSetInventory(SaveData.GoodsInventory, SaveData.SnapshotInventory);
+	if (GetLocalRole() == ROLE_Authority) {
+		// Inventory
+		GoodsInventory->ServerSetInventory(SaveData.GoodsInventory, SaveData.SnapshotInventory);
+	}
 	// Tools
 	ToolInventory.Empty();
 	for (FToolData CurToolData : SaveData.ToolInventory)
 	{
+		UE_LOG(LogTRGame, Log, TEXT("Adding tool from save %s"), *CurToolData.AttributeData.ItemDisplayName.ToString());
 		ToolInventory.Add(CurToolData.AttributeData.ItemGuid, CurToolData);
 	}
 	// Other data
@@ -994,11 +997,14 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 		MaxEquippedEquipment = TmpInt->Quantity;
 	}
 	MaxEquippedEquipment = MaxEquippedEquipment < 0 ? 0 : MaxEquippedEquipment;
-	// Re-equip all tools
-	ServerUnequipAllTools();
-	for (FGuid TmpGuid : SaveData.LastEquippedItems)
+	if (GetLocalRole() == ROLE_Authority)
 	{
-		ServerEquipTool(TmpGuid);
+		// Re-equip all tools
+		ServerUnequipAllTools();
+		for (FGuid TmpGuid : SaveData.LastEquippedItems)
+		{
+			ServerEquipTool(TmpGuid);
+		}
 	}
 	// Update PlayerState
 	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);

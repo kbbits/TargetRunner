@@ -76,6 +76,7 @@ void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
 	ATRPlayerState* NewTRPlayerState = Cast<ATRPlayerState>(NewPlayerState);
 	if (NewTRPlayerState)
 	{
+		UE_LOG(LogTRGame, Log, TEXT("PlayerState::CopyProperties - current guid %s overwriting new guid %s"), *PlayerGuid.ToString(), *NewTRPlayerState->PlayerGuid.ToString());
 		NewTRPlayerState->PlayerGuid = PlayerGuid;
 		NewTRPlayerState->ProfileName = ProfileName;
 		NewTRPlayerState->DisplayName = DisplayName;

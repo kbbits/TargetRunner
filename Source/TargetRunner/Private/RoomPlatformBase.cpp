@@ -2,6 +2,7 @@
 #include "RoomPlatformBase.h"
 #include "RoomPlatformGridMgr.h"
 #include "RoomComponentActor.h"
+#include "RoomExitInfo.h"
 #include "ObjectPlacer.h"
 #include "ObjectPlacerProxyBox.h"
 #include "TrEnums.h"
@@ -14,7 +15,6 @@
 ARoomPlatformBase::ARoomPlatformBase()
 {
 	bReplicates = true;
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bRoomTemplateSet = false;
 }
@@ -40,21 +40,21 @@ void ARoomPlatformBase::BeginPlay()
 void ARoomPlatformBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 
-void ARoomPlatformBase::ServerSetRoomTemplate_Implementation(const FRoomTemplate& NewRoomTemplate)
+//void ARoomPlatformBase::ServerSetRoomTemplate_Implementation(const FRoomTemplate& NewRoomTemplate)
+void ARoomPlatformBase::SetRoomTemplate(const FRoomTemplate& NewRoomTemplate)
 {
 	RoomTemplate = NewRoomTemplate;
 	// Manually call OnRep here on server
 	OnRep_RoomTemplate();
 }
 
-bool ARoomPlatformBase::ServerSetRoomTemplate_Validate(const FRoomTemplate& NewRoomTemplate)
-{
-	return true;
-}
+//bool ARoomPlatformBase::ServerSetRoomTemplate_Validate(const FRoomTemplate& NewRoomTemplate)
+//{
+//	return true;
+//}
 
 /*
 void ARoomPlatformBase::OnRep_WallTemplate_Implementation()
@@ -72,14 +72,20 @@ void ARoomPlatformBase::OnRep_WallTemplate_Implementation()
 
 void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
 {
+	if (GetLocalRole() < ROLE_Authority) {
+		UE_LOG(LogTRGame, Log, TEXT("OnRep_RoomTemplate - called on client"));
+	}
+	else {
+		UE_LOG(LogTRGame, Log, TEXT("OnRep_RoomTemplate - called on server"));
+	}
 	int32 RoomCellSubdivision;
 	ARoomPlatformGridMgr* RoomGridManager;
-	if (MyGridManager == nullptr)
-	{
+	if (MyGridManager == nullptr) {
 		GetGridManager();
 	}
 	RoomGridManager = Cast<ARoomPlatformGridMgr>(MyGridManager);
-	if (!IsValid(RoomGridManager)) {
+	if (!IsValid(RoomGridManager)) 
+	{
 		UE_LOG(LogTRGame, Error, TEXT("OnRep_RoomTemplate - could not get valid room grid manager"));
 		return;
 	}
@@ -88,6 +94,10 @@ void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
 	}
 	RoomCellSubdivision = RoomGridManager->RoomCellSubdivision;
 
+	if (RoomTemplate.WallTemplate.Num() == 0) {
+		UE_LOG(LogTRGame, Error, TEXT("OnRep_RoomTemplate - RoomTemplate's WallTemplate is empty."));
+	}
+	/*  This is done in Grid manager now
 	// Create appropriate wall state arrays representing the used wall types, sized according to RoomCellSubdivision.
 	int32 DoorSection;
 	TArray<ETRWallState> TmpWallTemplate;
@@ -136,12 +146,18 @@ void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
 		TmpWallTemplate.Append(WallState == ETRWallState::Blocked ? SolidWall : (WallState == ETRWallState::Door ? DoorWall : EmptyWall));
 	}
 	WallTemplate = TmpWallTemplate;
+	*/
+	
 	bRoomTemplateSet = true;
-	if (GetLocalRole() < ROLE_Authority && bGenerateOnClient)
+	if (GetLocalRole() < ROLE_Authority)
 	{
-		// Have clients generate the room too.
-		GenerateRoomImpl();
-		SpawnContents();
+		RoomGridManager->AddPlatformToGridMap(this);
+		if (bGenerateOnClient)
+		{
+			// Have clients generate the room too.
+			GenerateRoomImpl();
+			SpawnContents();
+		}
 	}
 }
 
@@ -259,6 +275,7 @@ bool ARoomPlatformBase::SpawnCeiling_Implementation()
 
 bool ARoomPlatformBase::SpawnContents_Implementation()
 {
+	// Room content entities are replicated so they are only spawned on the server.
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		if (!SpawnResources())
@@ -353,7 +370,7 @@ bool ARoomPlatformBase::SpawnClutter_Implementation()
 
 	UE_LOG(LogTRGame, Log, TEXT("%s - SpawnClutter in room (%d, %d)"), *GetNameSafe(this), GridX, GridY);
 
-	// Find all the special actor object placers.
+	// Find all the clutter object placers.
 	PlatformControlZone->GetOverlappingActors(Placers, AObjectPlacerProxyBoxClutter::StaticClass());
 	if (Placers.Num() == 0)
 	{
@@ -433,6 +450,7 @@ int32 ARoomPlatformBase::DestroyTrackedRoomComponents()
 		// Destroy all the room components with valid refs
 		RoomComponent = SpawnedRoomComponents[i];
 		if (RoomComponent.IsValid()) {
+			RoomComponent.Get()->DestroyRCACollections();
 			RoomComponent.Get()->Destroy();
 			NumDestroyed++;
 		}
@@ -470,16 +488,23 @@ ARoomPlatformBase* ARoomPlatformBase::GetConnectedNeighbor(const ETRDirection Di
 }
 
 
+FRoomExitInfo ARoomPlatformBase::GetExitInfo()
+{
+	return RoomTemplate.ExitInfo;
+}
+
+
 void ARoomPlatformBase::DestroyResourcePlacers_Implementation(const bool bDestroySpawns)
 {
 	TArray<AActor*> AllPlacers;
 	AObjectPlacerResource* Placer;
-	// Find all the special actor object placers.
+	// Find all the resource object placers.
 	PlatformControlZone->GetOverlappingActors(AllPlacers, AObjectPlacerResource::StaticClass());
 	for (AActor* PlacerActor : AllPlacers)
 	{
 		Placer = Cast<AObjectPlacerResource>(PlacerActor);
-		if (Placer) {
+		if (Placer) 
+		{
 #if WITH_EDITOR
 			if (bDestroySpawns) { Placer->ClearPlaced(); }
 #endif
@@ -508,7 +533,8 @@ void ARoomPlatformBase::DestroySpecialPlacers_Implementation(const bool bDestroy
 	for (AActor* PlacerActor : AllPlacers)
 	{
 		Placer = Cast<AObjectPlacerSpecialActor>(PlacerActor);
-		if (Placer) {
+		if (Placer) 
+		{
 #if WITH_EDITOR
 			if (bDestroySpawns) { Placer->ClearPlaced(); }
 #endif
@@ -537,7 +563,8 @@ void ARoomPlatformBase::DestroyClutterPlacers_Implementation(const bool bDestroy
 	for (AActor* PlacerActor : AllPlacers)
 	{
 		Placer = Cast<AObjectPlacerProxyBoxClutter>(PlacerActor);
-		if (Placer) {
+		if (Placer) 
+		{
 #if WITH_EDITOR
 			if (bDestroySpawns) { Placer->ClearPlaced(); }
 #endif

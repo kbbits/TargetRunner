@@ -95,6 +95,44 @@ void APlatformGridMgr::MovePlayerStarts()
 void APlatformGridMgr::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if (GetLocalRole() == ROLE_Authority) 
+	{
+		ServerISMQueueTime += DeltaTime;
+		if (ServerISMQueue.Num() > 0)
+		{			
+			if (ServerISMQueueTime >= ServerISMQueueMaxTime)
+			{
+				ServerISMQueueTime = 0.0f;
+				TArray<FISMContext> ISMContexts;
+				int32 Size = 0;
+				if (ServerISMQueue.Num() > ISMQueueMaxBatchSize) 
+				{
+					ISMContexts.Empty(ISMQueueMaxBatchSize);
+					for (int32 i = 0; i < ISMQueueMaxBatchSize; i++)
+					{
+						Size += sizeof(ServerISMQueue[i].Mesh);
+						Size += ServerISMQueue[i].SpawnTransforms.GetTypeSize() * ServerISMQueue[i].SpawnTransforms.Num();
+						ISMContexts.Add(ServerISMQueue[i]);
+					}
+					ServerISMQueue.RemoveAt(0, ISMQueueMaxBatchSize, false);
+				}
+				else {
+					ISMContexts.Append(ServerISMQueue);
+					ServerISMQueue.Empty(25);
+				}
+				UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::Tick - Processing %d ISM contexts in queue"), ISMContexts.Num());
+				UE_LOG(LogTRGame, Log, TEXT(" ISMContext size %d"), sizeof(ISMContexts));
+				UE_LOG(LogTRGame, Log, TEXT(" ISMContext batch size %d bytes"), ISMContexts.GetTypeSize() * ISMContexts.Num());
+				UE_LOG(LogTRGame, Log, TEXT(" ISMContext calculated size %d bytes"), Size);
+				MC_SpawnISMs(ISMContexts);
+			}
+		}
+		else if (ServerISMQueueTime > 120.0f) {
+			ServerISMQueueTime = ServerISMQueueMaxTime;
+		}
+	}
+	
 }
 
 
@@ -404,6 +442,86 @@ void APlatformGridMgr::WakeNeighborsImpl(const FVector2D AroundGridCoords)
 }
 
 
+
+void APlatformGridMgr::SpawnISMs(const TArray<FISMContext>& ISMContexts)
+{
+	UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Spawning %d ISM contexts"), ISMContexts.Num());
+	for (FISMContext ISMContext : ISMContexts)
+	{
+		if (ISMContext.SpawnTransforms.Num() == 0) {
+			UE_LOG(LogTRGame, Warning, TEXT("PlatformGridMgr::SpawnISMs - Got ISMContext %s with 0 spawn transforms"), *ISMContext.MeshPath.ToString());
+		}
+		else {
+			UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Adding ISMContext %s with %d spawn transforms"), *ISMContext.MeshPath.ToString(), ISMContext.SpawnTransforms.Num());
+		}
+		
+		UStaticMesh* MeshRef = nullptr;
+		if (ISMContext.Mesh.IsValid()) {
+			MeshRef = ISMContext.Mesh.Get();
+		}
+		if (MeshRef == nullptr) {
+			UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Getting mesh from soft path %s"), *ISMContext.MeshPath.ToString());
+			MeshRef = Cast<UStaticMesh>(ISMContext.MeshPath.ResolveObject());
+			if (MeshRef == nullptr) {
+				UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Loading mesh from soft path %s"), *ISMContext.MeshPath.ToString());
+				MeshRef = Cast<UStaticMesh>(ISMContext.MeshPath.TryLoad());
+			}
+		}
+		if (MeshRef)
+		{
+			TSoftObjectPtr<UStaticMesh> MeshSOPtr(MeshRef);
+			FSoftObjectPath MeshSOPath(MeshRef);
+			if (ISMContext.MeshPath != MeshSOPath)
+			{
+				UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - changing mesh path from %s to %s"), *ISMContext.MeshPath.ToString(), *MeshSOPath.ToString());
+				ISMContext.MeshPath = MeshSOPath;
+			}
+			UMaterialInterface* MatRef = MeshRef->GetMaterial(0);
+			if (MatRef)
+			{
+				for (FTransform SpawnTransform : ISMContext.SpawnTransforms)
+				{
+					SpawnISM(MeshSOPtr, MatRef, SpawnTransform);
+				}
+				ISMContext.Mesh.Reset();
+			}
+			else {
+				UE_LOG(LogTRGame, Error, TEXT("PlatformGridMgr::SpawnISMs - Could not get material for mesh %s"), *ISMContext.MeshPath.ToString());
+			}
+		}
+		else {
+			UE_LOG(LogTRGame, Error, TEXT("PlatformGridMgr::SpawnISMs - Could not load static mesh %s"), *ISMContext.MeshPath.ToString());
+		}
+	}
+	if (GetLocalRole() == ROLE_Authority && bEnableClientISMs)
+	{
+		ServerISMQueue.Append(ISMContexts);
+	}
+}
+
+
+void APlatformGridMgr::MC_SpawnISMs_Implementation(const TArray<FISMContext>& ISMContexts)
+{
+	if (GetLocalRole() < ROLE_Authority)
+	{
+		UE_LOG(LogTRGame, Log, TEXT("MC_SpawnISMs - spawning %d ISM contexts"), ISMContexts.Num());
+		for (FISMContext ISMContext : ISMContexts)
+		{
+			if (ISMContext.SpawnTransforms.Num() == 0) {
+				UE_LOG(LogTRGame, Warning, TEXT("PlatformGridMgr::MC_SpawnISMs - Got ISMContext %s with 0 spawn transforms"), *ISMContext.MeshPath.ToString());
+			}
+		}
+		SpawnISMs(ISMContexts);
+	}
+}
+
+
+bool APlatformGridMgr::MC_SpawnISMs_Validate(const TArray<FISMContext>& ISMContexts)
+{
+	return true;
+}
+
+
 int32 APlatformGridMgr::SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, UPARAM(ref) UMaterialInterface* Material, const FTransform& SpawnTransform)
 {
 	if (!Material->CheckMaterialUsage_Concurrent(EMaterialUsage::MATUSAGE_InstancedStaticMeshes))
@@ -434,12 +552,13 @@ int32 APlatformGridMgr::SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, U
 	}
 	if (!FoundISMComp)
 	{
-		DebugLog(FString::Printf(TEXT("GridManager creating new ISM component")));
+		DebugLog(FString::Printf(TEXT("GridManager creating new ISM component for mesh %s"), *Mesh.GetAssetName()));
 		// Create an ISM component for this mesh and material
 		FoundISMComp = NewObject<UInstancedStaticMeshComponent>(this);
 		FoundISMComp->SetMobility(EComponentMobility::Movable);
+		FoundISMComp->SetOnlyOwnerSee(false);
+		check(GetRootComponent() != nullptr);
 		FoundISMComp->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-		FoundISMComp->RegisterComponent();
 		//FoundISMComp->bCastDynamicShadow = false;
 		//FoundISMComp->CastShadow = false;		
 		FoundISMComp->SetVisibility(true);
@@ -447,10 +566,12 @@ int32 APlatformGridMgr::SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, U
 		FoundISMComp->SetMaterial(0, Material);
 		FoundISMComp->SetIsReplicated(true);
 		FoundISMComp->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
+		FoundISMComp->OnComponentCreated();
+		FoundISMComp->RegisterComponent();
 	}
 	if (FoundISMComp)
 	{
-		DebugLog(FString::Printf(TEXT("GridManager Adding ISM instance %s"), *SpawnTransform.GetLocation().ToString()));
+		DebugLog(FString::Printf(TEXT("GridManager Adding ISM instance for %s at %s"), *Mesh.GetAssetName(), *SpawnTransform.GetLocation().ToString()));
 		return FoundISMComp->AddInstanceWorldSpace(SpawnTransform);
 	}
 	else

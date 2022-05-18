@@ -324,6 +324,7 @@ void ARoomPlatformGridMgr::SpawnRooms_Implementation()
 			RoomPlatform->SpawnContents(); // calls SpawnResources, SpawnSpecials, SpawnClutter
 		}
 	}
+	SpawnsFinished();
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		// Have the clients update their grid maps
@@ -341,6 +342,9 @@ void ARoomPlatformGridMgr::SpawnRoomsEd_Implementation()
 
 void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 {
+	if (GetLocalRole() < ROLE_Authority) {
+		UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr::SpawnRoom called on client."));
+	}
 	// First remove any existing platform.
 	bool bSuccess;
 	APlatformBase* OldRoom = RemovePlatformFromGrid(GridCoords, bSuccess);
@@ -364,10 +368,14 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	FRoomTemplate* RoomTemplate = GridRow->RowRooms.Find(GridCoords.Y);
 	if (RoomTemplate == nullptr) { UE_LOG(LogTRGame, Error, TEXT("%s - Could not find room template at X:%d Y:%d"), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y); }
 
+	//NewRoom = GetWorld()->SpawnActorDeferred<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(GridCoords), SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
 	NewRoom = GetWorld()->SpawnActor<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(GridCoords), SpawnParams);
 	if (NewRoom != nullptr)
 	{
 		NewRoom->MyGridManager = this;
+		NewRoom->GridX = GridCoords.X;
+		NewRoom->GridY = GridCoords.Y;
+		//UGameplayStatics::FinishSpawningActor(NewRoom, NewRoom->GetTransform());
 		if (IsValid(GameMode))
 		{
 			// Get our random stream from game mode
@@ -380,11 +388,62 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 			//NewRoom->PlatformRandStream.Initialize(DefaultGridRandStream.RandRange(1, INT_MAX - 1));
 			RoomTemplate->RoomRandSeed = DefaultGridRandStream.RandRange(1, INT_MAX - 1);
 		}
-		NewRoom->GridX = GridCoords.X;
-		NewRoom->GridY = GridCoords.Y;
+
+		// Build the WallTemplate -- and array of WallState enums
+		// Create appropriate wall state arrays representing the used wall types, sized according to RoomCellSubdivision.
+		FRandomStream TmpPlatformRandStream;
+		int32 DoorSection;
+		TArray<ETRWallState> TmpWallTemplate;
+		TmpPlatformRandStream.Initialize(RoomTemplate->RoomRandSeed);
+		// Put the door in the center of the wall by default
+		DoorSection = (RoomCellSubdivision / 2);
+		TArray<ETRWallState> DoorWall;
+		DoorWall.Reserve(RoomCellSubdivision);
+		for (int i = 0; i < RoomCellSubdivision; i++)
+		{
+			if (i == DoorSection) { DoorWall.Add(ETRWallState::Door); }
+			else { DoorWall.Add(ETRWallState::Blocked); }
+		}
+		TArray<ETRWallState> SolidWall;
+		SolidWall.Reserve(RoomCellSubdivision);
+		for (int i = 0; i < RoomCellSubdivision; i++)
+		{
+			SolidWall.Add(ETRWallState::Blocked);
+		}
+		TArray<ETRWallState> EmptyWall;
+		EmptyWall.Reserve(RoomCellSubdivision);
+		for (int i = 0; i < RoomCellSubdivision; i++)
+		{
+			EmptyWall.Add(ETRWallState::Empty);
+		}
+		// Create wall template, sized so each of the four walls gets [RoomCellSubdivision] entries.
+		TmpWallTemplate.Empty(4 * RoomCellSubdivision);
+		TArray<ETRWallState> Walls;
+		Walls.Add(RoomTemplate->NorthWall);
+		Walls.Add(RoomTemplate->EastWall);
+		Walls.Add(RoomTemplate->SouthWall);
+		Walls.Add(RoomTemplate->WestWall);
+		// Append wall segments for each wall. 
+		for (ETRWallState WallState : Walls)
+		{
+			if (WallState == ETRWallState::Door && !bDoorsAtWallCenter)
+			{
+				// Put the door in a random wall section
+				DoorSection = TmpPlatformRandStream.RandRange(0, RoomCellSubdivision - 1);
+				for (int i = 0; i < RoomCellSubdivision; i++)
+				{
+					if (i == DoorSection) { DoorWall[i] = ETRWallState::Door; }
+					else { DoorWall[i] = ETRWallState::Blocked; }
+				}
+			}
+			TmpWallTemplate.Append(WallState == ETRWallState::Blocked ? SolidWall : (WallState == ETRWallState::Door ? DoorWall : EmptyWall));
+		}
+		RoomTemplate->WallTemplate = TmpWallTemplate;
+		// End of WallTemplate generation
+		
 		AddPlatformToGridMap(NewRoom);
 		// Setting room template will trigger replication to clients. Clients will handle generation via the OnRep hooks.
-		NewRoom->ServerSetRoomTemplate(*RoomTemplate);		
+		NewRoom->SetRoomTemplate(*RoomTemplate);		
 		NewRoom->ServerGenerateRoom();
 	}
 }
@@ -505,7 +564,7 @@ TSoftObjectPtr<UPrefabricatorAssetInterface> ARoomPlatformGridMgr::GetRoomCompon
 */
 
 
-TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInLayoutMap_Implementation(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound)
+TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInLayoutMap(const ETRRoomComponentType Type, const ETRRoomExitLayout ExitLayout, bool& bFound)
 {
 	InitRoomComponentMaps();
 	float TotalWeight = 0.0f;
@@ -584,7 +643,7 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInLa
 }
 
 
-TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInArray_Implementation(const ETRRoomComponentType Type, const FIntPoint RoomCoords, bool& bFound)
+TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInArray(const ETRRoomComponentType Type, const FIntPoint RoomCoords, bool& bFound)
 {
 	InitRoomComponentMaps();
 	float TotalWeight = 0.0f;
@@ -658,10 +717,17 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInAr
 
 TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActor_Implementation(const ETRRoomComponentType Type, const FIntPoint RoomCoords, FRoomExitInfo& ExitInfo, bool& bFound)
 {
-	ExitInfo = URoomFunctionLibrary::GetRoomExitInfo(RoomGridTemplate, RoomCoords);
+	ARoomPlatformBase* Room = GetRoomInGrid(RoomCoords);
+	//ExitInfo = URoomFunctionLibrary::GetRoomExitInfo(RoomGridTemplate, RoomCoords);
+	if (Room == nullptr) {
+		UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr::GetRoomComponentActor - could not get room at X:%d Y:%d"), RoomCoords.X, RoomCoords.Y);
+		bFound = false;
+		return ARoomComponentActor::StaticClass();
+	}
+	ExitInfo = Room->GetExitInfo();
 	if (ExitInfo.ExitLayout == ETRRoomExitLayout::None)
 	{
-		UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr - Could not get room exit info for room X:%d Y:%d. Exit layout was None."), RoomCoords.X, RoomCoords.Y);
+		UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr - Invalid room exit info for room X:%d Y:%d. Exit layout was None."), RoomCoords.X, RoomCoords.Y);
 		bFound = false;
 		return ARoomComponentActor::StaticClass();
 	}

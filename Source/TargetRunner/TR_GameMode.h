@@ -194,6 +194,8 @@ public:
 	UFUNCTION(BlueprintPure)
 		void GetGridExtents(FVector2D& MinExtents, FVector2D& MaxExtents);
 
+	// Called to spawn the platforms, of the level.
+	// NOTE: current blueprint logic DOES NOT call this for RoomPlatforGridMgr (only basic PlatformGridMgr)
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		bool SpawnLevel();
 

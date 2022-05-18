@@ -32,9 +32,9 @@ public:
 		bool bGenerateOnClient;
 
 	//UPROPERTY(EditInstanceOnly, BlueprintReadOnly, ReplicatedUsing = OnRep_WallTemplate)
-	/**  */
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
-		TArray<ETRWallState> WallTemplate;
+	// Moved to RoomTemplate
+	//UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
+	//	TArray<ETRWallState> WallTemplate;
 
 	// Our cache of refs to the RoomComponentActors this platform spawned.
 	UPROPERTY()
@@ -57,8 +57,11 @@ public:
 	*[Server]
 	* Set this room's room template. Must do this before GenerateRoom can be called. 
 	*/
-	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
-		void ServerSetRoomTemplate(const FRoomTemplate& NewRoomTemplate);
+	//UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
+	//	void ServerSetRoomTemplate(const FRoomTemplate& NewRoomTemplate);
+
+	UFUNCTION()
+		void SetRoomTemplate(const FRoomTemplate& NewRoomTemplate);
 
 	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	//	void OnRep_WallTemplate();
@@ -146,6 +149,9 @@ public:
 	// If not connected in that direction, this returns nullptr.
 	UFUNCTION(BlueprintPure)
 		ARoomPlatformBase* GetConnectedNeighbor(const ETRDirection Direction);
+
+	UFUNCTION(BlueprintPure)
+		FRoomExitInfo GetExitInfo();
 
 	// Must include this in header since we are subclass of concrete class?
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

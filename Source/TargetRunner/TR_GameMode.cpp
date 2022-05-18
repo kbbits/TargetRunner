@@ -284,6 +284,15 @@ bool ATR_GameMode::InitGridManager_Implementation()
 		RoomGridManager->SpecialsToDistribute = LevelTemplate.SpecialsAvailable;
 	}
 
+	UTRGameInstance* TRGameInst = Cast<UTRGameInstance>(GetGameInstance());
+	if (TRGameInst)
+	{
+		// Force the game instance on all clients to refresh it's grid manager ref
+		TRGameInst->MC_ResetGridManager();
+		// Reset here on server manually.
+		TRGameInst->MC_ResetGridManager_Implementation();
+	}
+
 	//UE_LOG(LogTRGame, Log, TEXT("TRGameMode::InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)
 	return true;
 }

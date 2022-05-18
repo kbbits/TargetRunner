@@ -121,6 +121,8 @@ public:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 
+	virtual void BeginPlay() override;
+
 	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Destroyed() override;
 
@@ -183,6 +185,9 @@ public:
 	UPROPERTY(VisibleAnywhere)
 		UChildActorComponent* PickedRoomComponentActor_CAC;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		ARoomComponentActor* ChildRCA;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomComponentActor")
 		FRoomComponentActorCollection RoomComponentActorCollection;
 
@@ -195,6 +200,9 @@ protected:
 
 	UPROPERTY()
 		FRandomStream RandStream;
+
+	UPROPERTY()
+		bool bInitTried = false;
 
 protected:
 	virtual void BeginPlay() override;

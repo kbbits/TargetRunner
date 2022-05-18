@@ -272,8 +272,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 		ARoomPlatformGridMgr* FindGridManager();
 
+	// UNUSED
 	// Called from server to update the client's room grid template
-	UFUNCTION(BlueprintCallable, Client, Reliable)
+	UFUNCTION(BlueprintCallable, Client, Reliable, meta = (DeprecatedFunction))
 		void ClientUpdateRoomGridTemplate(const FRoomGridTemplate& UpdatedTemplate, const TArray<FVector2D>& RoomCoords, const TArray<FRoomTemplate>& RoomTemplates);
 
 	// [Server]

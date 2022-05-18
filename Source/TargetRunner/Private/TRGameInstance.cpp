@@ -7,6 +7,7 @@
 #include "TRPlayerControllerBase.h"
 #include "LevelTemplatesSave.h"
 #include "PlayerLevelRecordsSave.h"
+#include "PlatformGridMgr.h"
 
 UTRGameInstance::UTRGameInstance()
 	: Super()
@@ -331,4 +332,32 @@ void UTRGameInstance::UpdateLevelTemplatePlayerRecord(const FPlayerLevelRecord& 
 	else {
 		UE_LOG(LogTRGame, Error, TEXT("GameInstance - UpdateLevelTemplatePlayerRecord - no level template with id: %s"), *PlayerRecord.LevelId.ToString());
 	}
+}
+
+
+APlatformGridMgr* UTRGameInstance::GetGridManager(const bool bForceRefresh)
+{
+	if (GridManager == nullptr || bForceRefresh)
+	{
+		GridManager = nullptr;
+		TArray<AActor*> FoundManagers;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlatformGridMgr::StaticClass(), FoundManagers);
+		if (FoundManagers.Num() > 0)
+		{
+			GridManager = Cast<APlatformGridMgr>(FoundManagers[0]);
+		}
+	}
+	return GridManager;
+}
+
+
+void UTRGameInstance::MC_ResetGridManager_Implementation()
+{
+	GridManager = nullptr;
+}
+
+
+bool UTRGameInstance::MC_ResetGridManager_Validate()
+{
+	return true;
 }

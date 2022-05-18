@@ -168,6 +168,16 @@ public:
 	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
 		void ClientEchoLoadPlayerData(const FPlayerSaveData PlayerSaveData);
 
+	// [Client]
+	// Server can request the player save data from client. Client will then call ServerPlayerDataFromClient sending it's local data to server.
+	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
+		void ClientRequestPlayerDataFromClient();
+
+	// [Server]
+	// Send player save data from client to server. Used when player first connects to host.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerPlayerDataFromClient(const FPlayerSaveData PlayerSaveData);
+
 	// Market Data
 
 	// [Server]

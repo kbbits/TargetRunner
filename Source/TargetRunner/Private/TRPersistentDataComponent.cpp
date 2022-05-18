@@ -533,7 +533,7 @@ void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const F
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
 	if (TRPlayerController)
 	{
-		//UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ClientEchoLoadPlayerData - update player data for: %s."), *PlayerSaveData.PlayerGuid.ToString());
+		UE_LOG(LogTRGame, Log, TEXT("PersistentDataComponent ClientEchoLoadPlayerData - update player data for: %s."), *PlayerSaveData.PlayerGuid.ToString());
 		// Controler UpdateFromPlayerSaveData - calls PlayerState.UpdateFromPlayerSaveData
 		TRPlayerController->UpdateFromPlayerSaveData(PlayerSaveData);		
 	}
@@ -543,11 +543,143 @@ void UTRPersistentDataComponent::ClientEchoLoadPlayerData_Implementation(const F
 		GameInst->ClientLocalProfileName = PlayerSaveData.ProfileName;
 		GameInst->ClientLocalPlayerGuid = PlayerSaveData.PlayerGuid;
 	}
+	
+	// Save the incoming data locally if we are not the sever.
+	if (TRPlayerController && GetOwnerRole() < ROLE_Authority)
+	{
+		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
+		if (TRPlayerState)
+		{
+			// Create a new save each time
+			UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
+			// Get the data from our owning controller.
+			TRPlayerController->GetPlayerSaveData(SaveGame->PlayerSaveData);
+			if (UGameplayStatics::SaveGameToSlot(SaveGame, GetPlayerSaveFilename(), 0))
+			{
+				UE_LOG(LogTRGame, Log, TEXT("ClientEchoLoadPlayerData - Player data for Guid %s saved to: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits), *GetPlayerSaveFilename());
+			}
+			else
+			{
+				UE_LOG(LogTRGame, Error, TEXT("PersistentDataComponent ClientEchoLoadPlayerData : Error saving player data: %s"), *GetPlayerSaveFilename());
+			}
+		}
+		else {
+			UE_LOG(LogTRGame, Error, TEXT("PersistentDataComponent ClientEchoLoadPlayerData - Could not get player state."));
+		}
+	}
+	else {
+		UE_LOG(LogTRGame, Error, TEXT("PersistentDataComponent ClientEchoLoadPlayerData - Could not get player controller."));
+	}
+
 	OnPlayerDataLoaded.Broadcast();
 }
 
 
 bool UTRPersistentDataComponent::ClientEchoLoadPlayerData_Validate(const FPlayerSaveData PlayerSaveData)
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ClientRequestPlayerDataFromClient_Implementation()
+{
+	UE_LOG(LogTRGame, Log, TEXT("ClientRequestPlayerDataFromClient - starting"));
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (TRPlayerController)
+	{
+		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
+		if (TRPlayerState)
+		{
+			FString PlayerSaveFilename = GetPlayerSaveFilename();
+			if (!PlayerSaveFilename.IsEmpty())
+			{
+				if (UGameplayStatics::DoesSaveGameExist(PlayerSaveFilename, 0))
+				{
+					UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(PlayerSaveFilename, 0));
+					if (SaveGame)
+					{
+						ServerPlayerDataFromClient(SaveGame->PlayerSaveData);
+						//TRPlayerController->UpdateFromPlayerSaveData(SaveGame->PlayerSaveData);
+						UE_LOG(LogTRGame, Log, TEXT("ClientRequestPlayerDataFromClient - loaded player data for guid %s from: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits), *PlayerSaveFilename);
+					}
+					else {
+						UE_LOG(LogTRGame, Error, TEXT("ClientRequestPlayerDataFromClient - error loading save file: %s"), *PlayerSaveFilename);
+					}
+				}
+				else
+				{
+					UE_LOG(LogTRGame, Log, TEXT("ClientRequestPlayerDataFromClient - No client-side save file with name %s, getting data from entities."), *PlayerSaveFilename);
+					// No existing file, setup guids and init data.
+					FPlayerSaveData NewSaveData;
+					if (!TRPlayerState->PlayerGuid.IsValid())
+					{
+						TRPlayerState->PlayerGuid = FGuid::NewGuid();
+						UE_LOG(LogTRGame, Log, TEXT("ClientRequestPlayerDataFromClient - no save file found, setting new player guid: %s."), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+					}
+					// Get data
+					TRPlayerController->GetPlayerSaveData(NewSaveData);
+					ServerPlayerDataFromClient(NewSaveData);					
+				}
+			}
+			else
+			{
+				UE_LOG(LogTRGame, Error, TEXT("ClientRequestPlayerDataFromClient - player save file name is empty."));
+			}
+		}
+		else {
+			UE_LOG(LogTRGame, Error, TEXT("ClientRequestPlayerDataFromClient - Could not get player state."));
+		}
+	}
+	else {
+		UE_LOG(LogTRGame, Error, TEXT("ClientRequestPlayerDataFromClient - Could not get player controller."));
+	}
+}
+
+
+bool UTRPersistentDataComponent::ClientRequestPlayerDataFromClient_Validate()
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ServerPlayerDataFromClient_Implementation(const FPlayerSaveData PlayerSaveData)
+{
+	UE_LOG(LogTRGame, Log, TEXT("ServerPlayerDataFromClient - received data from client for player guid %s"), *PlayerSaveData.PlayerGuid.ToString());
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (TRPlayerController)
+	{
+		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
+		if (TRPlayerState)
+		{
+			if (PlayerSaveData.PlayerGuid.IsValid())
+			{
+				TRPlayerState->PlayerGuid = PlayerSaveData.PlayerGuid;
+			}
+			// Update data here on server
+			TRPlayerController->UpdateFromPlayerSaveData(PlayerSaveData);
+			// If this is the server-local player
+			if (TRPlayerController->IsLocalController())
+			{
+				// Update game instance with host's local info
+				UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+				if (GameInst)
+				{
+					GameInst->ClientLocalProfileName = TRPlayerState->ProfileName;
+					GameInst->ClientLocalPlayerGuid = TRPlayerState->PlayerGuid;
+				}
+			}
+			// Save the data we just got.
+			ServerSavePlayerData();
+			// Call standard load of data to trigger normal notications etc.
+			ServerLoadPlayerData();
+			// This serves as a player data load, so call the nofication delegate.
+			//OnPlayerDataLoaded.Broadcast();
+		}
+	}
+}
+
+
+bool UTRPersistentDataComponent::ServerPlayerDataFromClient_Validate(const FPlayerSaveData PlayerSaveData)
 {
 	return true;
 }

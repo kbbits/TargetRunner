@@ -21,6 +21,25 @@ enum class EInGrid : uint8
 };
 
 
+USTRUCT(BlueprintType)
+struct FISMContext 
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadWrite)
+		TSoftObjectPtr<UStaticMesh> Mesh;
+
+	UPROPERTY(BlueprintReadWrite)
+		FSoftObjectPath MeshPath;
+
+	UPROPERTY(BlueprintReadWrite)
+		TArray<FTransform> SpawnTransforms;
+
+};
+
+
 /*
 * The base class responsible for generating the map grid and spawning platforms (i.e. "rooms") into the world.
 * Most of the functionality and data is server-side only.
@@ -95,7 +114,23 @@ public:
 
 protected:
 
+	UPROPERTY()
 	TArray<APlayerStart*> PlayerStarts;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bEnableClientISMs = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+		TArray<FISMContext> ServerISMQueue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 ISMQueueMaxBatchSize = 50;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float ServerISMQueueTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float ServerISMQueueMaxTime = 0.25f;
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -126,6 +161,7 @@ public:
 	UFUNCTION(BlueprintPure)
 		FTransform GetGridCellSubGridWorldTransform(const FVector2D& GridCoords, const FVector2D& SubGridCoords);
 
+	// [Server]
 	UFUNCTION(Server, Reliable, BlueprintCallable, CallInEditor)
 		void GenerateGrid();
 
@@ -191,9 +227,18 @@ public:
 	virtual void WakeNeighborsImpl(const FVector2D AroundGridCoords);
 
 	// [Server]
-	// Add an instance of a static mesh using the given material. SpawnTransform is in world space.
-	// Returns the index of the instance spawned.
+	// Adds instances for the given meshes as ISMs
+	// This will queue the ISMs for replication to client(s).
 	UFUNCTION(BlueprintCallable)
+		void SpawnISMs(const TArray<FISMContext>& ISMContexts);
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		void MC_SpawnISMs(const TArray<FISMContext>& ISMContexts);
+		
+	// Add an instance of a static mesh using the given material. SpawnTransform is in world space.
+	// This will queue the replication of ISM instance to client.
+	// Returns the index of the instance spawned.
+	UFUNCTION()
 		int32 SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, UPARAM(ref) UMaterialInterface* Material, const FTransform& SpawnTransform);
 
 	// Debug
