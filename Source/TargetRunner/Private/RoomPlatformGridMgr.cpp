@@ -37,17 +37,15 @@ void ARoomPlatformGridMgr::BeginPlay()
 
 void ARoomPlatformGridMgr::OnGridForgeProgress(const FProgressItem ProgressItem)
 {
-	DebugLog(FString::Printf(TEXT("RoomPlatformGridMgr::OnGridForgeProgress: Code: %s,  %s, %.0f, %.0f"), *ProgressItem.Code.ToString(), *ProgressItem.Message, ProgressItem.CurrentProgress, ProgressItem.OfTotalProgress));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("RoomPlatformGridMgr::OnGridForgeProgress: Code: %s,  %s, %.0f, %.0f"), *ProgressItem.Code.ToString(), *ProgressItem.Message, ProgressItem.CurrentProgress, ProgressItem.OfTotalProgress);
 	OnGenerateProgress.Broadcast(ProgressItem);
 }
-
 
 
 void ARoomPlatformGridMgr::InitRoomComponentMaps(const bool bForceReload)
 {
 	ATR_GameMode* GM = IsValid(GetWorld()) ? Cast<ATR_GameMode>(UGameplayStatics::GetGameMode(GetWorld())) : nullptr;
-	if (GM)
-	{
+	if (GM)	{
 		RoomComponentsTable = GM->RoomComponentsTable;
 	}
 	if (bForceReload || RoomFloorComponentMap.Num() == 0)
@@ -66,8 +64,7 @@ void ARoomPlatformGridMgr::InitRoomComponentMaps(const bool bForceReload)
 					{
 						for (ETRRoomExitLayout ExitLayout : Spec.ValidExitLayouts)
 						{
-							if (RoomFloorComponentMap.Contains(ExitLayout))
-							{
+							if (RoomFloorComponentMap.Contains(ExitLayout))	{
 								RoomFloorComponentMap[ExitLayout].Add(Spec);
 							}
 							else
@@ -82,8 +79,7 @@ void ARoomPlatformGridMgr::InitRoomComponentMaps(const bool bForceReload)
 					{
 						for (ETRRoomExitLayout ExitLayout : Spec.ValidExitLayouts)
 						{
-							if (RoomCeilingComponentMap.Contains(ExitLayout))
-							{
+							if (RoomCeilingComponentMap.Contains(ExitLayout)) {
 								RoomCeilingComponentMap[ExitLayout].Add(Spec);
 							}
 							else
@@ -94,35 +90,29 @@ void ARoomPlatformGridMgr::InitRoomComponentMaps(const bool bForceReload)
 							}
 						}
 					}
-					else if (Spec.Type == ETRRoomComponentType::Wall)
-					{
+					else if (Spec.Type == ETRRoomComponentType::Wall) {
 						RoomWallComponentArray.Add(Spec);
 					}
-					else if (Spec.Type == ETRRoomComponentType::Door)
-					{
+					else if (Spec.Type == ETRRoomComponentType::Door) {
 						RoomDoorComponentArray.Add(Spec);
 					}
 				}
-				else
-				{
+				else {
 					UE_LOG(LogTRGame, Error, TEXT("ARoomPlatformGridMgr - InitRoomComponentMap found row in RoomComponentsTable is not a FRoomComponentSpec"));
 				}
 			}
 		}
-		else
-		{
+		else {
 			UE_LOG(LogTRGame, Error, TEXT("ARoomPlatformGridMgr - RoomComponentsTable is invalid"));
 		}
 	}
 }
 
 
-
 // Called every frame
 void ARoomPlatformGridMgr::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-	
+	Super::Tick(DeltaTime);	
 }
 
 
@@ -144,7 +134,7 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	bool bSuccessful = false;
 	// Destroy old grid, if any
 	DestroyGrid();
-	DebugLog(FString::Printf(TEXT("%s RoomPlatformGridMgr::GenerateGrid - Generating grid. Extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), *this->GetName(), GridExtentMinX, GridExtentMinY, GridExtentMaxX, GridExtentMaxY));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("%s RoomPlatformGridMgr::GenerateGrid - Generating grid. Extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), *this->GetName(), GridExtentMinX, GridExtentMinY, GridExtentMaxX, GridExtentMaxY);
 	FRandomStream* GridStreamFound = nullptr;
 	FRandomStream* ResourceStreamFound = nullptr;
 	// Grab the game mode.
@@ -167,14 +157,13 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 	
 	FRandomStream& GridRandStream = *GridStreamFound;
 	FRandomStream& ResourceDropperStream = *ResourceStreamFound;
-	DebugLog(FString::Printf(TEXT("RoomPlatformGridMgr::GenerateGridImpl - GridRandStream seed: %d"), GridRandStream.GetInitialSeed()));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("RoomPlatformGridMgr::GenerateGridImpl - GridRandStream seed: %d"), GridRandStream.GetInitialSeed());
 	// Create the grid forge
 	UGridForgeBase* GridForge = NewObject<UGridForgeBase>(this, GridForgeClass);
-	if (IsValid(GridForge))
-	{ 
+	if (IsValid(GridForge)) { 
 		GridForge->OnGenerateGridProgressDelegate.BindUObject(this, &ARoomPlatformGridMgr::OnGridForgeProgress);
 	}
-	else
+	else 
 	{
 		UE_LOG(LogTRGame, Error, TEXT("%s RoomPlatformGridMgr::GenerateGrid - Could not construct GridForge."), *this->GetName());
 		return;
@@ -205,8 +194,7 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 		// Use the manually specified blackout cells.
 		GridForge->BlackoutCells = OverrideBlackoutCells;
 	}
-	else
-	{
+	else {
 		GridForge->BlackoutCells.Empty();
 	}
 	
@@ -215,12 +203,13 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 
 	if (bSuccessful)
 	{
-		DebugLog(FString::Printf(TEXT("%s RoomPlatformGridMgr::GenerateGrid - Generating grid successful."), *GetNameSafe(this)));
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("%s RoomPlatformGridMgr::GenerateGrid - Generating grid successful."), *GetNameSafe(this));
 		StartGridCoords = RoomGridTemplate.StartCells[0];
 		ExitGridCoords = RoomGridTemplate.EndCells[0];
 		// Allocate resources to room templates
 		UResourceDropperBase* ResourceDropper = NewObject<UResourceDropperBase>(this, ResourceDropperClass);
-		if (ResourceDropper == nullptr) {
+		if (ResourceDropper == nullptr) 
+		{
 			UE_LOG(LogTRGame, Error, TEXT("%s RoomPlatformGridMgr::GenerateGrid - Could not construct ResourceDropper."), *GetNameSafe(this));
 			return;
 		}
@@ -234,13 +223,11 @@ void ARoomPlatformGridMgr::GenerateGridImpl()
 			if (bSpawnRoomsAfterGenerate) {	SpawnRooms();}
 		#endif
 	} 
-	else
-	{
+	else {
 		UE_LOG(LogTRGame, Warning, TEXT("Grid generation failed with grid forge: %s"), *GetNameSafe(GridForge));
 	}
 	// Clear the cell grid, just to be tidy.
 	GridForge->EmptyGridTemplateCells();
-
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		// Update the clients' room grid template
@@ -255,8 +242,6 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 	//TArray<int32> RowNums;
 	//TArray<int32> PlatformNums;
 	//PlatformGridMap.GenerateKeyArray(RowNums);
-
-	//DebugLog(FString::Printf(TEXT("Destroying %d rows."), RowNums.Num()));
 	//for (int32 Row : RowNums)
 	//{
 	//	PlatformGridMap.Find(Row)->RowPlatforms.GenerateKeyArray(PlatformNums);
@@ -272,20 +257,18 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 	//	PlatformGridMap.Find(Row)->RowPlatforms.Empty();
 	//}
 	//PlatformGridMap.Empty();
-
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("PlaformGridMgr - DestroyingGridImpl."));
 	Super::DestroyGridImpl();
 	TArray<int32> RowNums;
 	RowNums.Empty(RoomGridTemplate.Grid.Num());
 	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
-	for (int32 Row : RowNums)
-	{
+	for (int32 Row : RowNums) {
 		RoomGridTemplate.Grid.Find(Row)->RowRooms.Empty();
 	}
 	RoomGridTemplate.Grid.Empty();
 	RoomGridTemplate.StartCells.Empty();
 	RoomGridTemplate.EndCells.Empty();
 	ClearRoomComponentCaches();
-
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		// Update the clients' room grid template
@@ -306,8 +289,7 @@ void ARoomPlatformGridMgr::SpawnRooms_Implementation()
 		for (int32 Col : ColNums)
 		{
 			FRoomTemplate* Room = RoomGridTemplate.Grid.Find(Row)->RowRooms.Find(Col);
-			if (Room != nullptr)
-			{
+			if (Room != nullptr) {
 				SpawnRoom(FVector2D(Row, Col));
 			}
 		}
@@ -319,8 +301,7 @@ void ARoomPlatformGridMgr::SpawnRooms_Implementation()
 	for (FVector2D RoomCoord : AllRoomCoords)
 	{
 		ARoomPlatformBase* RoomPlatform = Cast<ARoomPlatformBase>(GetPlatformInGrid(RoomCoord, bFound));
-		if (RoomPlatform != nullptr)
-		{
+		if (RoomPlatform != nullptr) {
 			RoomPlatform->SpawnContents(); // calls SpawnResources, SpawnSpecials, SpawnClutter
 		}
 	}
@@ -350,7 +331,7 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	APlatformBase* OldRoom = RemovePlatformFromGrid(GridCoords, bSuccess);
 	if (IsValid(OldRoom))
 	{
-		DebugLog(FString::Printf(TEXT("Destroying old room X:%d Y:%d."), OldRoom->GridX, OldRoom->GridY));
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("Destroying old room X:%d Y:%d."), OldRoom->GridX, OldRoom->GridY);
 		OldRoom->DestroyPlatform();
 		OldRoom = nullptr;
 	}
@@ -361,13 +342,16 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 	SpawnParams.Owner = this;
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
 
-	DebugLog(FString::Printf(TEXT("%s SpawnRoom - Spanwing room actor for X:%d Y:%d."), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("%s SpawnRoom - Spanwing room actor for X:%d Y:%d."), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y);
 	
 	FRoomGridRow* GridRow = RoomGridTemplate.Grid.Find(GridCoords.X);
-	if (GridRow == nullptr) { UE_LOG(LogTRGame, Error, TEXT("%s - Could not find grid row %d"), *this->GetName(), (int32)GridCoords.X); }
+	if (GridRow == nullptr) { 
+		UE_LOG(LogTRGame, Error, TEXT("%s - Could not find grid row %d"), *this->GetName(), (int32)GridCoords.X); 
+	}
 	FRoomTemplate* RoomTemplate = GridRow->RowRooms.Find(GridCoords.Y);
-	if (RoomTemplate == nullptr) { UE_LOG(LogTRGame, Error, TEXT("%s - Could not find room template at X:%d Y:%d"), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y); }
-
+	if (RoomTemplate == nullptr) { 
+		UE_LOG(LogTRGame, Error, TEXT("%s - Could not find room template at X:%d Y:%d"), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y); 
+	}
 	//NewRoom = GetWorld()->SpawnActorDeferred<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(GridCoords), SpawnParams.Owner, SpawnParams.Instigator, SpawnParams.SpawnCollisionHandlingOverride);
 	NewRoom = GetWorld()->SpawnActor<ARoomPlatformBase>(RoomClass, GetGridCellWorldTransform(GridCoords), SpawnParams);
 	if (NewRoom != nullptr)
@@ -500,8 +484,7 @@ void ARoomPlatformGridMgr::WakeNeighborsImpl(FVector2D AroundGridCoords)
 				{
 					// Connected neighbors only
 					NeighborRoom = CurRoom->GetConnectedNeighbor(Direction);
-					if (NeighborRoom)
-					{
+					if (NeighborRoom) {
 						NeighborRoom->StasisWakeActors();
 					}
 				}
@@ -573,20 +556,16 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInLa
 	TMap<ETRRoomExitLayout, TArray<FRoomComponentSpec>>* CompMap = nullptr;
 	FRandomStream* GridStreamFound = nullptr;
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
-	if (IsValid(GameMode))
-	{
+	if (IsValid(GameMode)) {
 		GridStreamFound = &GameMode->GetGridStream();
 	}
-	else
-	{
+	else {
 		GridStreamFound = &DefaultGridRandStream;
 	}
-	if (Type == ETRRoomComponentType::Floor)
-	{
+	if (Type == ETRRoomComponentType::Floor) {
 		CompMap = &RoomFloorComponentMap;
 	}
-	else if (Type == ETRRoomComponentType::Ceiling)
-	{
+	else if (Type == ETRRoomComponentType::Ceiling) {
 		CompMap = &RoomCeilingComponentMap;
 	}
 	else {
@@ -632,7 +611,8 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInLa
 		if (!CompMap) {
 			UE_LOG(LogTRGame, Warning, TEXT("RoomPlatformGridMgr GetRoomComponentActorInLayoutMap - No room component of type %s"), *GetEnumValueAsString<ETRRoomComponentType>(Type));
 		}
-		if (CompMap && !CompMap->Contains(ExitLayout)) {
+		if (CompMap && !CompMap->Contains(ExitLayout)) 
+		{
 			UE_LOG(LogTRGame, Warning, TEXT("RoomPlatformGridMgr GetRoomComponentActorInLayoutMap - No %s room component for exit layout %s"), 
 				*GetEnumValueAsString<ETRRoomComponentType>(Type), 
 				*GetEnumValueAsString<ETRRoomExitLayout>(ExitLayout));
@@ -652,23 +632,20 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActorInAr
 	TArray<FRoomComponentSpec>* CompArray = nullptr;
 	FRandomStream* GridStreamFound = nullptr;
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
-	if (IsValid(GameMode))
-	{
+	if (IsValid(GameMode)) {
 		GridStreamFound = &GameMode->GetGridStream();
 	}
-	else
-	{
+	else {
 		GridStreamFound = &DefaultGridRandStream;
 	}
-	if (Type == ETRRoomComponentType::Wall)
-	{
+	if (Type == ETRRoomComponentType::Wall)	{
 		CompArray = &RoomWallComponentArray;
 	}
-	else if (Type == ETRRoomComponentType::Door)
-	{
+	else if (Type == ETRRoomComponentType::Door) {
 		CompArray = &RoomDoorComponentArray;
 	}
-	else {
+	else 
+	{
 		UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr GetRoomComponentActorInArray - called with invalid room type %s"), *GetEnumValueAsString<ETRRoomComponentType>(Type));
 		bFound = false;
 		return nullptr;
@@ -719,7 +696,8 @@ TSubclassOf<ARoomComponentActor> ARoomPlatformGridMgr::GetRoomComponentActor_Imp
 {
 	ARoomPlatformBase* Room = GetRoomInGrid(RoomCoords);
 	//ExitInfo = URoomFunctionLibrary::GetRoomExitInfo(RoomGridTemplate, RoomCoords);
-	if (Room == nullptr) {
+	if (Room == nullptr) 
+	{
 		UE_LOG(LogTRGame, Error, TEXT("RoomPlatformGridMgr::GetRoomComponentActor - could not get room at X:%d Y:%d"), RoomCoords.X, RoomCoords.Y);
 		bFound = false;
 		return ARoomComponentActor::StaticClass();

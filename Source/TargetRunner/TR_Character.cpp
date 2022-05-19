@@ -24,7 +24,9 @@ ATR_Character::ATR_Character(const FObjectInitializer& OI) : Super(OI)
 		ResourceCollectionVolume->OnComponentBeginOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapBegin);
 		ResourceCollectionVolume->OnComponentEndOverlap.AddDynamic(this, &ATR_Character::OnCollectorOverlapEnd);
 	}
-	else { UE_LOG(LogTRGame, Error, TEXT("TR_Character constructor failed to create ResourceCollectionVolume component")); }
+	else { 
+		UE_LOG(LogTRGame, Error, TEXT("TR_Character constructor failed to create ResourceCollectionVolume component")); 
+	}
 }
 
 

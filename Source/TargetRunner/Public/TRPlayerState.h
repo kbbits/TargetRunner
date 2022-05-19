@@ -71,6 +71,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void GetPlayerSaveData(FPlayerSaveData& SaveData);
 
+	// Updates local data from save data.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void UpdateFromPlayerSaveData(const FPlayerSaveData& SaveData);
 };

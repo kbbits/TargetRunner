@@ -72,7 +72,7 @@ void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
 {
 	Super::CopyProperties(NewPlayerState);
 
-	//UE_LOG(LogTRGame, Log, TEXT("PlayerState::CopyProperties to new player state: %s"), *NewPlayerState->GetName());
+	UE_LOG(LogTRGame, Log, TEXT("PlayerState::CopyProperties to new player state: %s"), *NewPlayerState->GetName());
 	ATRPlayerState* NewTRPlayerState = Cast<ATRPlayerState>(NewPlayerState);
 	if (NewTRPlayerState)
 	{
@@ -80,7 +80,7 @@ void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
 		NewTRPlayerState->PlayerGuid = PlayerGuid;
 		NewTRPlayerState->ProfileName = ProfileName;
 		NewTRPlayerState->DisplayName = DisplayName;
-		NewTRPlayerState->ExperienceLevel = ExperienceLevel;
+		NewTRPlayerState->ExperienceLevel = ExperienceLevel < 1 ? 1 : ExperienceLevel;
 		NewTRPlayerState->LevelUpGoodsProgress = LevelUpGoodsProgress;
 		NewTRPlayerState->MaxTierCompleted = MaxTierCompleted;
 		NewTRPlayerState->TotalRunsPlayed = TotalRunsPlayed;
@@ -150,24 +150,26 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
 	//UE_LOG(LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - new player %s : %s."), *SaveData.ProfileName.ToString(),*SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
-	PlayerGuid = SaveData.PlayerGuid;
-	ProfileName = SaveData.ProfileName;
-	DisplayName = SaveData.DisplayName;
+	PlayerGuid = SaveData.PlayerGuid;		// replicated
+	ProfileName = SaveData.ProfileName;		// replicated
+	DisplayName = SaveData.DisplayName;		// replicated
 	MaxTierCompleted = SaveData.MaxTierCompleted;
 	TotalRunsPlayed = SaveData.TotalRunsPlayed;
 	TotalPlaytimeInRuns = SaveData.TotalPlaytimeInRuns;
-	ExperienceLevel = SaveData.ExperienceLevel;
+	ExperienceLevel = SaveData.ExperienceLevel < 1 ? 1 : SaveData.ExperienceLevel;	// replicated
 	// Do the attribute components
 	TArray<UActorAttributeComponent*> AttributeComps;
 	GetComponents<UActorAttributeComponent>(AttributeComps);
 	for (UActorAttributeComponent* Attr : AttributeComps)
 	{
+		// This call does nothing if the data is not for that attribute.
 		Attr->UpdateFromAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
 	// Goods quantities attributes
+	// LevelUpProgress
 	const FNamedGoodsQuantitySet* TmpGoodsSet = FindInNamedArray<FNamedGoodsQuantitySet>(SaveData.AttributeData.GoodsQuantitiesAttributes, LevelUpGoodsProgress.Name);
 	if (TmpGoodsSet)
 	{
-		LevelUpGoodsProgress.GoodsQuantitySet = TmpGoodsSet->GoodsQuantitySet;
+		LevelUpGoodsProgress.GoodsQuantitySet = TmpGoodsSet->GoodsQuantitySet;  // replicated
 	}
 }

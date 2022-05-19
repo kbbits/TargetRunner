@@ -104,6 +104,9 @@ protected:
 	UPROPERTY()
 		TArray<TWeakObjectPtr<ARoomComponentActorCollectionActor>> SpawnedCollections;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug = false;
+
 protected:
 
 	bool FilterRCACollections();
@@ -194,7 +197,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RoomComponentActor", Meta = (ExposeOnSpawn = "true"))
 		int32 RandSeed;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug = false;
+
 protected:
+
 	UPROPERTY()
 		TSubclassOf<ARoomComponentActor> PickedClass;
 

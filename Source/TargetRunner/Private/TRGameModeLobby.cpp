@@ -128,6 +128,7 @@ void ATRGameModeLobby::GenericPlayerInitialization(AController* C)
 			UE_LOG(LogTRGame, Log, TEXT("GenericPlayerInit player id: %d"), TRPlayerState->GetPlayerId());
 			if (TRPlayerState->PlayerGuid.IsValid())
 			{
+				UE_LOG(LogTRGame, Log, TEXT("GenericPlayerInit player guid: %sd"), TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
 				//TRPlayerController->PersistentDataComponent->ServerLoadPlayerData();
 			}
 			else

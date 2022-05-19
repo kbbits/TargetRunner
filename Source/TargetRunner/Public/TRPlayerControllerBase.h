@@ -101,6 +101,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		FGenericTeamId FactionId;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug = false;
+
 protected:
 
 	// All tool types available for purchase in the market
@@ -187,6 +190,13 @@ public:
 	// [Client]
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientAddToolToInventory(const FToolData& ToolData, const FGuid AddedGuid);
+	
+	// [Any]
+	// Performs the local work of equipping a tool.
+	// Other replicated XxxxEquipTool functions call this.
+	// Returns true if tool was found and equipped.
+	UFUNCTION()
+		bool EquipToolInternal(const FGuid ToolGuid, const bool bSuppressNotifications = false);
 
 	// [Server]
 	// Call this to equip a tool from player's inventory. This handles rep. to client.
@@ -197,6 +207,13 @@ public:
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientEquipTool(const FGuid ToolGuid);
 
+	// [Any]
+	// Performs the local work of unequipping a tool.
+	// Other replicated XxxxUnequipTool functions call this.
+	// Returns true if the tool was previously equipped (and is now unequipped).
+	UFUNCTION()
+		bool UnequipToolInternal(const FGuid ToolGuid, const bool bSuppressNotifications = false);
+
 	// [Server]
 	// Call this to unequip a tool from player. This handles rep. to client.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
@@ -205,6 +222,11 @@ public:
 	// [Client]
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientUnequipTool(const FGuid ToolGuid);
+
+	// [Any]
+	// Replicated functions call this one to do the work.
+	UFUNCTION()
+		void UnequipAllToolsInternal(const bool bSuppressNotifications = false);
 
 	// [Server]
 	// Call this to unequip a tool from player. This handles rep. to client.
@@ -280,10 +302,10 @@ public:
 	// [Server]
 	// Gets player save data from controller and player state.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		bool GetPlayerSaveData(FPlayerSaveData& SaveData);
+		bool GetPlayerSaveData(FPlayerSaveData& SaveData, const bool bAllowNullPlayerState = false);
 
 	// [Any]
-	// Updates the controller and player state from serialized data.
+	// Updates the local controller and player state from serialized data.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		bool UpdateFromPlayerSaveData(const FPlayerSaveData& SaveData);
 

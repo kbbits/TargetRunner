@@ -44,11 +44,23 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	// Returns true if we are the server authority and:
+	//   Either we are owned by a player controller and it is not a local controller
+	//  Or
+	//   NetMode is not Client and not Standalone. i.e. there is a client to update
+	// Returns false otherwise.
 	bool ShouldUpdateClient();
 
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	// [Any]
+	// Does the work of adjusting local inventory. Called by the replicated AddSubtractGoods functions.
+	//Returns true if adjustment could be made, false otherwise(ex: if amount to remove is > current inventory)
+	//   bNegateGoodsQuantities - Set this to true to have each goods quantity multiplied by -1.0. (to simplify removing goods using postitive goods quantities)
+	UFUNCTION()
+		bool AddSubtractGoodsInternal(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, float& NewCurrentQuantity, FGoodsQuantity& NewSnapshotDelta, const bool bAddToSnapshot = false);
 
 	// [Any]
 	// Call this one to Add (or subtract) a quantity of goods from inventory. Returns true if adjustment could be made, false otherwise (ex: if amount to remove is > current inventory)
@@ -63,6 +75,13 @@ public:
 		void ServerAddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, const bool bAddtoSnapshot = false);
 
 	// [Any]
+	// Does the work of add/subtract quantities from local inventory. The other replicated AddSubtractGoodsArray functions call this.
+	// Returns true if all adjustments could be made, false otherwise(ex: if amount to remove is > current inventory)
+	//  bNegateGoodsQuantities - Set this to true to have each goods quantity multiplied by -1.0. (to simplify removing goods using postitive goods quantities)
+	UFUNCTION()
+		bool AddSubtractGoodsArrayInternal(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities, TArray<FGoodsQuantity>& CurrentQuantities, TArray<FGoodsQuantity>& NewSnapshotDeltas, const bool bAddToSnapshot = false);
+
+	// [Any]
 	// Call this to Add (or subtract) quantities of goods from inventory. Returns true if all adjustments could be made, false otherwise (ex: if amount to remove is > current inventory)
 	//  bNegateGoodsQuantities - Set this to true to have each goods quantity multiplied by -1.0. (to simplify removing goods using postitive goods quantities)
 	// Note: actual changes to inventory are made by replicated functions that this calls. (ServerAddSubtractGoodsArray, ClientUpdateInventoryQuantity).
@@ -73,6 +92,12 @@ public:
 	// Called from AddSubtractGoods()
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerAddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities,  const bool bAddToSnapshot = false);
+
+	// [Both]
+	// Non-replicated function that does the work of setting the inventory values.
+	// The replicated "XxxxSetInventory" functions call this.
+	UFUNCTION()
+		void SetInventoryInternal(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods);
 
 	// [Server]
 	// Sets the contents of inventory. Usually don't need to call this manually - useful to reset state after a load. 

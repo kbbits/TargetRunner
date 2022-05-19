@@ -79,10 +79,22 @@ void ATRPlayerControllerBase::SeamlessTravelFrom(class APlayerController* OldPC)
 		UE_LOG(LogTRGame, Warning, TEXT("TRPlayerControllerBase::SeamlessTravelFrom old player controller is null"));
 		return;
 	}
-	//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase::SeamlessTravelFrom %s to %s"), *OldPC->GetName(), *this->GetName());
+	FPlayerSaveData TmpSaveData;
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRPlayerControllerBase::SeamlessTravelFrom %s to %s"), *OldPC->GetName(), *this->GetName());
 	ATRPlayerControllerBase* OldTRPlayerController = Cast<ATRPlayerControllerBase>(OldPC);
 	if (OldTRPlayerController)
 	{
+		// Get data from old controller. Allow player state to be null on this call. We don't have one yet. 
+		// It's travelling properites are handled in it's own CopyProperties.
+		OldTRPlayerController->GetPlayerSaveData(TmpSaveData, true);
+		// Update current controller with that data
+		UpdateFromPlayerSaveData(TmpSaveData);
+		// Some data not saved in SaveData
+		FactionId = OldTRPlayerController->FactionId;
+
+		// TODO: Verify this works on client too -- or we will need to send data to client here
+
+		/*
 		// Inventory
 		if (OldTRPlayerController->GoodsInventory)
 		{
@@ -115,6 +127,7 @@ void ATRPlayerControllerBase::SeamlessTravelFrom(class APlayerController* OldPC)
 		MaxEquippedWeapons = OldTRPlayerController->MaxEquippedWeapons;
 		MaxEquippedEquipment = OldTRPlayerController->MaxEquippedEquipment;
 		FactionId = OldTRPlayerController->FactionId;
+		*/
 	}
 	else
 	{
@@ -254,12 +267,14 @@ void ATRPlayerControllerBase::ServerAddToolToInventory_Implementation(const FToo
 	bool bSuccess = false;
 	if (IsValid(ToolData.ToolClass))
 	{		
-		if (!TmpToolData.AttributeData.ItemGuid.IsValid()) { TmpToolData.AttributeData.ItemGuid = FGuid::NewGuid(); }
+		if (!TmpToolData.AttributeData.ItemGuid.IsValid()) { 
+			TmpToolData.AttributeData.ItemGuid = FGuid::NewGuid(); 
+		}
 		ToolInventory.Add(TmpToolData.AttributeData.ItemGuid, TmpToolData);
 		OnToolInventoryAdded.Broadcast(TmpToolData);
 		bSuccess = true;
 	}
-	//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory added tool guid %s."), *TmpToolData.AttributeData.ItemGuid.ToString());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory tried add tool guid %s. Success %s"), *TmpToolData.AttributeData.ItemGuid.ToString(), bSuccess ? *FString(TEXT("True")) : *FString(TEXT("False")));
 	if (bSuccess && !IsLocalController())
 	{
 		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerAddToolToInventory calling client."));
@@ -281,7 +296,7 @@ void ATRPlayerControllerBase::ClientAddToolToInventory_Implementation(const FToo
 		ToolInventory.Add(ToolData.AttributeData.ItemGuid, ToolData);
 		OnToolInventoryAdded.Broadcast(ToolData);
 	}
-	//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientAddToolToInventory added tool guid %s."), *ToolData.AttributeData.ItemGuid.ToString());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientAddToolToInventory added tool guid %s."), *ToolData.AttributeData.ItemGuid.ToString());
 }
 
 bool ATRPlayerControllerBase::ClientAddToolToInventory_Validate(const FToolData& ToolData, const FGuid AddedGuid)
@@ -290,8 +305,73 @@ bool ATRPlayerControllerBase::ClientAddToolToInventory_Validate(const FToolData&
 }
 
 
+bool ATRPlayerControllerBase::EquipToolInternal(const FGuid ToolGuid, const bool bSuppressNotifications)
+{
+	FToolData* ToolData = ToolInventory.Find(ToolGuid);
+	if (ToolData == nullptr)
+	{
+		UE_LOG(LogTRGame, Error, TEXT("TRPlayerControllerBase - EquipToolInternal tool guid %s not found in inventory."), *ToolGuid.ToString());
+		return false;
+	}
+	for (UToolBase* ToolRef : EquippedTools)
+	{
+		// If tool is already equipped, we're done.
+		if (ToolRef->ItemGuid == ToolGuid) {
+			return true;
+		}
+	}
+	UToolBase* TmpTool = UToolBase::CreateToolFromToolData(*ToolData, this);
+	int CurrentEquipped = 0;
+	int MaxEquipped = 0;
+	if (TmpTool->IsA<UToolWeaponBase>())
+	{
+		// Unequip weapons until we have room to equip the requested one
+		TArray<UToolWeaponBase*> TmpEquippedWeapons;
+		GetEquippedWeapons(TmpEquippedWeapons);
+		MaxEquipped = MaxEquippedWeapons;
+		while (TmpEquippedWeapons.Num() > 0 && TmpEquippedWeapons.Num() >= MaxEquipped)
+		{
+			// Suppress notifications, we'll send one at the end
+			UnequipToolInternal(TmpEquippedWeapons[0]->ItemGuid, true);
+			TmpEquippedWeapons.RemoveAt(0, 1, false);
+		}
+		CurrentEquipped = TmpEquippedWeapons.Num();
+	}
+	else
+	{
+		// Unequip equipment until we have room to equip requested one
+		TArray<UToolEquipmentBase*> TmpEquippedEquipment;
+		GetEquippedEquipment(TmpEquippedEquipment);
+		MaxEquipped = MaxEquippedEquipment;
+		while (TmpEquippedEquipment.Num() > 0 && TmpEquippedEquipment.Num() >= MaxEquipped)
+		{
+			// Suppress notifications, we'll send one at the end
+			UnequipToolInternal(TmpEquippedEquipment[0]->ItemGuid, true);
+			TmpEquippedEquipment.RemoveAt(0);
+		}
+		CurrentEquipped = TmpEquippedEquipment.Num();
+	}
+	// If we found the tool and have room to equip it, do so
+	if (TmpTool && CurrentEquipped < MaxEquipped) 
+	{
+		EquippedTools.Add(TmpTool);
+		// Only need to apply modifiers on server side. They replicate themselves.
+		if (GetLocalRole() == ROLE_Authority) {
+			ApplyAttributeModifiers(TmpTool->GetEquipModifiers());
+		}
+		if (!bSuppressNotifications) {
+			OnEquippedToolsChanged.Broadcast();
+		}
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("EquipToolInternal - Equipped tool %s"), *TmpTool->ItemGuid.ToString(EGuidFormats::Digits));
+		return true;
+	}
+	return false;
+}
+
+
 void ATRPlayerControllerBase::ServerEquipTool_Implementation(const FGuid ToolGuid)
 {
+	/*
 	FToolData* ToolData = ToolInventory.Find(ToolGuid);
 	if (ToolData == nullptr)
 	{
@@ -336,6 +416,11 @@ void ATRPlayerControllerBase::ServerEquipTool_Implementation(const FGuid ToolGui
 			ClientEquipTool(ToolGuid);
 		}
 	}
+	*/
+	// If this is for a PC not on the server, i.e. a client player, update them.
+	if (EquipToolInternal(ToolGuid) && !IsLocalController()) {
+		ClientEquipTool(ToolGuid);
+	}
 }
 
 
@@ -347,6 +432,7 @@ bool ATRPlayerControllerBase::ServerEquipTool_Validate(const FGuid ToolGuid)
 
 void ATRPlayerControllerBase::ClientEquipTool_Implementation(const FGuid ToolGuid)
 {
+	/*
 	FToolData* ToolData = ToolInventory.Find(ToolGuid);
 	if (ToolData == nullptr)
 	{
@@ -386,6 +472,8 @@ void ATRPlayerControllerBase::ClientEquipTool_Implementation(const FGuid ToolGui
 		OnEquippedToolsChanged.Broadcast();
 		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientEquipTool tool %s equipped."), *ToolData->AttributeData.ItemDisplayName.ToString());
 	}
+	*/
+	EquipToolInternal(ToolGuid);
 }
 
 
@@ -395,8 +483,38 @@ bool ATRPlayerControllerBase::ClientEquipTool_Validate(const FGuid ToolGuid)
 }
 
 
+bool ATRPlayerControllerBase::UnequipToolInternal(const FGuid ToolGuid, const bool bSuppressNotifications)
+{
+	UToolBase* FoundTool = nullptr;
+	for (UToolBase* TmpTool : EquippedTools)
+	{
+		if (TmpTool->ItemGuid == ToolGuid)
+		{
+			FoundTool = TmpTool;
+			break;
+		}
+	}
+	if (FoundTool)
+	{
+		EquippedTools.Remove(FoundTool);
+		// Only need to adjust attributes on server. They replicate.
+		if (GetLocalRole() == ROLE_Authority) {
+			RemoveAttributeModifiers(FoundTool->GetEquipModifiers());
+		}
+		if (!bSuppressNotifications) {
+			OnEquippedToolsChanged.Broadcast();
+		}
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UnequipToolInternal - Unequipped tool %s"), *FoundTool->ItemGuid.ToString(EGuidFormats::Digits));
+		return true;
+	}
+	// Tool was already unequipped
+	return false;
+}
+
+
 void ATRPlayerControllerBase::ServerUnequipTool_Implementation(const FGuid ToolGuid)
 {
+	/*
 	UToolBase* FoundTool = nullptr;
 	for (UToolBase* TmpTool : EquippedTools)
 	{
@@ -415,7 +533,12 @@ void ATRPlayerControllerBase::ServerUnequipTool_Implementation(const FGuid ToolG
 		{
 			ClientUnequipTool(ToolGuid);
 		}
-	}	
+	}
+	*/
+	UnequipToolInternal(ToolGuid);
+	if (!IsLocalController()) {
+		ClientUnequipTool(ToolGuid);
+	}
 }
 
 
@@ -427,6 +550,7 @@ bool ATRPlayerControllerBase::ServerUnequipTool_Validate(const FGuid ToolGuid)
 
 void ATRPlayerControllerBase::ClientUnequipTool_Implementation(const FGuid ToolGuid)
 {
+	/*
 	UToolBase* FoundTool = nullptr;
 	for (UToolBase* TmpTool : EquippedTools)
 	{
@@ -442,6 +566,8 @@ void ATRPlayerControllerBase::ClientUnequipTool_Implementation(const FGuid ToolG
 		// Only remove modifiers on server side
 		OnEquippedToolsChanged.Broadcast();
 	}
+	*/
+	UnequipToolInternal(ToolGuid);
 }
 
 
@@ -451,8 +577,25 @@ bool ATRPlayerControllerBase::ClientUnequipTool_Validate(const FGuid ToolGuid)
 }
 
 
+void ATRPlayerControllerBase::UnequipAllToolsInternal(const bool bSuppressNotifications)
+{
+	bool bChanged = EquippedTools.Num() > 0;
+	while (EquippedTools.Num() > 0)
+	{
+		UToolBase* TmpTool = EquippedTools.Last();
+		if (TmpTool) {
+			UnequipToolInternal(TmpTool->ItemGuid, true);
+		}
+	}
+	if (bChanged && !bSuppressNotifications) {
+		OnEquippedToolsChanged.Broadcast();
+	}
+}
+
+
 void ATRPlayerControllerBase::ServerUnequipAllTools_Implementation()
 {
+	/*
 	bool bChanged = false;
 	for (UToolBase* TmpTool : EquippedTools)
 	{
@@ -471,6 +614,11 @@ void ATRPlayerControllerBase::ServerUnequipAllTools_Implementation()
 			ClientUnequipAllTools();
 		}
 	}
+	*/
+	UnequipAllToolsInternal();
+	if (!IsLocalController()) {
+		ClientUnequipAllTools();
+	}
 }
 
 
@@ -482,13 +630,14 @@ bool ATRPlayerControllerBase::ServerUnequipAllTools_Validate()
 
 void ATRPlayerControllerBase::ClientUnequipAllTools_Implementation()
 {
-	UToolBase* FoundTool = nullptr;
+	/*UToolBase* FoundTool = nullptr;
 	bool bChanged = EquippedTools.Num() > 0;
 	EquippedTools.Empty();
 	if (bChanged)
 	{
 		OnEquippedToolsChanged.Broadcast();
-	}
+	}*/
+	UnequipAllToolsInternal();
 }
 
 
@@ -872,8 +1021,7 @@ void ATRPlayerControllerBase::GetEquippedWeapons(TArray<UToolWeaponBase*>& Equip
 	for (UToolBase* TmpTool : EquippedTools)
 	{
 		TmpWeapon = Cast<UToolWeaponBase>(TmpTool);
-		if (TmpWeapon)
-		{
+		if (TmpWeapon) {
 			EquippedWeapons.Add(TmpWeapon);
 		}
 	}
@@ -887,8 +1035,7 @@ void ATRPlayerControllerBase::GetEquippedEquipment(TArray<UToolEquipmentBase*>& 
 	for (UToolBase* TmpTool : EquippedTools)
 	{
 		TmpEquipment = Cast<UToolEquipmentBase>(TmpTool);
-		if (TmpEquipment)
-		{
+		if (TmpEquipment) {
 			EquippedEquipment.Add(TmpEquipment);
 		}
 	}
@@ -900,8 +1047,7 @@ ARoomPlatformGridMgr* ATRPlayerControllerBase::FindGridManager()
 	ARoomPlatformGridMgr* GridManager = nullptr;
 	TArray<AActor*> FoundManagers;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ARoomPlatformGridMgr::StaticClass(), FoundManagers);
-	if (FoundManagers.Num() > 0)
-	{
+	if (FoundManagers.Num() > 0) {
 		GridManager = Cast<ARoomPlatformGridMgr>(FoundManagers[0]);
 	}
 	return GridManager;
@@ -924,15 +1070,14 @@ void ATRPlayerControllerBase::ClientUpdateRoomGridTemplate_Implementation(const 
 }
 
 
-bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
+bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData, const bool bAllowNullPlayerState)
 {
 	// Copy empty default struct in first in case this save already has data.
 	SaveData = FPlayerSaveData();
 	// Attribute components
 	TArray<UActorAttributeComponent*> AttributeComps;
 	GetComponents<UActorAttributeComponent>(AttributeComps);
-	for (UActorAttributeComponent* Attr : AttributeComps)
-	{
+	for (UActorAttributeComponent* Attr : AttributeComps) {
 		Attr->FillAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
 	// Inventory
@@ -941,8 +1086,7 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 	// Tools & equipped tools
 	ToolInventory.GenerateValueArray(SaveData.ToolInventory);
 	SaveData.LastEquippedItems.Empty(EquippedTools.Num());
-	for (UToolBase* TmpTool : EquippedTools)
-	{
+	for (UToolBase* TmpTool : EquippedTools) {
 		SaveData.LastEquippedItems.Add(TmpTool->ItemGuid);
 	}
 	// Other data
@@ -950,22 +1094,21 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 	SaveData.AttributeData.IntAttributes.Add(FTRNamedInt(FName(TEXT("MaxEquippedEquipment")), MaxEquippedEquipment));
 	// Get data from PlayerState
 	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
-	if (TRPlayerState)
-	{
+	if (TRPlayerState != nullptr) {
 		TRPlayerState->GetPlayerSaveData(SaveData);
-		return true;
 	}
-	else
+	else if(!bAllowNullPlayerState)
 	{
 		UE_LOG(LogTRGame, Error, TEXT("GetPlayerSaveData -  Player state not found."));
 		return false;
-	}
+	}	
+	return true;
 }
 
 
 bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
-	//UE_LOG(LogTRGame, Log, TEXT("PlayerControllerBase UpdateFromPlayerData started."));
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("PlayerControllerBase UpdateFromPlayerData started GUID %s."), *SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
 	UToolBase* TmpTool = nullptr;
 	// Attribute components
 	TArray<UActorAttributeComponent*> AttributeComps;
@@ -974,15 +1117,17 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	{
 		Attr->UpdateFromAttributeDataArray(SaveData.AttributeData.Attributes);
 	}
-	if (GetLocalRole() == ROLE_Authority) {
-		// Inventory
-		GoodsInventory->ServerSetInventory(SaveData.GoodsInventory, SaveData.SnapshotInventory);
-	}
+	//if (GetLocalRole() == ROLE_Authority) {
+	//	// Inventory
+	//	GoodsInventory->ServerSetInventory(SaveData.GoodsInventory, SaveData.SnapshotInventory);
+	//}
+	// Update local inventory
+	GoodsInventory->SetInventoryInternal(SaveData.GoodsInventory, SaveData.SnapshotInventory);
 	// Tools
 	ToolInventory.Empty();
 	for (FToolData CurToolData : SaveData.ToolInventory)
 	{
-		UE_LOG(LogTRGame, Log, TEXT("Adding tool from save %s"), *CurToolData.AttributeData.ItemDisplayName.ToString());
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("    Adding tool from save %s %s"), *CurToolData.AttributeData.ItemDisplayName.ToString(), *CurToolData.AttributeData.ItemGuid.ToString(EGuidFormats::Digits));
 		ToolInventory.Add(CurToolData.AttributeData.ItemGuid, CurToolData);
 	}
 	// Other data
@@ -997,15 +1142,23 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 		MaxEquippedEquipment = TmpInt->Quantity;
 	}
 	MaxEquippedEquipment = MaxEquippedEquipment < 0 ? 0 : MaxEquippedEquipment;
-	if (GetLocalRole() == ROLE_Authority)
+	//if (GetLocalRole() == ROLE_Authority)
+	//{
+	//	// Re-equip all tools
+	//	ServerUnequipAllTools();
+	//	for (FGuid TmpGuid : SaveData.LastEquippedItems)
+	//	{
+	//		ServerEquipTool(TmpGuid);
+	//	}
+	//}
+	// Equip only the tools from save data
+	UnequipAllToolsInternal(true);
+	for (FGuid TmpGuid : SaveData.LastEquippedItems) 
 	{
-		// Re-equip all tools
-		ServerUnequipAllTools();
-		for (FGuid TmpGuid : SaveData.LastEquippedItems)
-		{
-			ServerEquipTool(TmpGuid);
-		}
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("    Equipping Tool from save GUID %s"), *TmpGuid.ToString(EGuidFormats::Digits));
+		EquipToolInternal(TmpGuid, true);
 	}
+	OnEquippedToolsChanged.Broadcast();
 	// Update PlayerState
 	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
 	if (TRPlayerState)

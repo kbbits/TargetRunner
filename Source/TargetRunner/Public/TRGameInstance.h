@@ -70,10 +70,6 @@ protected:
 	UPROPERTY(BlueprintSetter=SetSelectedLevelTemplate, BlueprintGetter=GetSelectedLevelTemplate)
 		FLevelTemplate SelectedLevelTemplate;
 
-private:
-
-	// Our Grid Manager. Use GetGridManager() for access
-	class APlatformGridMgr* GridManager;
 
 	/* =======  Functions ======= */
 
@@ -152,13 +148,4 @@ public:
 	// [Server Only]
 	UFUNCTION(BlueprintCallable)
 		void UpdateLevelTemplatePlayerRecord(const FPlayerLevelRecord& PlayerRecord);
-
-	// [Any]
-	// Gets the current grid manager in the level.
-	// Returns nullptr if no grid manager could be found.
-	UFUNCTION(BlueprintCallable)
-		class APlatformGridMgr* GetGridManager(const bool bForceRefresh = false);
-
-	UFUNCTION(NetMulticast, Reliable, BlueprintCallable, WithValidation)
-		void MC_ResetGridManager();
 };

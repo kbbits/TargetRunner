@@ -80,6 +80,9 @@ public:
 	//UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 	//	FOnNewPlayerToolData OnNewPlayerToolData;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug;
+
 protected:
 
 	static const FString LocalPlayerFilenameSuffix;
@@ -134,6 +137,8 @@ public:
 
 	// Player Save Data
 
+	FString GetPlayerSaveFilenameForGuid(const FGuid PlayerProfileGuid, const bool bRemote);
+
 	FString GetPlayerSaveFilename(); 
 
 	// returns a list of all save game filenames for local profiles in /Saved/SaveGames folder.
@@ -147,6 +152,12 @@ public:
 	// Does a save file exist locally for the given remote player guid?
 	UFUNCTION(BlueprintCallable)
 		bool ProfileExistsForRemotePlayer(FGuid PlayerGuid);
+
+	// [Any]
+	// Performs the local save of player data.
+	// Other replicated functions call this.
+	UFUNCTION()
+		void SavePlayerDataInternal();
 
 	// [Server]
 	// Save the player's data. Asynchronus call.
@@ -177,6 +188,12 @@ public:
 	// Send player save data from client to server. Used when player first connects to host.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerPlayerDataFromClient(const FPlayerSaveData PlayerSaveData);
+
+	// [Server]
+	// Deletes the local save data for the player guid.
+	//   bRemote - set to true if the profile data is for a remote player save.
+	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
+		void ServerDeletePlayerProfile(const FGuid PlayerGuid, const bool bRemote);
 
 	// Market Data
 

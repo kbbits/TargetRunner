@@ -188,14 +188,14 @@ void APlatformGridMgr::GenerateGrid_Implementation()
 	// Destroy old grid, if any
 	DestroyGrid();
 	
-	DebugLog(FString::Printf(TEXT("%s PlatformGridMgr::GenerateGrid - Generating grid."), *GetNameSafe(this)));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("%s PlatformGridMgr::GenerateGrid - Generating grid."), *GetNameSafe(this));
 
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
 	if (GameMode)
 	{
 		FRandomStream& GridRandStream = GameMode->GetGridStream();
 		GridRandStream.Reset();
-		DebugLog(FString::Printf(TEXT("PlatformGridManager::GenerateGrid - GridRandStream seed: %d"), GridRandStream.GetInitialSeed()));
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("PlatformGridManager::GenerateGrid - GridRandStream seed: %d"), GridRandStream.GetInitialSeed());
 	}
 	else
 	{
@@ -218,7 +218,7 @@ void APlatformGridMgr::DestroyGrid_Implementation()
 	DestroyGridImpl();
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		DebugLog(FString::Printf(TEXT("DestroyGrid destroying spawned player starts: %d."), PlayerStarts.Num()));
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("DestroyGrid destroying spawned player starts: %d."), PlayerStarts.Num());
 		// Destroy any player starts we spawned.
 		for (APlayerStart* tmpPlayerStart : PlayerStarts)
 		{
@@ -246,7 +246,7 @@ void APlatformGridMgr::DestroyGridImpl()
 	}
 
 	PlatformGridMap.GenerateKeyArray(RowNums);
-	DebugLog(FString::Printf(TEXT("Destroying %d rows."), RowNums.Num()));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("Destroying %d rows."), RowNums.Num());
 	for (int32 Row : RowNums)
 	{
 		PlatformGridMap.Find(Row)->RowPlatforms.GenerateKeyArray(PlatformNums);
@@ -255,7 +255,7 @@ void APlatformGridMgr::DestroyGridImpl()
 			APlatformBase* Platform = PlatformGridMap.Find(Row)->RowPlatforms[Col];
 			if (IsValid(Platform))
 			{
-				DebugLog(FString::Printf(TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY));
+				UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("Destroying room X:%d Y:%d."), Platform->GridX, Platform->GridY);
 				Platform->DestroyPlatform();
 			}
 		}
@@ -445,25 +445,27 @@ void APlatformGridMgr::WakeNeighborsImpl(const FVector2D AroundGridCoords)
 
 void APlatformGridMgr::SpawnISMs(const TArray<FISMContext>& ISMContexts)
 {
-	UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Spawning %d ISM contexts"), ISMContexts.Num());
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Spawning %d ISM contexts"), ISMContexts.Num());
 	for (FISMContext ISMContext : ISMContexts)
 	{
 		if (ISMContext.SpawnTransforms.Num() == 0) {
 			UE_LOG(LogTRGame, Warning, TEXT("PlatformGridMgr::SpawnISMs - Got ISMContext %s with 0 spawn transforms"), *ISMContext.MeshPath.ToString());
 		}
 		else {
-			UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Adding ISMContext %s with %d spawn transforms"), *ISMContext.MeshPath.ToString(), ISMContext.SpawnTransforms.Num());
+			UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Adding ISMContext %s with %d spawn transforms"), *ISMContext.MeshPath.ToString(), ISMContext.SpawnTransforms.Num());
 		}
 		
 		UStaticMesh* MeshRef = nullptr;
 		if (ISMContext.Mesh.IsValid()) {
 			MeshRef = ISMContext.Mesh.Get();
 		}
-		if (MeshRef == nullptr) {
-			UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Getting mesh from soft path %s"), *ISMContext.MeshPath.ToString());
+		if (MeshRef == nullptr) 
+		{
+			UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Getting mesh from soft path %s"), *ISMContext.MeshPath.ToString());
 			MeshRef = Cast<UStaticMesh>(ISMContext.MeshPath.ResolveObject());
-			if (MeshRef == nullptr) {
-				UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Loading mesh from soft path %s"), *ISMContext.MeshPath.ToString());
+			if (MeshRef == nullptr) 
+			{
+				UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - Loading mesh from soft path %s"), *ISMContext.MeshPath.ToString());
 				MeshRef = Cast<UStaticMesh>(ISMContext.MeshPath.TryLoad());
 			}
 		}
@@ -473,17 +475,16 @@ void APlatformGridMgr::SpawnISMs(const TArray<FISMContext>& ISMContexts)
 			FSoftObjectPath MeshSOPath(MeshRef);
 			if (ISMContext.MeshPath != MeshSOPath)
 			{
-				UE_LOG(LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - changing mesh path from %s to %s"), *ISMContext.MeshPath.ToString(), *MeshSOPath.ToString());
+				UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("PlatformGridMgr::SpawnISMs - changing mesh path from %s to %s"), *ISMContext.MeshPath.ToString(), *MeshSOPath.ToString());
 				ISMContext.MeshPath = MeshSOPath;
 			}
 			UMaterialInterface* MatRef = MeshRef->GetMaterial(0);
 			if (MatRef)
 			{
-				for (FTransform SpawnTransform : ISMContext.SpawnTransforms)
-				{
+				for (FTransform SpawnTransform : ISMContext.SpawnTransforms) {
 					SpawnISM(MeshSOPtr, MatRef, SpawnTransform);
 				}
-				ISMContext.Mesh.Reset();
+				ISMContext.Mesh.Reset(); // TODO: Remove this?
 			}
 			else {
 				UE_LOG(LogTRGame, Error, TEXT("PlatformGridMgr::SpawnISMs - Could not get material for mesh %s"), *ISMContext.MeshPath.ToString());
@@ -493,8 +494,7 @@ void APlatformGridMgr::SpawnISMs(const TArray<FISMContext>& ISMContexts)
 			UE_LOG(LogTRGame, Error, TEXT("PlatformGridMgr::SpawnISMs - Could not load static mesh %s"), *ISMContext.MeshPath.ToString());
 		}
 	}
-	if (GetLocalRole() == ROLE_Authority && bEnableClientISMs)
-	{
+	if (GetLocalRole() == ROLE_Authority && bEnableClientISMs) {
 		ServerISMQueue.Append(ISMContexts);
 	}
 }
@@ -504,7 +504,7 @@ void APlatformGridMgr::MC_SpawnISMs_Implementation(const TArray<FISMContext>& IS
 {
 	if (GetLocalRole() < ROLE_Authority)
 	{
-		UE_LOG(LogTRGame, Log, TEXT("MC_SpawnISMs - spawning %d ISM contexts"), ISMContexts.Num());
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("MC_SpawnISMs - spawning %d ISM contexts"), ISMContexts.Num());
 		for (FISMContext ISMContext : ISMContexts)
 		{
 			if (ISMContext.SpawnTransforms.Num() == 0) {
@@ -552,7 +552,7 @@ int32 APlatformGridMgr::SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, U
 	}
 	if (!FoundISMComp)
 	{
-		DebugLog(FString::Printf(TEXT("GridManager creating new ISM component for mesh %s"), *Mesh.GetAssetName()));
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("GridManager creating new ISM component for mesh %s"), *Mesh.GetAssetName());
 		// Create an ISM component for this mesh and material
 		FoundISMComp = NewObject<UInstancedStaticMeshComponent>(this);
 		FoundISMComp->SetMobility(EComponentMobility::Movable);
@@ -571,11 +571,10 @@ int32 APlatformGridMgr::SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, U
 	}
 	if (FoundISMComp)
 	{
-		DebugLog(FString::Printf(TEXT("GridManager Adding ISM instance for %s at %s"), *Mesh.GetAssetName(), *SpawnTransform.GetLocation().ToString()));
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("GridManager Adding ISM instance for %s at %s"), *Mesh.GetAssetName(), *SpawnTransform.GetLocation().ToString());
 		return FoundISMComp->AddInstanceWorldSpace(SpawnTransform);
 	}
-	else
-	{
+	else {
 		UE_LOG(LogTRGame, Error, TEXT("GridManager Could not find or create ISM component for %s"), *MeshRef->GetPathName());
 	}
 	return -1;

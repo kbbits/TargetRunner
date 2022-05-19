@@ -101,26 +101,21 @@ FLevelTemplate ATR_GameMode::GetLevelTemplate()
 
 void ATR_GameMode::InitGoodsDropper_Implementation()
 {
-	if (GoodsDropper == nullptr)
-	{
+	if (GoodsDropper == nullptr) {
 		GoodsDropper = NewObject<UGoodsDropper>(this, FName(TEXT("GoodsDropper")));
 	}
 	if (GoodsDropper)
 	{
-		if (IsValid(GoodsDropperTable))
-		{
+		if (IsValid(GoodsDropperTable))	{
 			GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable);
 		}
-		else
-		{
+		else {
 			UE_LOG(LogTRGame, Error, TEXT("TRGameMode InitGoodsDropper GoodsDropperTable not valid."));
 		}
-		if (IsValid(ResourceDropTable))
-		{
+		if (IsValid(ResourceDropTable)) {
 			GoodsDropper->AddDropTableDataToLibrary(ResourceDropTable);
 		}
-		else
-		{
+		else {
 			UE_LOG(LogTRGame, Error, TEXT("TRGameMode InitGoodsDropper ResourceDropTable was not valid."));
 		}
 	}
@@ -144,12 +139,10 @@ void ATR_GameMode::GetClutterDropGoods(TArray<FGoodsQuantity>& DroppedGoods)
 	DroppedGoods.Empty();
 	if (GoodsDropper)
 	{
-		if (DifficultyLevel > 1 && ClutterGoodsLevelScaleExp > 0.f)
-		{
+		if (DifficultyLevel > 1 && ClutterGoodsLevelScaleExp > 0.f) {
 			DroppedGoods.Append(UGoodsFunctionLibrary::MultiplyGoodsQuantities(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName), FMath::Pow(static_cast<float>(DifficultyLevel), ClutterGoodsLevelScaleExp)));
 		}
-		else 
-		{
+		else {
 			DroppedGoods.Append(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName));
 		}
 	}
@@ -283,16 +276,6 @@ bool ATR_GameMode::InitGridManager_Implementation()
 		RoomGridManager->ResourcesToDistribute = LevelTemplate.ResourcesAvailable;
 		RoomGridManager->SpecialsToDistribute = LevelTemplate.SpecialsAvailable;
 	}
-
-	UTRGameInstance* TRGameInst = Cast<UTRGameInstance>(GetGameInstance());
-	if (TRGameInst)
-	{
-		// Force the game instance on all clients to refresh it's grid manager ref
-		TRGameInst->MC_ResetGridManager();
-		// Reset here on server manually.
-		TRGameInst->MC_ResetGridManager_Implementation();
-	}
-
 	//UE_LOG(LogTRGame, Log, TEXT("TRGameMode::InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)
 	return true;
 }

@@ -27,12 +27,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		ETRWallState WestWall;
 
+	// The detailed array of wall segment states. One entry for each room cell subdivision per wall.
+	// i.e. RoomCellSubdivision * 4 entries
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 		TArray<ETRWallState> WallTemplate;
 
+	//Exit info for the room
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 		FRoomExitInfo ExitInfo;
 
+	// Group ID within the grid
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		int32 Group;
 

@@ -132,10 +132,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		float ServerISMQueueMaxTime = 0.25f;
 
-#if WITH_EDITORONLY_DATA
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		bool bEnableClassDebugLog = false;
-#endif
 
 protected:
 	// Called when the game starts or when spawned
@@ -228,7 +226,7 @@ public:
 
 	// [Server]
 	// Adds instances for the given meshes as ISMs
-	// This will queue the ISMs for replication to client(s).
+	// If on server, this will queue the ISMs for replication to client(s).
 	UFUNCTION(BlueprintCallable)
 		void SpawnISMs(const TArray<FISMContext>& ISMContexts);
 
@@ -236,15 +234,8 @@ public:
 		void MC_SpawnISMs(const TArray<FISMContext>& ISMContexts);
 		
 	// Add an instance of a static mesh using the given material. SpawnTransform is in world space.
-	// This will queue the replication of ISM instance to client.
 	// Returns the index of the instance spawned.
 	UFUNCTION()
 		int32 SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, UPARAM(ref) UMaterialInterface* Material, const FTransform& SpawnTransform);
-
-	// Debug
-#if WITH_EDITOR
-	FORCEINLINE void DebugLog(const FString& LogString) { if (bEnableClassDebugLog) { UE_LOG(LogTRGame, Log, TEXT("%s"), *LogString); } };
-#else
-	FORCEINLINE void DebugLog(const FString& LogString) { };
-#endif
+	
 };
