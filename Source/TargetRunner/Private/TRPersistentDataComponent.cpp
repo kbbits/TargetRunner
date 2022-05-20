@@ -6,7 +6,9 @@
 #include "TRGameModeLobby.h"
 #include "TRPlayerControllerBase.h"
 #include "TRPlayerState.h"
+#include "TRGameModeLobby.h"
 #include "PlayerSave.h"
+#include "LevelTemplateContextStruct.h"
 #include "Kismet/GameplayStatics.h"
 #include "Paths.h"
 #include "PlatformFile.h"
@@ -73,22 +75,26 @@ void UTRPersistentDataComponent::OnRep_LevelTemplatesPageLoaded()
 
 void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(const float Tier, const int32 DifficultyLevel, const bool bUnlockForPlayer)
 {
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRPersistentDataComponent - ServerGenerateNewLevelTemplate"));
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst)
 	{
 		ULevelTemplateContext* NewTemplate = GameInst->GenerateNewLevelTemplate(Tier, DifficultyLevel);
-		if (NewTemplate && NewTemplate->LevelTemplate.IsValid()) {
+		if (NewTemplate && NewTemplate->LevelTemplate.IsValid()) 
+		{
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRPersistentDataComponent - ServerGenerateNewLevelTemplate generated %s"), *NewTemplate->LevelTemplate.LevelId.ToString());
 			if (bUnlockForPlayer)
 			{
 				// The unlock will do replication
 				ServerUnlockLevelTemplateForPlayer(NewTemplate->LevelTemplate.LevelId);
 			}
 			else
-			{			
-				LevelTemplatesPage.Add(NewTemplate->ToStruct());
-				LevelTemplatesRepTrigger++; 
+			{		
+				ServerLoadLevelTemplatesData();
+				//LevelTemplatesPage.Add(NewTemplate->ToStruct());
+				//LevelTemplatesRepTrigger++; 
 				// Manually call rep_notify on server
-				if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
+				//if (GetOwnerRole() == ROLE_Authority) { OnRep_LevelTemplatesPageLoaded(); }
 			}
 		}
 	}
@@ -169,6 +175,9 @@ void UTRPersistentDataComponent::ServerUnlockLevelTemplateForPlayer_Implementati
 				ULevelTemplateContext* UnlockedTemplate = GameInst->UnlockLevelTemplateForPlayer(LevelId, TRPlayerState->PlayerGuid);
 				if (UnlockedTemplate)
 				{
+					if (!TRPlayerController->IsLocalController()) {
+						ClientUnlockLevelTemplateForPlayer(UnlockedTemplate->LevelTemplate, TRPlayerState->PlayerGuid);
+					}
 					TArray<ULevelTemplateContext*> TmpLTCArray;
 					GameInst->LevelTemplatesMap.GenerateValueArray(TmpLTCArray);
 					LevelTemplatesPage.Empty();
@@ -195,6 +204,39 @@ void UTRPersistentDataComponent::ServerUnlockLevelTemplateForPlayer_Implementati
 }
 
 bool UTRPersistentDataComponent::ServerUnlockLevelTemplateForPlayer_Validate(const FName LevelId)
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ClientUnlockLevelTemplateForPlayer_Implementation(const FLevelTemplate& LevelTemplate, const FGuid PlayerGuid)
+{
+	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+	if (GameInst)
+	{
+		GameInst->LoadLevelTemplatesData();
+		ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+		if (TRPlayerController)
+		{
+			ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
+			if (TRPlayerState) 
+			{	
+				if (TRPlayerState->PlayerGuid == PlayerGuid)
+				{
+					UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRPersistentDataComponent::ClientUnlockLevelTemplateForPlayer - level template %s unlocked for player %s"), *LevelTemplate.LevelId.ToString(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+					GameInst->AddLevelTemplate(LevelTemplate);
+					ULevelTemplateContext* UnlockedTemplate = GameInst->UnlockLevelTemplateForPlayer(LevelTemplate.LevelId, TRPlayerState->PlayerGuid);
+				}
+				else {
+					UE_LOG(LogTRGame, Error, TEXT("PersistentDataComponent:ClientUnlockLevelTemplateForPlayer - incoming guid %s does not match player guid %s"), *PlayerGuid.ToString(EGuidFormats::Digits), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+				}
+			}
+		}
+	}
+}
+
+
+bool UTRPersistentDataComponent::ClientUnlockLevelTemplateForPlayer_Validate(const FLevelTemplate& LevelTemplate, const FGuid PlayerGuid)
 {
 	return true;
 }
@@ -605,20 +647,58 @@ void UTRPersistentDataComponent::ClientRequestPlayerDataFromClient_Implementatio
 		UE_LOG(LogTRGame, Error, TEXT("ClientRequestPlayerDataFromClient - Could not get player state."));
 		return;
 	}
+	if (!TRPlayerState->PlayerGuid.IsValid())
+	{
+		// May be a new controller instance. Try getting guid from GI
+		UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+		if (GameInst)
+		{
+			TRPlayerState->ProfileName = GameInst->ClientLocalProfileName;
+			TRPlayerState->PlayerGuid = GameInst->ClientLocalPlayerGuid;
+		}
+	}
 	FString PlayerSaveFilename = GetPlayerSaveFilename();
 	if (PlayerSaveFilename.IsEmpty())
 	{
 		UE_LOG(LogTRGame, Error, TEXT("ClientRequestPlayerDataFromClient - player save file name is empty."));
 		return;
 	}
+	// Gather our level template data to send.
+	// TODO: will need to do this differently when/if player has a lot of level templates unlocked.
+	TArray<FLevelTemplateContextStruct> LTCStructs;
+	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+	if (GameInst)
+	{
+		GameInst->LoadLevelTemplatesData();
+		TArray<ULevelTemplateContext*> LTCs = GameInst->GetLevelTemplatesForPlayer(TRPlayerState->PlayerGuid);
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ClientRequestPlayerDataFromClient - loaded %d level template contexts"), LTCs.Num());
+		for (ULevelTemplateContext* LTC : LTCs)
+		{
+			if (LTC)
+			{
+				FLevelTemplateContextStruct LTCStruct = LTC->ToStruct();
+				// Strip out PLRs
+				LTCStruct.PlayerRecords.Empty();
+				// Add in only the PLR for this player and only if it has been unlocked
+				FPlayerLevelRecord PLR = GameInst->GetLevelTemplatePlayerRecord(LTCStruct.LevelTemplate.LevelId, TRPlayerState->PlayerGuid);
+				if (PLR.LevelId.IsValid() && PLR.Unlocked)
+				{
+					UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ClientRequestPlayerDataFromClient - adding level template %s"), *LTCStruct.LevelTemplate.LevelId.ToString());
+					LTCStruct.PlayerRecords.Add(PLR);
+					LTCStructs.Add(LTCStruct);
+				}
+			}
+		}
+	}
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ClientRequestPlayerDataFromClient - sending %d level template contexts"), LTCStructs.Num());
 	// Get data from local save file if it exists
 	if (UGameplayStatics::DoesSaveGameExist(PlayerSaveFilename, 0))
 	{					
 		UPlayerSave* SaveGame = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(PlayerSaveFilename, 0));
 		if (SaveGame)
-		{
+		{	
 			// Send the data to server.
-			ServerPlayerDataFromClient(SaveGame->PlayerSaveData);
+			ServerPlayerDataFromClient(SaveGame->PlayerSaveData, LTCStructs);
 			//TRPlayerController->UpdateFromPlayerSaveData(SaveGame->PlayerSaveData);
 			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ClientRequestPlayerDataFromClient - loaded player data for guid %s from: %s"), *SaveGame->PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits), *PlayerSaveFilename);
 		}
@@ -638,7 +718,7 @@ void UTRPersistentDataComponent::ClientRequestPlayerDataFromClient_Implementatio
 		}
 		// Get data from local entities and send to server.
 		TRPlayerController->GetPlayerSaveData(NewSaveData);
-		ServerPlayerDataFromClient(NewSaveData);					
+		ServerPlayerDataFromClient(NewSaveData, LTCStructs);					
 	}		
 }
 
@@ -649,7 +729,7 @@ bool UTRPersistentDataComponent::ClientRequestPlayerDataFromClient_Validate()
 }
 
 
-void UTRPersistentDataComponent::ServerPlayerDataFromClient_Implementation(const FPlayerSaveData PlayerSaveData)
+void UTRPersistentDataComponent::ServerPlayerDataFromClient_Implementation(const FPlayerSaveData PlayerSaveData, const TArray<FLevelTemplateContextStruct>& LevelTemplateContexts)
 {
 	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ServerPlayerDataFromClient - received data from client for player guid %s"), *PlayerSaveData.PlayerGuid.ToString(EGuidFormats::Digits));
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
@@ -687,6 +767,37 @@ void UTRPersistentDataComponent::ServerPlayerDataFromClient_Implementation(const
 			GameInst->ClientLocalPlayerGuid = TRPlayerState->PlayerGuid;
 		}
 	}
+	// Update level templates
+	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+	if (GameInst)
+	{
+		int32 LTCsAdded = 0;
+		GameInst->LoadLevelTemplatesData();
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ServerPlayerDataFromClient - Initial template contexts %d"), GameInst->LevelTemplatesMap.Num());
+		for (FLevelTemplateContextStruct LTCStruct : LevelTemplateContexts)
+		{
+			if (LTCStruct.PlayerRecords.Num() > 0)
+			{
+				if (LTCStruct.PlayerRecords[0].PlayerGuid == TRPlayerState->PlayerGuid && LTCStruct.PlayerRecords[0].Unlocked)
+				{
+					UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ServerPlayerDataFromClient - Adding level template %s"), *LTCStruct.LevelTemplate.LevelId.ToString());
+					GameInst->AddLevelTemplate(LTCStruct.LevelTemplate);
+					GameInst->UnlockLevelTemplateForPlayer(LTCStruct.LevelTemplate.LevelId, TRPlayerState->PlayerGuid);
+					LTCsAdded++;
+				}
+			}
+		}
+		// If we added LTCs save the data.
+		if (LTCsAdded > 0) {
+			GameInst->SaveLevelTemplatesData(); // this also calls SavePlayerRecordsData
+		}
+		// If we are in the lobby, notify lobby GM. (so it can relay to other players)
+		ATRGameModeLobby* LobbyGameMode = Cast<ATRGameModeLobby>(GetWorld()->GetAuthGameMode());
+		if (LobbyGameMode) {
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ServerPlayerDataFromClient - Notifying Lobby Game mode of new level templates"));
+			LobbyGameMode->LevelTemplatesChanged();
+		}
+	}
 	// Save the data we just got.
 	SavePlayerDataInternal();
 	// Call standard load of data to trigger normal notications etc.
@@ -696,7 +807,7 @@ void UTRPersistentDataComponent::ServerPlayerDataFromClient_Implementation(const
 }
 
 
-bool UTRPersistentDataComponent::ServerPlayerDataFromClient_Validate(const FPlayerSaveData PlayerSaveData)
+bool UTRPersistentDataComponent::ServerPlayerDataFromClient_Validate(const FPlayerSaveData PlayerSaveData, const TArray<FLevelTemplateContextStruct>& LevelTemplateContexts)
 {
 	return true;
 }

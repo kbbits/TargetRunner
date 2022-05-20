@@ -27,41 +27,37 @@ public:
 	UTRGameInstance();
 
 public:
-	// [Client]
 	// Store the local client's profile name in the game instance so it is always available locally.
 	UPROPERTY(BlueprintReadWrite)
 		FName ClientLocalProfileName;
 
-	// [Client]
 	// Store the local client's profile guid in the game instance so it is always available locally.
 	UPROPERTY(BlueprintReadWrite)
 		FGuid ClientLocalPlayerGuid;
 
-	// [Server]
+	// The player GUID of the host
 	UPROPERTY(BlueprintReadWrite)
 		FGuid HostProfileGuid;
 
-	// [Server]
 	// The LevelForge class to use.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ULevelForgeBase> DefaultLevelForgeClass;
 
-	// [Server]
-	// Map of all level templates with LevelId as key. Will only be valid on server.
+	// Map of all level templates with LevelId as key. Will be different on each client/server.
 	UPROPERTY(BlueprintReadWrite)
 		TMap<FName, ULevelTemplateContext*> LevelTemplatesMap;
 
-	// [Server]
 	UPROPERTY(BlueprintReadWrite)
 		bool bLevelTemplatesLoaded = false;
 	
-	// [Server]
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FRandomStream LevelRandStream;
 
-	// [Server]
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnLevelTemplatesSaved OnLevelTemplatesSaved;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug = false;
 
 protected:
 
@@ -75,48 +71,32 @@ protected:
 
 protected:
 
-	// [Server Only]
 	// The filename of the level templates data. 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		FString GetLevelTemplatesSaveFilename();
 
-	// [Server Only]
 	// The filename of the level templates data. 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		FString GetPlayerRecordsSaveFilename();
 
 public:
-
-	// [Server Only]
-	// Saves player data for all selected PlayerControllers.
-	// Saving is managed through each PlayerController's PersistentDataComponent.
-	UFUNCTION(BlueprintCallable)
-		void SaveAllPlayerData();
-
-	// [Server Only]
-	// Loads player data for all PCs
-	// Loading is managed through each PC's PDC.
-	UFUNCTION(BlueprintCallable)
-		void ReloadAllPlayerData();
-
-	// [Server Only]
+		
 	UFUNCTION(BlueprintCallable)
 		ULevelTemplateContext* GenerateNewLevelTemplate(const float Tier, const int32 DifficultyLevel);
 
-	// [Server only]
+	UFUNCTION(BlueprintCallable)
+		void AddLevelTemplate(const FLevelTemplate& LevelTemplate);
+
 	UFUNCTION(BlueprintCallable)
 		void SetSelectedLevelTemplate(const FLevelTemplate& LevelTemplate);
 
-	// [Server only]
 	UFUNCTION(BlueprintPure)
 		FLevelTemplate& GetSelectedLevelTemplate();
 
-	// [Server Only]
 	// This will call SavePlayerRecordsData. No need to call it manualy.
 	UFUNCTION(BlueprintNativeEvent)
 		void SaveLevelTemplatesData();
 
-	// [Server Only]
 	// Saves the level template data related to each player. (template unlock, total runs, etc.)
 	UFUNCTION(BlueprintNativeEvent)
 		void SavePlayerRecordsData();
@@ -133,19 +113,15 @@ public:
 	UFUNCTION()
 		void OnPlayerRecordsSaveComplete(const FString& SlotName, const int32 UserIndex, bool bSuccessful);
 
-	// [Server only]
 	UFUNCTION(BlueprintCallable)
 		ULevelTemplateContext* UnlockLevelTemplateForPlayer(const FName LevelId, const FGuid PlayerGuid);
 
-	// [Server Only]
 	UFUNCTION(BlueprintCallable)
 		TArray<ULevelTemplateContext*> GetLevelTemplatesForPlayer(const FGuid PlayerGuid);
 
-	// [Server Only]
 	UFUNCTION(BlueprintCallable)
 		FPlayerLevelRecord GetLevelTemplatePlayerRecord(const FName LevelId, const FGuid PlayerGuid);
 
-	// [Server Only]
 	UFUNCTION(BlueprintCallable)
 		void UpdateLevelTemplatePlayerRecord(const FPlayerLevelRecord& PlayerRecord);
 };

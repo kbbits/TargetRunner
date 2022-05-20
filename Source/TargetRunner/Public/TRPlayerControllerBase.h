@@ -101,6 +101,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		FGenericTeamId FactionId;
 
+	UPROPERTY(BlueprintReadWrite)
+		bool bInitialPostLogin = false;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		bool bEnableClassDebug = false;
 
@@ -141,6 +144,14 @@ protected:
 	FGenericTeamId GetGenericTeamId() const;
 	
 public:
+
+	// Called from server to notify clients that level template data has changed.
+	UFUNCTION(Client, Unreliable, WithValidation)
+		void ClientLevelTemplatesChanged();
+
+	// Our BP hook for BP implementations.
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnLevelTemplatesChanged();
 
 	// [Server]
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)

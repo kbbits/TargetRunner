@@ -72,11 +72,11 @@ void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
 {
 	Super::CopyProperties(NewPlayerState);
 
-	UE_LOG(LogTRGame, Log, TEXT("PlayerState::CopyProperties to new player state: %s"), *NewPlayerState->GetName());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("PlayerState::CopyProperties to new player state: %s"), *NewPlayerState->GetName());
 	ATRPlayerState* NewTRPlayerState = Cast<ATRPlayerState>(NewPlayerState);
 	if (NewTRPlayerState)
 	{
-		UE_LOG(LogTRGame, Log, TEXT("PlayerState::CopyProperties - current guid %s overwriting new guid %s"), *PlayerGuid.ToString(), *NewTRPlayerState->PlayerGuid.ToString());
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("PlayerState::CopyProperties - current PS with guid %s overwriting new PS with guid %s"), *PlayerGuid.ToString(EGuidFormats::Digits), *NewTRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
 		NewTRPlayerState->PlayerGuid = PlayerGuid;
 		NewTRPlayerState->ProfileName = ProfileName;
 		NewTRPlayerState->DisplayName = DisplayName;
@@ -95,8 +95,7 @@ void ATRPlayerState::CopyProperties(APlayerState* NewPlayerState)
 			NewTRPlayerState->HealthAttribute->CopyPropertiesFromOther(HealthAttribute);
 		}
 	}
-	else
-	{
+	else {
 		UE_LOG(LogTRGame, Error, TEXT("PlayerState::CopyProperties - New player state is null."));
 	}
 }
@@ -128,6 +127,7 @@ void ATRPlayerState::RemoveAttributeModifiers_Implementation(const TArray<FAttri
 
 void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 {
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("PlayerState::GetPlayerSaveData - Called for player state guid %s"), *PlayerGuid.ToString(EGuidFormats::Digits));
 	SaveData.PlayerGuid = PlayerGuid;
 	SaveData.ProfileName = ProfileName;
 	SaveData.DisplayName = DisplayName;
@@ -149,7 +149,7 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 
 void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
-	//UE_LOG(LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - new player %s : %s."), *SaveData.ProfileName.ToString(),*SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - Current guid %s. Save data info %s : %s."), *PlayerGuid.ToString(EGuidFormats::Digits), *SaveData.ProfileName.ToString(), *SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
 	PlayerGuid = SaveData.PlayerGuid;		// replicated
 	ProfileName = SaveData.ProfileName;		// replicated
 	DisplayName = SaveData.DisplayName;		// replicated
@@ -168,8 +168,7 @@ void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveDa
 	// Goods quantities attributes
 	// LevelUpProgress
 	const FNamedGoodsQuantitySet* TmpGoodsSet = FindInNamedArray<FNamedGoodsQuantitySet>(SaveData.AttributeData.GoodsQuantitiesAttributes, LevelUpGoodsProgress.Name);
-	if (TmpGoodsSet)
-	{
+	if (TmpGoodsSet) {
 		LevelUpGoodsProgress.GoodsQuantitySet = TmpGoodsSet->GoodsQuantitySet;  // replicated
 	}
 }

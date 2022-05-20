@@ -52,6 +52,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float TotalPlaytimeInRuns;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug;
 		
 public:
 	// Called when the game starts or when spawned

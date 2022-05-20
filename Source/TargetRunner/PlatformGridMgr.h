@@ -123,16 +123,22 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		TArray<FISMContext> ServerISMQueue;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		int32 ISMQueueMaxBatchSize = 50;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		float ServerISMQueueTime = 0.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		float ServerISMQueueMaxTime = 0.25f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintGetter = GetRCAMinISMMoveDelay)
+		float RoomComponentMinISMMoveDelay = 0.1;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintGetter = GetRCAMaxISMMoveDelay)
+		float RoomComponentMaxISMMoveDelay = 0.3;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		bool bEnableClassDebugLog = false;
 
 protected:
@@ -237,5 +243,13 @@ public:
 	// Returns the index of the instance spawned.
 	UFUNCTION()
 		int32 SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, UPARAM(ref) UMaterialInterface* Material, const FTransform& SpawnTransform);
+
+	// Returns the minimum delay before RoomComponentActors should start moving their ISMs to the grid manager.
+	UFUNCTION(BlueprintPure)
+		float GetRCAMinISMMoveDelay();
+
+	// Returns the maximum delay before RoomComponentActors should start moving their ISMs to the grid manager.
+	UFUNCTION(BlueprintPure)
+		float GetRCAMaxISMMoveDelay();
 	
 };

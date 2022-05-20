@@ -155,6 +155,19 @@ FGenericTeamId ATRPlayerControllerBase::GetGenericTeamId() const
 }
 
 
+void ATRPlayerControllerBase::ClientLevelTemplatesChanged_Implementation()
+{
+	// Just call the BP hook
+	OnLevelTemplatesChanged();
+}
+
+
+bool ATRPlayerControllerBase::ClientLevelTemplatesChanged_Validate()
+{
+	return true;
+}
+
+
 void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
 {
 	APawn* TmpPawn = GetPawn();
@@ -164,9 +177,9 @@ void ATRPlayerControllerBase::UpdateMovementFromAttributes_Implementation()
 	if (MoveComp && RunSpeedAttribute && JumpForceAttribute)
 	{
 		MoveComp->MaxWalkSpeed = RunSpeedAttribute->GetCurrent();
-		//UE_LOG(LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("Player walk speed changed to: %.0f"), MoveComp->MaxWalkSpeed);
 		MoveComp->JumpZVelocity = JumpForceAttribute->GetCurrent();
-		//UE_LOG(LogTRGame, Log, TEXT("Player jump velocity changed to: %.0f"), MoveComp->JumpZVelocity);
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("Player jump velocity changed to: %.0f"), MoveComp->JumpZVelocity);
 	}
 }
 
@@ -706,8 +719,7 @@ void ATRPlayerControllerBase::ClientRenameTool_Implementation(const FGuid& ToolG
 			break;
 		}
 	}
-	if (FoundTool == nullptr)
-	{
+	if (FoundTool == nullptr) {
 		FoundTool = UToolBase::CreateToolFromToolData(*ToolData, this);
 	}
 	if (FoundTool && !FoundTool->DisplayName.EqualTo(NewName, ETextComparisonLevel::Default))
@@ -746,8 +758,7 @@ void ATRPlayerControllerBase::ServerUpgradeTool_Implementation(const FGuid ToolG
 			break;
 		}
 	}
-	if (FoundTool == nullptr)
-	{
+	if (FoundTool == nullptr) {
 		FoundTool = UToolBase::CreateToolFromToolData(*ToolData, this);
 	}
 	if (UpgradeType == ETRToolUpgrade::DamageRate)
@@ -765,7 +776,7 @@ void ATRPlayerControllerBase::ServerUpgradeTool_Implementation(const FGuid ToolG
 	if (FoundRate)
 	{
 		FoundRate->Rate += RateDelta.Rate;
-		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRPlayerControllerBase - ServerUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
 	}
 	FToolData TmpToolData;
 	FoundTool->ToToolData(TmpToolData);
@@ -806,8 +817,7 @@ void ATRPlayerControllerBase::ClientUpgradeTool_Implementation(const FGuid ToolG
 			break;
 		}
 	}
-	if (FoundTool == nullptr)
-	{
+	if (FoundTool == nullptr) {
 		FoundTool = UToolBase::CreateToolFromToolData(*ToolData, this);
 	}
 	if (UpgradeType == ETRToolUpgrade::DamageRate)
@@ -825,7 +835,7 @@ void ATRPlayerControllerBase::ClientUpgradeTool_Implementation(const FGuid ToolG
 	if (FoundRate)
 	{
 		FoundRate->Rate += RateDelta.Rate;
-		//UE_LOG(LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRPlayerControllerBase - ClientUpgradeTool tool %s upgraded."), *ToolData->AttributeData.ItemDisplayName.ToString());
 	}
 	FToolData TmpToolData;
 	FoundTool->ToToolData(TmpToolData);
@@ -853,12 +863,10 @@ void ATRPlayerControllerBase::ServerSetCurrentTool_Implementation(const FGuid To
 			break;
 		}
 	}
-	if (FoundTool)
-	{
+	if (FoundTool) {
 		SpawnAsCurrentTool(FoundTool);
 	}
-	else
-	{
+	else {
 		UE_LOG(LogTRGame, Error, TEXT("TRPlayerController::ServerSetCurrentTool - Tool guid: %s not found in equipped tools."), *ToolGuid.ToString(EGuidFormats::Digits));
 	}
 }
@@ -988,13 +996,13 @@ void ATRPlayerControllerBase::SpawnAsCurrentTool_Implementation(UToolBase* NewCu
 	}
 	if (NewCurrentTool && IsValid(NewCurrentTool))
 	{
-		if (CurrentTool)
-		{
+		if (CurrentTool) {
 			CurrentTool->Destroy();
 		}
 		APawn* CurPawn = GetPawn();
 		CurrentTool = nullptr;
-		if (CurPawn) {
+		if (CurPawn) 
+		{
 			SpawnParams.Owner = CurPawn;
 			SpawnParams.Instigator = CurPawn;
 			SpawnTransform = CurPawn->GetTransform();
@@ -1009,7 +1017,9 @@ void ATRPlayerControllerBase::SpawnAsCurrentTool_Implementation(UToolBase* NewCu
 			}
 		}
 		// Manually call rep_notify on server
-		if (GetLocalRole() == ROLE_Authority) { OnRep_CurrentTool(); }
+		if (GetLocalRole() == ROLE_Authority) { 
+			OnRep_CurrentTool(); 
+		}
 	}
 }
 
@@ -1063,8 +1073,7 @@ void ATRPlayerControllerBase::ClientUpdateRoomGridTemplate_Implementation(const 
 		GridManager->SetRoomGridTemplateData(UpdatedTemplate, RoomCoords, RoomTemplates);
 		//GridManager->SpawnRooms();
 	}
-	else
-	{
+	else {
 		UE_LOG(LogTRGame, Warning, TEXT("ClientUpdateRoomGridTemplate - No Grid mgr found."))
 	}
 }
@@ -1108,7 +1117,7 @@ bool ATRPlayerControllerBase::GetPlayerSaveData_Implementation(FPlayerSaveData& 
 
 bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
-	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("PlayerControllerBase UpdateFromPlayerData started GUID %s."), *SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("PlayerControllerBase UpdateFromPlayerData start: GUID %s."), *SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
 	UToolBase* TmpTool = nullptr;
 	// Attribute components
 	TArray<UActorAttributeComponent*> AttributeComps;
@@ -1123,6 +1132,13 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	//}
 	// Update local inventory
 	GoodsInventory->SetInventoryInternal(SaveData.GoodsInventory, SaveData.SnapshotInventory);
+	if (bEnableClassDebug)
+	{
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("Inventory from save:"));
+		for (FGoodsQuantity Goods : SaveData.GoodsInventory) {
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("    %s %d"), *Goods.Name.ToString(), (int32)Goods.Quantity);
+		}
+	}
 	// Tools
 	ToolInventory.Empty();
 	for (FToolData CurToolData : SaveData.ToolInventory)

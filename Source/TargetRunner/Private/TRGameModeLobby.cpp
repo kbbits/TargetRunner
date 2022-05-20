@@ -2,14 +2,44 @@
 
 
 #include "TRGameModeLobby.h"
+#include "TRPlayerControllerBase.h"
 #include "TRPlayerState.h"
 #include "PlayerLevelUpData.h"
 
 ATRGameModeLobby::ATRGameModeLobby()
 	: Super()
 {
-	
+	TotalPlayerControllersForTravel = 0;
 }
+
+
+void ATRGameModeLobby::SaveAllPlayerData()
+{
+	ATRPlayerControllerBase* PController = nullptr;
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		PController = Cast<ATRPlayerControllerBase>(*Iterator);
+		if (IsValid(PController))
+		{
+			PController->PersistentDataComponent->ServerSavePlayerData();
+		}
+	}
+}
+
+
+void ATRGameModeLobby::ReloadAllPlayerData()
+{
+	ATRPlayerControllerBase* PController = nullptr;
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		PController = Cast<ATRPlayerControllerBase>(*Iterator);
+		if (IsValid(PController))
+		{
+			PController->PersistentDataComponent->ServerLoadPlayerData();
+		}
+	}
+}
+
 
 int32 ATRGameModeLobby::GetMarketDataForPlayer(const ATRPlayerControllerBase* MarketPlayerController, TArray<FGoodsPurchaseItem>& MarketGoods)
 {
@@ -29,8 +59,7 @@ int32 ATRGameModeLobby::GetMarketDataForPlayer(const ATRPlayerControllerBase* Ma
 	for (const TPair<FName, uint8*>& RowItr : GoodsMarketTable->GetRowMap())
 	{
 		PurchaseItem = reinterpret_cast<const FGoodsPurchaseItem*>(RowItr.Value);
-		if (PurchaseItem->LevelAvailable <= PlayerState->ExperienceLevel)
-		{
+		if (PurchaseItem->LevelAvailable <= PlayerState->ExperienceLevel) {
 			MarketGoods.Add(*PurchaseItem);
 		}
 	}
@@ -97,6 +126,19 @@ void ATRGameModeLobby::OnAllPlayersTravelComplete_Implementation()
 }
 
 
+void ATRGameModeLobby::LevelTemplatesChanged_Implementation()
+{
+	ATRPlayerControllerBase* PlayerController = nullptr;
+	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
+	{
+		PlayerController = Cast<ATRPlayerControllerBase>(It->Get());
+		if (IsValid(PlayerController)) {
+			PlayerController->ClientLevelTemplatesChanged();
+		}
+	}
+}
+
+
 void ATRGameModeLobby::PostSeamlessTravel()
 {
 	APlayerController* PlayerController;
@@ -107,7 +149,7 @@ void ATRGameModeLobby::PostSeamlessTravel()
 		if (IsValid(PlayerController))
 		{
 			TotalPlayerControllersForTravel++;
-			//UE_LOG(LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
 	Super::PostSeamlessTravel();
@@ -125,14 +167,13 @@ void ATRGameModeLobby::GenericPlayerInitialization(AController* C)
 		ATRPlayerState* TRPlayerState = TRPlayerController->GetPlayerState<ATRPlayerState>();
 		if (TRPlayerState)
 		{
-			UE_LOG(LogTRGame, Log, TEXT("GenericPlayerInit player id: %d"), TRPlayerState->GetPlayerId());
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("GenericPlayerInit player id: %d"), TRPlayerState->GetPlayerId());
 			if (TRPlayerState->PlayerGuid.IsValid())
 			{
-				UE_LOG(LogTRGame, Log, TEXT("GenericPlayerInit player guid: %sd"), TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+				UE_LOG(LogTRGame, Log, TEXT("GenericPlayerInit player guid: %sd"), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
 				//TRPlayerController->PersistentDataComponent->ServerLoadPlayerData();
 			}
-			else
-			{
+			else {
 				UE_LOG(LogTRGame, Error, TEXT("TRGameModeLobby::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
 			}
 		}
@@ -153,12 +194,22 @@ void ATRGameModeLobby::HandleStartingNewPlayer_Implementation(APlayerController*
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 
-	//if (NewPlayer->PlayerState) {
-	//	UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer player id %d"), NewPlayer->PlayerState->GetPlayerId());
-	//}
-	//else {
-	//	UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer no player state"));
-	//}
+	if (bEnableClassDebug)
+	{
+		if (NewPlayer->PlayerState) 
+		{
+			ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(NewPlayer->PlayerState);
+			if (TRPlayerState) {
+				UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("HandleStartingNewPlayer player id %d guid %s"), NewPlayer->PlayerState->GetPlayerId(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+			}
+			else {
+				UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("HandleStartingNewPlayer player id %d. Not a TRPlayerState."), NewPlayer->PlayerState->GetPlayerId());
+			}
+		}
+		else {
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("HandleStartingNewPlayer no player state"));
+		}
+	}
 	APlayerController* PlayerController;
 	int32 NumLoadedPlayers = 0;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
@@ -167,14 +218,13 @@ void ATRGameModeLobby::HandleStartingNewPlayer_Implementation(APlayerController*
 		// Starting players will all have the same controller class.
 		if (IsValid(PlayerController) && PlayerController->GetClass() == NewPlayer->GetClass())
 		{
-			if (PlayerController->PlayerState && PlayerController->HasClientLoadedCurrentWorld())
-			{
+			if (PlayerController->PlayerState && PlayerController->HasClientLoadedCurrentWorld()) {
 				NumLoadedPlayers++;
 			}
-			//UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
-	UE_LOG(LogTRGame, Log, TEXT("TRGameModeLobby::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRGameModeLobby::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);
 	if (NumLoadedPlayers == TotalPlayerControllersForTravel)
 	{
 		OnAllPlayersTravelComplete();
@@ -184,5 +234,12 @@ void ATRGameModeLobby::HandleStartingNewPlayer_Implementation(APlayerController*
 
 bool ATRGameModeLobby::ReadyToStartMatch_Implementation()
 {
-	return Super::ReadyToStartMatch_Implementation();
+	//return Super::ReadyToStartMatch_Implementation();
+	if (GetMatchState() == MatchState::WaitingToStart)
+	{
+		if (bAllClientsReady && (TotalPlayerControllersForTravel == 0 || NumPlayers == TotalPlayerControllersForTravel)) {
+			return true;
+		}
+	}
+	return false;
 }

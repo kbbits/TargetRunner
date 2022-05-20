@@ -46,11 +46,10 @@ void ATR_GameMode::BeginPlay()
 		if (TRGameInst) 
 		{
 			// Debug log
-			//UE_LOG(LogTRGame, Log, TEXT("TRGameMode - BeginPlay setting level template"));
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRGameMode - BeginPlay setting level template"));
 			SetNewLevelTemplate(TRGameInst->GetSelectedLevelTemplate());
 		}
-		else
-		{
+		else {
 			UE_LOG(LogTRGame, Error, TEXT("TRGameMode - BeginPlay incorrect game instance class %s"), *GameInst->GetClass()->GetName());
 		}
 	}
@@ -80,13 +79,41 @@ void ATR_GameMode::HandleMatchIsWaitingToStart()
 //}
 
 
+void ATR_GameMode::SaveAllPlayerData()
+{
+	ATRPlayerControllerBase* PController = nullptr;
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		PController = Cast<ATRPlayerControllerBase>(*Iterator);
+		if (IsValid(PController))
+		{
+			PController->PersistentDataComponent->ServerSavePlayerData();
+		}
+	}
+}
+
+
+void ATR_GameMode::ReloadAllPlayerData()
+{
+	ATRPlayerControllerBase* PController = nullptr;
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		PController = Cast<ATRPlayerControllerBase>(*Iterator);
+		if (IsValid(PController))
+		{
+			PController->PersistentDataComponent->ServerLoadPlayerData();
+		}
+	}
+}
+
+
 void ATR_GameMode::SetNewLevelTemplate(const FLevelTemplate& NewTemplate)
 {
 	if (NewTemplate.LevelSeed == 0) { UE_LOG(LogTRGame, Warning, TEXT("GameMode - SetNewLevelTemplate - Template has 0 seed.")); }
 	LevelTemplate = NewTemplate;
 	// Debug log
-	//UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate %s ID: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
-	//UE_LOG(LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate seed: %d"), LevelTemplate.LevelSeed);
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate %s ID: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRGameMode - SetNewLevelTemplate seed: %d"), LevelTemplate.LevelSeed);
 	InitGoodsDropper();
 	ReseedAllStreams(LevelTemplate.LevelSeed);
 	bLevelTemplateReady = true;
@@ -106,6 +133,7 @@ void ATR_GameMode::InitGoodsDropper_Implementation()
 	}
 	if (GoodsDropper)
 	{
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("GameMode::InitGoodsDropper - created goods dropper."));
 		if (IsValid(GoodsDropperTable))	{
 			GoodsDropper->AddDropTableDataToLibrary(GoodsDropperTable);
 		}
@@ -139,6 +167,7 @@ void ATR_GameMode::GetClutterDropGoods(TArray<FGoodsQuantity>& DroppedGoods)
 	DroppedGoods.Empty();
 	if (GoodsDropper)
 	{
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("GameMode::GetClutterDropGoods - Drop table name %s"), *DropTableName.ToString());
 		if (DifficultyLevel > 1 && ClutterGoodsLevelScaleExp > 0.f) {
 			DroppedGoods.Append(UGoodsFunctionLibrary::MultiplyGoodsQuantities(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName), FMath::Pow(static_cast<float>(DifficultyLevel), ClutterGoodsLevelScaleExp)));
 		}
@@ -146,8 +175,7 @@ void ATR_GameMode::GetClutterDropGoods(TArray<FGoodsQuantity>& DroppedGoods)
 			DroppedGoods.Append(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName));
 		}
 	}
-	else
-	{
+	else {
 		UE_LOG(LogTRGame, Error, TEXT("TRGameMode GetClutterDropGoods - Null GoodsDropper."));
 	}
 }
@@ -174,6 +202,7 @@ void ATR_GameMode::GetClutterDropResources(TArray<FResourceQuantity>& DroppedRes
 	}	
 	if (GoodsDropper)
 	{
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("GameMode::GetClutterDropResources - Drop table name %s"), *DropTableName.ToString());
 		// Get resources by using goods droppper to drop resource code named goods.
 		// Use AddGoodsQuantities to consolidate duplicate entries.
 		DroppedGoods.Append(UGoodsFunctionLibrary::AddGoodsQuantities(GoodsDropper->EvaluateGoodsDropTableByName(DropTableName), EmptyGoods));
@@ -190,8 +219,7 @@ void ATR_GameMode::GetClutterDropResources(TArray<FResourceQuantity>& DroppedRes
 			}
 		}
 	}
-	else
-	{
+	else {
 		UE_LOG(LogTRGame, Error, TEXT("TRGameMode GetClutterDropGoods - Null GoodsDropper."));
 	}
 	/*FResourceTypeData TmpResourceTypeData;
@@ -232,13 +260,11 @@ void ATR_GameMode::GetEnemyMobsForTier(const int32 Tier, TArray<TSubclassOf<ATRE
 			EnemyClasses.Empty(Row->EnemyClasses.Num());
 			EnemyClasses.Append(Row->EnemyClasses);
 		}
-		else
-		{
+		else {
 			UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::GetEnemyMobsForTier no row for tier %d found in table"), Tier);
 		}
 	}
-	else
-	{
+	else {
 		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::GetEnemyMobsForTier EnemyMobsByTierTable is invalid"));
 	}
 }
@@ -248,11 +274,13 @@ bool ATR_GameMode::InitGridManager_Implementation()
 {
 	// Initializes our reference
 	GetGridManager();
-	if (GridManager == nullptr) { 
+	if (GridManager == nullptr) 
+	{
 		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::InitGridManager could not find any grid manager actors")); 
 		return false;
 	}
-	if (!GetLevelTemplate().IsValid()) { 
+	if (!GetLevelTemplate().IsValid()) 
+	{ 
 		UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::InitGridManager invalid level tempate. LevelSeed: %d"), LevelTemplate.LevelSeed);
 		return false; 
 	}
@@ -276,7 +304,7 @@ bool ATR_GameMode::InitGridManager_Implementation()
 		RoomGridManager->ResourcesToDistribute = LevelTemplate.ResourcesAvailable;
 		RoomGridManager->SpecialsToDistribute = LevelTemplate.SpecialsAvailable;
 	}
-	//UE_LOG(LogTRGame, Log, TEXT("TRGameMode::InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRGameMode::InitGridManager - extents: MinX:%d MinY:%d  MaxX:%d MaxY:%d"), (int32)MinExtents.X, (int32)MinExtents.Y, (int32)MaxExtents.X, (int32)MaxExtents.Y)
 	return true;
 }
 
@@ -315,16 +343,19 @@ void ATR_GameMode::GetGridExtents(FVector2D& MinExtents, FVector2D& MaxExtents)
 
 bool ATR_GameMode::SpawnLevel_Implementation()
 {
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("GameMode::SpawnLevel - Native SpawnLevel called."));
 	GetGridManager();
-	if (GridManager == nullptr) {
+	if (GridManager == nullptr) 
+	{
 		UE_LOG(LogTRGame, Error, TEXT("SpawnLevel - No valid grid manager"));
 		return false;
 	}
-	if (!LevelTemplate.IsValid()) {
+	if (!LevelTemplate.IsValid()) 
+	{
 		UE_LOG(LogTRGame, Error, TEXT("SpawnLevel - invalid level tempate. LevelSeed: %d"), LevelTemplate.LevelSeed);
 		return false;
 	}
-		
+	
 	// If it is a RoomGridManager, spawn the rooms.
 	ARoomPlatformGridMgr* RoomGridManager = Cast<ARoomPlatformGridMgr>(GridManager);
 	if (RoomGridManager != nullptr)
@@ -344,16 +375,16 @@ void ATR_GameMode::ReseedAllStreams_Implementation(const int32 NewSeed)
 		GeneratorRandStream.RandRange(1, INT_MAX - 1);
 		//UE_LOG(LogTRGame, Log, TEXT("    random int: %d"), GeneratorRandStream.RandRange(1, INT_MAX - 1));
 	}
-	//UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - Generator seed: %d"), GeneratorRandStream.GetInitialSeed());	
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ReseedAllStreams - Generator seed: %d"), GeneratorRandStream.GetInitialSeed());
 	GridRandStream.Initialize(GeneratorRandStream.RandRange(1, INT_MAX - 1));
-	//UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - Grid seed: %d"), GridRandStream.GetInitialSeed());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ReseedAllStreams - Grid seed: %d"), GridRandStream.GetInitialSeed());
 	ResourceDropperRandStream.Initialize(GeneratorRandStream.RandRange(1, INT_MAX - 1));
-	//UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - ResourceDropper seed: %d"), ResourceDropperRandStream.GetInitialSeed());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ReseedAllStreams - ResourceDropper seed: %d"), ResourceDropperRandStream.GetInitialSeed());
 	if (GoodsDropper != nullptr)
 	{
 		int32 GoodsDropperSeed = GeneratorRandStream.RandRange(1, INT_MAX - 1);
 		GoodsDropper->SeedRandomStream(GoodsDropperSeed);
-		//UE_LOG(LogTRGame, Log, TEXT("ReseedAllStreams - GoodsDropper seed: %d"), GoodsDropperSeed);
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ReseedAllStreams - GoodsDropper seed: %d"), GoodsDropperSeed);
 	}
 }
 
@@ -458,7 +489,7 @@ void ATR_GameMode::PostSeamlessTravel()
 		if (IsValid(PlayerController))
 		{
 			TotalPlayerControllersForTravel++;
-			//UE_LOG(LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("PostSeamlessTravel PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
 	Super::PostSeamlessTravel();
@@ -469,6 +500,7 @@ void ATR_GameMode::PostSeamlessTravel()
 
 void ATR_GameMode::GenericPlayerInitialization(AController* C)
 {
+	UE_CLOG(bEnableClassDebug, LogTRGame, Warning, TEXT("TRGameMode::GenericPlayerInitialization called."));
 	Super::GenericPlayerInitialization(C);
 	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(C);
 	if (TRPlayerController)
@@ -476,14 +508,14 @@ void ATR_GameMode::GenericPlayerInitialization(AController* C)
 		ATRPlayerState* TRPlayerState = TRPlayerController->GetPlayerState<ATRPlayerState>();
 		if (TRPlayerState)
 		{
-			if (TRPlayerState->PlayerGuid.IsValid())
-			{
-				//TRPlayerController->PersistentDataComponent->ServerLoadPlayerData();
-			}
-			else
-			{
-				//UE_LOG(LogTRGame, Warning, TEXT("TRGameMode::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
-			}
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("    GenericPlayerInit player id: %d"), TRPlayerState->GetPlayerId());
+			//PlayerState->PlayerGuid will always be invalid here
+			//if (TRPlayerState->PlayerGuid.IsValid()) {
+			//	//TRPlayerController->PersistentDataComponent->ServerLoadPlayerData();
+			//}
+			//else {
+			//    UE_CLOG(bEnableClassDebug, LogTRGame, Warning, TEXT("TRGameMode::GenericPlayerInitialization - PlayerState.PlayerGuid is invalid."));
+			//}
 		}
 	}
 
@@ -495,7 +527,22 @@ void ATR_GameMode::GenericPlayerInitialization(AController* C)
 void ATR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
 {
 	Super::HandleStartingNewPlayer_Implementation(NewPlayer);
-
+	if (bEnableClassDebug)
+	{
+		if (NewPlayer->PlayerState)
+		{
+			ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(NewPlayer->PlayerState);
+			if (TRPlayerState) {
+				UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("HandleStartingNewPlayer player id %d guid %s"), NewPlayer->PlayerState->GetPlayerId(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+			}
+			else {
+				UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("HandleStartingNewPlayer player id %d. Not a TRPlayerState."), NewPlayer->PlayerState->GetPlayerId());
+			}
+		}
+		else {
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("HandleStartingNewPlayer no player state"));
+		}
+	}
 	APlayerController* PlayerController;
 	int32 NumLoadedPlayers = 0;
 	for (auto It = GetWorld()->GetControllerIterator(); It; ++It)
@@ -504,16 +551,14 @@ void ATR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 		// Starting players will all have the same controller class.
 		if (IsValid(PlayerController) && PlayerController->GetClass() == NewPlayer->GetClass())
 		{
-			if (PlayerController->PlayerState && PlayerController->HasClientLoadedCurrentWorld())
-			{
+			if (PlayerController->PlayerState && PlayerController->HasClientLoadedCurrentWorld()) {
 				NumLoadedPlayers++;
 			}
 			//UE_LOG(LogTRGame, Log, TEXT("HandleStartingNewPlayer PlayerControllers: %s  %s"), *PlayerController->GetName(), *PlayerController->GetClass()->GetName());
 		}
 	}
-	//UE_LOG(LogTRGame, Log, TEXT("TR_GameMode::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);
-	if (NumLoadedPlayers == TotalPlayerControllersForTravel)
-	{
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TR_GameMode::HandleStartingNewPlayer - NumPlayers %d  NumTravellingPlayers %d  TotalPlayers %d  NumLoadedPlayers %d"), NumPlayers, NumTravellingPlayers, TotalPlayerControllersForTravel, NumLoadedPlayers);
+	if (NumLoadedPlayers == TotalPlayerControllersForTravel) {
 		OnAllPlayersTravelComplete();
 	}
 }
@@ -521,11 +566,9 @@ void ATR_GameMode::HandleStartingNewPlayer_Implementation(APlayerController* New
 
 bool ATR_GameMode::ReadyToStartMatch_Implementation()
 {
-	// By default start when we have > 0 players
 	if (GetMatchState() == MatchState::WaitingToStart)
 	{
-		if (bRoomMapReady && (NumPlayers == TotalPlayerControllersForTravel))
-		{
+		if (bRoomMapReady && (NumPlayers == TotalPlayerControllersForTravel)) {
 			return true;
 		}
 	}

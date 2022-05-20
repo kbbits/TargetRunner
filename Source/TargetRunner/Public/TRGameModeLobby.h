@@ -31,11 +31,30 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* LevelUpTable;
 
+	UPROPERTY(BlueprintReadWrite)
+		bool bAllClientsReady = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug = false;
+
 protected:
 
 	int32 TotalPlayerControllersForTravel;
 
 public:
+
+	/*---------- Player save/load --------------------*/
+
+	// Saves player data for all connected PlayerControllers.
+	// Saving is managed through each PlayerController's PersistentDataComponent.
+	UFUNCTION(BlueprintCallable)
+		void SaveAllPlayerData();
+
+	// Loads player data for all PCs
+	// Loading is managed through each PC's PDC.
+	UFUNCTION(BlueprintCallable)
+		void ReloadAllPlayerData();
+
 	
 	// [Any]
 	// Gets the market data available to the provided player.
@@ -66,6 +85,11 @@ public:
 	/** All players have completed travel. */
 	UFUNCTION(BlueprintNativeEvent)
 		void OnAllPlayersTravelComplete();
+
+	/** Notify that level templates have change. 
+	 *  Base class calls LevelTemplatesChanged on each player controller. */
+	UFUNCTION(BlueprintNativeEvent)
+		void LevelTemplatesChanged();
 
 
 	/** Called when GameMode has completed seamless travel.

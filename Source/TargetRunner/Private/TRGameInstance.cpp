@@ -31,33 +31,6 @@ FString UTRGameInstance::GetPlayerRecordsSaveFilename_Implementation()
 }
 
 
-void UTRGameInstance::SaveAllPlayerData()
-{
-	ATRPlayerControllerBase* PController = nullptr;
-	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
-	{
-		PController = Cast<ATRPlayerControllerBase>(*Iterator);
-		if (IsValid(PController))
-		{
-			PController->PersistentDataComponent->ServerSavePlayerData();
-		}
-	}
-}
-
-void UTRGameInstance::ReloadAllPlayerData()
-{
-	ATRPlayerControllerBase* PController = nullptr;
-	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
-	{
-		PController = Cast<ATRPlayerControllerBase>(*Iterator);
-		if (IsValid(PController))
-		{
-			PController->PersistentDataComponent->ServerLoadPlayerData();
-		}
-	}
-}
-
-
 ULevelTemplateContext* UTRGameInstance::GenerateNewLevelTemplate(const float Tier, const int32 DifficultyLevel)
 {
 	bool bSuccessful = false;
@@ -68,7 +41,7 @@ ULevelTemplateContext* UTRGameInstance::GenerateNewLevelTemplate(const float Tie
 	}
 	ULevelTemplateContext* NewLTC = NewObject<ULevelTemplateContext>(this);
 	int32 NewSeed = LevelRandStream.RandRange(1, INT_MAX - 1);
-	//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - generating new level template for seed: %d. (stream seed: %d)"), NewSeed, LevelRandStream.GetCurrentSeed());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - generating new level template for seed: %d. (stream seed: %d)"), NewSeed, LevelRandStream.GetCurrentSeed());
 	LevelForge->GenerateNewLevelTemplate(NewSeed, Tier, DifficultyLevel, NewLTC->LevelTemplate, bSuccessful);
 	if (bSuccessful)
 	{
@@ -82,11 +55,23 @@ ULevelTemplateContext* UTRGameInstance::GenerateNewLevelTemplate(const float Tie
 }
 
 
+void UTRGameInstance::AddLevelTemplate(const FLevelTemplate& LevelTemplate)
+{
+	if (LevelTemplate.LevelId.IsValid())
+	{
+		ULevelTemplateContext* NewLTC = NewObject<ULevelTemplateContext>(this);
+		NewLTC->LevelTemplate = LevelTemplate;
+		LevelTemplatesMap.Add(NewLTC->LevelTemplate.LevelId, NewLTC);
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance::AddLevelTemplate - Added template %s"), *LevelTemplate.LevelId.ToString());
+	}
+}
+
+
 void UTRGameInstance::SetSelectedLevelTemplate(const FLevelTemplate& LevelTemplate)
 {
 	SelectedLevelTemplate = LevelTemplate;
 	// Debug log
-	UE_LOG(LogTRGame, Log, TEXT("TRGameInstance - Set level template %s seed: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRGameInstance - Set level template %s seed: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
 }
 
 
@@ -98,7 +83,7 @@ FLevelTemplate& UTRGameInstance::GetSelectedLevelTemplate()
 
 void UTRGameInstance::SaveLevelTemplatesData_Implementation()
 {
-	//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save level templates"));
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Save level templates"));
 	ULevelTemplatesSave* SaveGame = Cast<ULevelTemplatesSave>(UGameplayStatics::CreateSaveGameObject(ULevelTemplatesSave::StaticClass()));
 	TArray<FLevelTemplate> AllTemplates;
 	for (TPair<FName, ULevelTemplateContext*> LtcElem : LevelTemplatesMap)
@@ -107,14 +92,14 @@ void UTRGameInstance::SaveLevelTemplatesData_Implementation()
 	}
 	SaveGame->LevelTemplates = AllTemplates;
 	FAsyncSaveGameToSlotDelegate Callback = FAsyncSaveGameToSlotDelegate::CreateUObject(this, &UTRGameInstance::OnLevelTemplatesSaveComplete);	
-	//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Saving %d templates"), AllTemplates.Num());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Saving %d templates"), AllTemplates.Num());
 	UGameplayStatics::AsyncSaveGameToSlot(SaveGame, GetLevelTemplatesSaveFilename(), 0, Callback);
 }
 
 
 void UTRGameInstance::SavePlayerRecordsData_Implementation()
 {
-	//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save player level records"));
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Save player level records"));
 	UPlayerLevelRecordsSave* SaveGame = nullptr;
 	// First get the existing player records. We only have records for level templates used by the host profile now.
 	// But PLRs are stored globally. So, the save file will have data we don't have loaded. We don't want to overwrite it.
@@ -165,14 +150,14 @@ void UTRGameInstance::SavePlayerRecordsData_Implementation()
 		SaveGame->PlayerRecords = AllPLRs;
 		RecordsAdded = AllPLRs.Num();
 	}
-	//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Saving player level records: Added %d  Updated %d  Total from game %d  Total in file %d"), RecordsAdded, RecordsUpdated, AllPLRs.Num(), SaveGame->PlayerRecords.Num());
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Saving player level records: Added %d  Updated %d  Total from game %d  Total in file %d"), RecordsAdded, RecordsUpdated, AllPLRs.Num(), SaveGame->PlayerRecords.Num());
 	UGameplayStatics::AsyncSaveGameToSlot(SaveGame, GetPlayerRecordsSaveFilename(), 0, Callback);
 }
 
 
 void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 {
-	//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Load level templates - Already loaded: %s"), bLevelTemplatesLoaded ? TEXT("true") : TEXT("false"));
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Load level templates - Already loaded: %s"), bLevelTemplatesLoaded ? TEXT("true") : TEXT("false"));
 	if (bLevelTemplatesLoaded) { return; }
 	bLevelTemplatesLoaded = false;
 	//LevelTemplatesMap.Empty();
@@ -190,10 +175,9 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 				LevelTemplatesMap.Add(NewLTC->LevelTemplate.LevelId, NewLTC);
 			}
 			bLevelTemplatesLoaded = true;
-			//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Load level templates loaded %d"), LevelTemplatesMap.Num());
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Load level templates loaded %d"), LevelTemplatesMap.Num());
 		}
-		else
-		{
+		else {
 			UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - LoadLevelTemplates -  No level templates save file found."));
 		}
 	}
@@ -224,10 +208,9 @@ void UTRGameInstance::LoadLevelTemplatesData_Implementation()
 						//UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - LoadLevelTemplates - No level template with id: %s"), *TmpPlayerRecord.LevelId.ToString());
 					}
 				}
-				//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Load level templates loaded %d player records"), PlayerRecordsLoaded);
+				UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Load level templates loaded %d player records"), PlayerRecordsLoaded);
 			}
-			else
-			{
+			else {
 				UE_LOG(LogTRGame, Warning, TEXT("UTRGameInstance - LoadLevelTemplates - No player level records save file found."));
 			}
 		}
@@ -239,7 +222,7 @@ void UTRGameInstance::OnLevelTemplatesSaveComplete(const FString& SlotName, cons
 {
 	if (bSuccessful) { 
 		// After successful save of template data, save the associated player level records
-		//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save level templates successful"));
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Save level templates successful"));
 		SavePlayerRecordsData(); 
 	}
 	else { 
@@ -251,7 +234,7 @@ void UTRGameInstance::OnLevelTemplatesSaveComplete(const FString& SlotName, cons
 
 void UTRGameInstance::OnPlayerRecordsSaveComplete(const FString& SlotName, const int32 UserIndex, bool bSuccessful)
 {
-	//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - Save player level records %s"), bSuccessful ? TEXT("success") : TEXT("failed"));
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Save player level records %s"), bSuccessful ? TEXT("success") : TEXT("failed"));
 	// Just calls the delegate for notifications
 	OnLevelTemplatesSaved.Broadcast(bSuccessful);
 }
@@ -269,7 +252,7 @@ ULevelTemplateContext* UTRGameInstance::UnlockLevelTemplateForPlayer(const FName
 		if (TargetTemplate->PlayerRecords.Contains(PlayerGuid))
 		{
 			// Then update the player level record
-			//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - UnlockLevelTemplateForPlayer updating for player: %s"), *PlayerGuid.ToString(EGuidFormats::Digits));
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - UnlockLevelTemplateForPlayer updating for player: %s"), *PlayerGuid.ToString(EGuidFormats::Digits));
 			TargetTemplate->PlayerRecords[PlayerGuid].Unlocked = true;
 			TargetTemplate->PlayerRecords[PlayerGuid].UnlockedAt = FDateTime::Now();
 		}
@@ -283,7 +266,7 @@ ULevelTemplateContext* UTRGameInstance::UnlockLevelTemplateForPlayer(const FName
 			NewLevelRecord.UnlockedAt = FDateTime::Now();
 			// And add the PLR to the level's player record sub-map
 			TargetTemplate->PlayerRecords.Add(PlayerGuid, NewLevelRecord);
-			//UE_LOG(LogTRGame, Log, TEXT("UTRGameInstance - UnlockLevelTemplateForPlayer new record for player: %s"), *PlayerGuid.ToString(EGuidFormats::Digits));
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - UnlockLevelTemplateForPlayer new record for player: %s"), *PlayerGuid.ToString(EGuidFormats::Digits));
 		}
 		return TargetTemplate;
 	}	
@@ -297,6 +280,7 @@ ULevelTemplateContext* UTRGameInstance::UnlockLevelTemplateForPlayer(const FName
 
 TArray<ULevelTemplateContext*> UTRGameInstance::GetLevelTemplatesForPlayer(const FGuid PlayerGuid)
 {
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - GetLevelTemplatesForPlayer %d total templates guid %s"), LevelTemplatesMap.Num(), *PlayerGuid.ToString(EGuidFormats::Digits));
 	TArray<ULevelTemplateContext*> PlayerLTCs;
 	for (TPair<FName, ULevelTemplateContext*> LtcElem : LevelTemplatesMap)
 	{
@@ -305,6 +289,7 @@ TArray<ULevelTemplateContext*> UTRGameInstance::GetLevelTemplatesForPlayer(const
 			PlayerLTCs.Add(LtcElem.Value);
 		}
 	}
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("UTRGameInstance - Found %d level templates matching guid"), PlayerLTCs.Num());
 	return PlayerLTCs;
 }
 

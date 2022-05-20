@@ -81,6 +81,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* RoomComponentsTable;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug = false;
+
 protected:
 
 	// Indicates if the room map generation has started.
@@ -153,6 +156,19 @@ protected:
 	//	APlatformGridMgr* SpawnNewGridManager(const TSubclassOf<APlatformGridMgr> GridManagerClass, const FTransform Transform);
 
 public:
+	/*---------- Player save/load --------------------*/
+
+	// Saves player data for all connected PlayerControllers.
+	// Saving is managed through each PlayerController's PersistentDataComponent.
+	UFUNCTION(BlueprintCallable)
+		void SaveAllPlayerData();
+
+	// Loads player data for all PCs
+	// Loading is managed through each PC's PDC.
+	UFUNCTION(BlueprintCallable)
+		void ReloadAllPlayerData();
+
+
 	/*---------- Level Template and Grid -------------*/
 
 	// Set and initialize the level template. Also seeds rand streams.
@@ -188,7 +204,7 @@ public:
 
 	// Gets the current grid manager in the level.
 	// Returns nullptr if no grid manager could be found.
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintPure)
 		APlatformGridMgr* GetGridManager();
 
 	UFUNCTION(BlueprintPure)

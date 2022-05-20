@@ -130,6 +130,11 @@ public:
 	// [Server]
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
 		void ServerUnlockLevelTemplateForPlayer(const FName LevelId);
+
+	// [Client]
+	// Host server will call this to also add and unlock the level template on the client.
+	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
+		void ClientUnlockLevelTemplateForPlayer(const FLevelTemplate& LevelTemplate, const FGuid PlayerGuid);
 	
 	// [Server]
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
@@ -187,7 +192,7 @@ public:
 	// [Server]
 	// Send player save data from client to server. Used when player first connects to host.
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerPlayerDataFromClient(const FPlayerSaveData PlayerSaveData);
+		void ServerPlayerDataFromClient(const FPlayerSaveData PlayerSaveData, const TArray<FLevelTemplateContextStruct>& LevelTemplateContexts);
 
 	// [Server]
 	// Deletes the local save data for the player guid.

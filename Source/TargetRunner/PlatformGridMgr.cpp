@@ -579,3 +579,15 @@ int32 APlatformGridMgr::SpawnISM(UPARAM(ref) TSoftObjectPtr<UStaticMesh> Mesh, U
 	}
 	return -1;
 }
+
+
+float APlatformGridMgr::GetRCAMinISMMoveDelay()
+{
+	return RoomComponentMinISMMoveDelay;
+}
+
+
+float APlatformGridMgr::GetRCAMaxISMMoveDelay()
+{
+	return RoomComponentMaxISMMoveDelay;
+}
