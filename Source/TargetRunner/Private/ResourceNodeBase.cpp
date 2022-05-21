@@ -18,6 +18,14 @@ AResourceNodeBase::AResourceNodeBase()
 	CurrentHealth = BaseHealth;
 }
 
+
+void AResourceNodeBase::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	
+}
+
+
 // Called when the game starts or when spawned
 void AResourceNodeBase::BeginPlay()
 {
@@ -25,10 +33,25 @@ void AResourceNodeBase::BeginPlay()
 	if (CurrentHealth != BaseHealth) { CurrentHealth = BaseHealth; }
 }
 
+
 // Called every frame
 void AResourceNodeBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+
+void AResourceNodeBase::InitRandStream()
+{
+	if (NodeRandSeed > 0)
+	{
+		if (NodeRandStream.GetInitialSeed() != NodeRandSeed) {
+			NodeRandStream.Initialize(NodeRandSeed);
+		}
+	}
+	else if (NodeRandStream.GetInitialSeed() == 0){
+		NodeRandStream.GenerateNewSeed();
+	}
 }
 
 
@@ -40,7 +63,9 @@ void AResourceNodeBase::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& 
 	DOREPLIFETIME(AResourceNodeBase, TotalResources);
 	DOREPLIFETIME(AResourceNodeBase, ResourcesByDamageCurrent);
 	DOREPLIFETIME(AResourceNodeBase, NodeResourceType);
+	DOREPLIFETIME(AResourceNodeBase, NodeRandSeed);
 }
+
 
 void AResourceNodeBase::SetResources_Implementation(const FResourceType& NewNodeResourceType, const TArray<FResourceQuantity>& NewTotalResources, const float PercentResourcesByDamage)
 {
@@ -167,6 +192,7 @@ void AResourceNodeBase::ServerExtractResources_Implementation(const TArray<FReso
 	}
 }
 
+
 bool AResourceNodeBase::ServerExtractResources_Validate(const TArray<FResourceQuantity>& ExtractQuantities)
 {
 	return true;
@@ -175,8 +201,7 @@ bool AResourceNodeBase::ServerExtractResources_Validate(const TArray<FResourceQu
 
 void AResourceNodeBase::OnRep_CurrentHealth_Implementation()
 {
-	if (CurrentHealth <= 0.0f)
-	{
+	if (CurrentHealth <= 0.0f)	{
 		OnNodeDestroyed.Broadcast();
 	}
 }
@@ -189,6 +214,7 @@ void AResourceNodeBase::OnRep_ResourcesByDamageCurrent()
 
 void AResourceNodeBase::OnRep_NodeResourceType_Implementation()
 {
+	InitRandStream();
 }
 
 
@@ -207,6 +233,7 @@ void AResourceNodeBase::ServerSetCurrentHealth_Implementation(const float NewCur
 	}	
 }
 
+
 bool AResourceNodeBase::ServerSetCurrentHealth_Validate(const float NewCurrentHealth)
 {
 	return true;
@@ -222,6 +249,7 @@ void AResourceNodeBase::ServerDeltaCurrentHealth_Implementation(const float Curr
 		OnRep_CurrentHealth();
 	}
 }
+
 
 bool AResourceNodeBase::ServerDeltaCurrentHealth_Validate(const float CurrentHealthDelta)
 {

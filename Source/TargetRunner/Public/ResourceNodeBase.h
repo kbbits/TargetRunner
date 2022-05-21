@@ -84,13 +84,26 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentHealth)
 		float CurrentHealth;
 
+	// Should only be set at spawn or before SetResourceType is called.
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, meta = (ExposeOnSpawn = "true"))
+		int32 NodeRandSeed;
+
+	UPROPERTY(BlueprintReadWrite)
+		FRandomStream NodeRandStream;
+
 protected:
+
+	virtual void OnConstruction(const FTransform& Transform) override;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable)
+		void InitRandStream();
 
 	// Set (or initialize) the resource type and total resources for this node. 
 	// Will also calculate and assign the resources by damage and resources on destroy.
@@ -121,6 +134,7 @@ public:
 		void OnRep_CurrentHealth();
 	void OnRep_CurrentHealth_Implementation();
 
+	// This also calls InitRandStream
 	UFUNCTION(BlueprintNativeEvent)
 		void OnRep_NodeResourceType();
 	virtual void OnRep_NodeResourceType_Implementation();

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/DataTable.h"
+#include "MeshOption.h"
 #include "ResourceTypeData.generated.h"
 
 /*
@@ -36,18 +37,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TSoftObjectPtr<UMaterialInterface> DefaultMaterial;
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+	//	TArray<TSoftObjectPtr<UStaticMesh>> DefaultMeshes;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
-		TArray<TSoftObjectPtr<UStaticMesh>> DefaultMeshes;
+		TArray<FMeshOption> NodeMeshes;
 
 public:
 	FResourceTypeData()
 	{
 		Code = FName();
 		Tier = 0;
-		//Category = FName();
-		//Type = FName();
-		//SubType = FName();
-		//GoodsNameOverride = FName();
 	}
 
 	FResourceTypeData(const FResourceTypeData* OtherData)
@@ -56,12 +56,9 @@ public:
 		{
 			Code = OtherData->Code;
 			Tier = OtherData->Tier;
-			//Category = OtherData->Category;
-			//Type = OtherData->Type;
-			//SubType = OtherData->SubType;
-			//GoodsNameOverride = OtherData->GoodsNameOverride;
 			DefaultMaterial = OtherData->DefaultMaterial;
-			DefaultMeshes = OtherData->DefaultMeshes;
+			//DefaultMeshes = OtherData->DefaultMeshes;
+			NodeMeshes = OtherData->NodeMeshes;
 		}
 	}
 

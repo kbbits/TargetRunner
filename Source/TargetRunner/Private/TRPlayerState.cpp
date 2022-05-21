@@ -56,15 +56,15 @@ void ATRPlayerState::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& Out
 void ATRPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
-	UTRGameInstance* GameInst = Cast<UTRGameInstance>(GetGameInstance());
-	if (GameInst)
-	{
-		if (!GameInst->ClientLocalProfileName.IsNone()) { ProfileName = GameInst->ClientLocalProfileName; }
-		if (GameInst->ClientLocalPlayerGuid.IsValid()) { PlayerGuid = GameInst->ClientLocalPlayerGuid; }
-	}
-	else {
-		UE_LOG(LogTRGame, Error, TEXT("TRPlayerState - BeginPlay - Could not get game instance."));
-	}
+	//UTRGameInstance* GameInst = Cast<UTRGameInstance>(GetGameInstance());
+	//if (GameInst)
+	//{
+	//	if (!GameInst->ClientLocalProfileName.IsNone()) { ProfileName = GameInst->ClientLocalProfileName; }
+	//	if (GameInst->ClientLocalPlayerGuid.IsValid()) { PlayerGuid = GameInst->ClientLocalPlayerGuid; }
+	//}
+	//else {
+	//	UE_LOG(LogTRGame, Error, TEXT("TRPlayerState - BeginPlay - Could not get game instance."));
+	//}
 }
 
 

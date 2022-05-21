@@ -160,7 +160,7 @@ public:
 	// [Client]
 	// Replication notification
 	UFUNCTION()
-		void OnRep_CurrentTool();
+		void OnRep_CurrentTool(AToolActorBase* OldTool);
 
 	// [Both]
 	// Binds to RunSpeedAttribute to notify on speed changes.

@@ -217,8 +217,11 @@ void ATRPlayerControllerBase::GetLifetimeReplicatedProps(TArray< FLifetimeProper
 }
 
 
-void ATRPlayerControllerBase::OnRep_CurrentTool()
+void ATRPlayerControllerBase::OnRep_CurrentTool(AToolActorBase* OldTool)
 {
+	if (IsValid(OldTool) && OldTool != CurrentTool) {
+		OldTool->Destroy();
+	}
 	OnCurrentToolChanged.Broadcast(CurrentTool);
 }
 
@@ -509,6 +512,14 @@ bool ATRPlayerControllerBase::UnequipToolInternal(const FGuid ToolGuid, const bo
 	}
 	if (FoundTool)
 	{
+		if (CurrentTool && CurrentTool->Tool->ItemGuid == FoundTool->ItemGuid) 
+		{
+			CurrentTool->Destroy();
+			CurrentTool = nullptr;
+			if (GetLocalRole() == ROLE_Authority) {
+				OnRep_CurrentTool(CurrentTool);
+			}
+		}
 		EquippedTools.Remove(FoundTool);
 		// Only need to adjust attributes on server. They replicate.
 		if (GetLocalRole() == ROLE_Authority) {
@@ -1018,7 +1029,7 @@ void ATRPlayerControllerBase::SpawnAsCurrentTool_Implementation(UToolBase* NewCu
 		}
 		// Manually call rep_notify on server
 		if (GetLocalRole() == ROLE_Authority) { 
-			OnRep_CurrentTool(); 
+			OnRep_CurrentTool(CurrentTool); 
 		}
 	}
 }

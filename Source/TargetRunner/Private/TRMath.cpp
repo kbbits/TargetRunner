@@ -59,3 +59,9 @@ ETRDirection UTRMath::OppositeDirection(const ETRDirection Direction)
 	}
 	return ETRDirection::North;
 }
+
+
+const FMeshOption& UTRMath::PickMeshOption(UPARAM(ref) FRandomStream& RandStream, const TArray<FMeshOption>& MeshOptions)
+{
+	return *PickOneFromWeightedList<FMeshOption>(RandStream, MeshOptions);
+}
