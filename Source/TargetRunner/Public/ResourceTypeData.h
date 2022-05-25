@@ -34,6 +34,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		int32 Tier;
 
+	// The material applied to resource nodes that do not have bPreventOverrideMaterial = true.
+	// Also the material used for particle meshes on FX.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TSoftObjectPtr<UMaterialInterface> DefaultMaterial;
 

@@ -209,11 +209,13 @@ AActor* AObjectPlacerProxyBox::PlaceOne(FRandomStream& RandStream, const AActor*
 		}
 		else
 		{
-			if (Offset == 0.f) {
+			if (Offset == 0.f) 
+			{
 				SpawnOffsetMax = (Extent * Direction).GetAbsMax();
 				SpawnOffsetMin = SpawnOffsetMax;
 			}
-			else {
+			else 
+			{
 				if (Direction.X == 1.f || Direction.Y == 1.f) {
 					SpawnOffsetMax = (FVector::DistXY(FacingArrow->GetComponentLocation(), Origin) + (Extent * Direction).GetAbsMax());
 				}
@@ -272,8 +274,7 @@ void AObjectPlacerProxyBox::ClearPlaced()
 	//UE_LOG(LogTRGame, Log, TEXT("ObjectPlacerProxyBox %s ClearPlaced - destroying %d placed actors"), *GetName(), PlacedObjectRefs.Num());
 	for (TWeakObjectPtr<AActor> WeakActor : PlacedObjectRefs)
 	{
-		if (WeakActor.IsValid() && WeakActor.Get())
-		{
+		if (WeakActor.IsValid() && WeakActor.Get()) {
 			WeakActor.Get()->Destroy();
 		}
 	}
@@ -338,12 +339,14 @@ bool AObjectPlacerProxyBox::FitsIntoBoxBounds(const FVector& ActorExtents, const
 	FVector Direction;
 	float Offset;
 	float ExtentMult;
-	if (PlacedObjects % 2 == 0.f) {
+	if (PlacedObjects % 2 == 0.f) 
+	{
 		if (ScaledBoxExtent.Y > ScaledBoxExtent.X) { Direction = FVector(0.f, 1.f, 0.f); }
 		else { Direction = FVector(1.f, 0.f, 0.f); }
 		Offset = SpawnOffsetMax;
 	}
-	else {
+	else 
+	{
 		if (ScaledBoxExtent.Y > ScaledBoxExtent.X) { Direction = FVector(0.f, -1.f, 0.f); }
 		else { Direction = FVector(-1.f, 0.f, 0.f); }
 		Offset = SpawnOffsetMin;

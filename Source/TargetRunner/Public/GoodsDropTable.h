@@ -25,6 +25,8 @@ public:
 	}
 
 	// Name of this drop table
+	// For clutter resource drops the name is in format ClutterResources<level tier>. ex: ClutterResources01
+	// For clutter goods drops the name in format Clutter<level tier>. ex: Clutter01
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FName Name;
 

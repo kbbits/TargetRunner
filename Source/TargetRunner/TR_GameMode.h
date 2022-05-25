@@ -65,9 +65,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		UGoodsDropper* GoodsDropper;
 
+	// Clutter goods drops, each row is a drop table and has name in format Clutter<level tier>. ex: Clutter01
+	// Can also contain other rows (drop tables) referenced by these ClutterXx rows.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* GoodsDropperTable;
 
+	// Clutter resource drops, each row is a drop table and has name in format ClutterResources<level tier>. ex: ClutterResources01
+	// Can also contain other rows (drop tables) referenced by these ClutterResourcesXx rows.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		UDataTable* ResourceDropTable;
 
@@ -103,12 +107,12 @@ protected:
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 		bool bRoomMapReady;
 
-	// Clutter goods drops quantities multiplied by DifficultyLevel ^ ClutterGoodsLevelScaleExp
+	// Clutter goods drops quantities multiplied by (DifficultyLevel ^ ClutterGoodsLevelScaleExp)
 	// Default is 0.25
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		float ClutterGoodsLevelScaleExp;
 
-	// Clutter resource drops quantities multiplied by DifficultyLevel ^ ClutterResourceLevelScaleExp
+	// Clutter resource drops quantities multiplied by (DifficultyLevel ^ ClutterResourceLevelScaleExp)
 	// Default is 0.25
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 		float ClutterResourceLevelScaleExp;
@@ -178,7 +182,8 @@ public:
 	UFUNCTION(BlueprintPure)
 		FLevelTemplate GetLevelTemplate();
 
-	// Creates the goods dropper if it does not exist. Then adds the GoodsDropTable data table to the GoodsDropper and applies all initial settings.
+	// Creates the goods dropper if it does not exist. Then adds the GoodsDropTable and ResoureDropTable data tables 
+	// to the GoodsDropper and applies all initial settings.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 		void InitGoodsDropper();
 

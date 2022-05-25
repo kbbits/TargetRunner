@@ -157,7 +157,7 @@ bool UResourceFunctionLibrary::FindBestResourceRateFilter(const TArray<FResource
 	}
 	if (BestMatchDegree != ETRResourceMatch::None)
 	{
-		UE_LOG(LogTRGame, Log, TEXT("FindBestResourceRateFilter - best matching rate %s %.2f"), *BestRate.ResourceTypeFilter.Code.ToString(), BestRate.Rate);
+		//UE_LOG(LogTRGame, Log, TEXT("FindBestResourceRateFilter - best matching rate %s %.2f"), *BestRate.ResourceTypeFilter.Code.ToString(), BestRate.Rate);
 		FoundRate = BestRate;
 		FoundMatchDegree = BestMatchDegree;
 		return true;

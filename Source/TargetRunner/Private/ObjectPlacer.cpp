@@ -188,7 +188,7 @@ FTransform AObjectPlacer::GetPlaceTransform(FRandomStream& RandStream, bool& bFo
 	bool bHitSomething = false;
 	FCollisionShape TraceShape = FCollisionShape::MakeBox(TraceBoxExtents);
 	TSubclassOf<AActor> ClassToPlace = GetClassToPlace();
-	
+
 	bFound = false;
 	while (!bHitSomething && TraceTries < MaxTraces)
 	{
@@ -211,14 +211,28 @@ FTransform AObjectPlacer::GetPlaceTransform(FRandomStream& RandStream, bool& bFo
 			TraceShape
 		);
 		// Don't allow placed actors to pile up. Try again if we hit actor of type we are placing.
-		if (bHitSomething && Hit.Actor->GetClass()->IsChildOf(ClassToPlace)) { bHitSomething = false; }
+		if (bHitSomething && Hit.Actor != nullptr)
+		{
+			if (Hit.Actor->GetClass()->IsChildOf(ClassToPlace) || ClassToPlace->IsChildOf(Hit.Actor->GetClass())) {
+				bHitSomething = false;
+			}
+			else 
+			{
+				UClass* ParentActorClass = Hit.Actor->GetParentActor() == nullptr ? nullptr : Hit.Actor->GetParentActor()->GetClass();
+				if (ParentActorClass != nullptr && (ParentActorClass->IsChildOf(ClassToPlace) || ClassToPlace->IsChildOf(ParentActorClass))) {
+					bHitSomething = false;
+				}
+			}
+		}
 		if (bHitSomething)
 		{
 			FRotator ObjectRotation;
 			FRotator ImpactNormalRotation = Hit.ImpactNormal.ToOrientationRotator();
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ObjectPlacer hit surface normal: %s"), *ImpactNormalRotation.ToString());
 			if (bRotateToHitSurface)
 			{
-				ObjectRotation = FRotator(ImpactNormalRotation.Pitch + FMath::FRandRange(-10.0f, 10.0f), ImpactNormalRotation.Yaw + FMath::FRandRange(-10.0f, 10.0f), FMath::FRandRange(MinRandomRoll, MaxRandomRoll));
+				// Subtract 90 from pitch since normal is pointing "up" away from surface. 
+				ObjectRotation = FRotator((ImpactNormalRotation.Pitch - 90.0f) + FMath::FRandRange(-10.0f, 10.0f), ImpactNormalRotation.Yaw + FMath::FRandRange(-10.0f, 10.0f), FMath::FRandRange(MinRandomRoll, MaxRandomRoll));
 			}
 			else
 			{

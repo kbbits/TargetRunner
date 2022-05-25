@@ -56,6 +56,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		bool bStasisWokeNeighbors;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug = false;
+
 protected:
 
 	// Is this platform currently woken from stasis?

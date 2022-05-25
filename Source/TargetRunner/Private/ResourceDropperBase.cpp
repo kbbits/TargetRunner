@@ -15,13 +15,13 @@ UResourceDropperBase::UResourceDropperBase()
 
 void UResourceDropperBase::DistributeResources(UPARAM(ref) FRandomStream& RandStream, const TArray<FResourceQuantity>& TotalLevelResources, FRoomGridTemplate& TemplateGrid)
 {
-	DebugLog(FString::Printf(TEXT("DistributeResources Start")));
-#if WITH_EDITOR
-	for (FResourceQuantity TmpResource : TotalLevelResources)
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("DistributeResources Start"));
+	if (bEnableClassDebugLog)
 	{
-		DebugLog(FString::Printf(TEXT("     %s: %f"), *TmpResource.ResourceType.Code.ToString(), TmpResource.Quantity));
+		for (FResourceQuantity TmpResource : TotalLevelResources) {
+			UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("     %s: %f"), *TmpResource.ResourceType.Code.ToString(), TmpResource.Quantity);
+		}
 	}
-#endif
 	float ExitPercent = RandStream.FRandRange(MinReservedForExit, MaxReservedForExit);
 	TArray<FResourceQuantity> TotalExitResources;
 	TArray<FResourceQuantity> TotalRoomResources;
@@ -35,26 +35,25 @@ void UResourceDropperBase::DistributeResources(UPARAM(ref) FRandomStream& RandSt
 	int32 RoomsRemaining = ResourceRoomCount;
 	int32 TotalPickTries = RoomsRemaining * 2;
 
-	DebugLog(FString::Printf(TEXT("     Exit percent: %f"), ExitPercent));
-	DebugLog(FString::Printf(TEXT("     All rooms: %d or %d"), RoomCount, AllRoomCoords.Num()));
-	DebugLog(FString::Printf(TEXT("     Resource rooms: %d"), ResourceRoomCount));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("     Exit percent: %f"), ExitPercent);
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("     All rooms: %d or %d"), RoomCount, AllRoomCoords.Num());
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("     Resource rooms: %d"), ResourceRoomCount);
 
 	UResourceFunctionLibrary::MultiplyResourceQuantity(TotalLevelResources, ExitPercent, true, TotalExitResources);
 	UResourceFunctionLibrary::MultiplyResourceQuantity(TotalLevelResources, 1.0f - ExitPercent, true, TotalRoomResources);
 	UResourceFunctionLibrary::MultiplyResourceQuantity(TotalRoomResources, 1.0f / ResourceRoomCount, true, PerRoomResources);
 
-#if WITH_EDITOR
-	DebugLog(TEXT("Exit resources:"));
-	for (FResourceQuantity TmpResource : TotalExitResources)
+	if (bEnableClassDebugLog)
 	{
-		DebugLog(FString::Printf(TEXT("     %s: %f"), *TmpResource.ResourceType.Code.ToString(), TmpResource.Quantity));
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("Exit resources:"));
+		for (FResourceQuantity TmpResource : TotalExitResources) {
+			UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("     %s: %f"), *TmpResource.ResourceType.Code.ToString(), TmpResource.Quantity);
+		}
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("Per room resources:"));
+		for (FResourceQuantity TmpResource : PerRoomResources) {
+			UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("     %s: %f"), *TmpResource.ResourceType.Code.ToString(), TmpResource.Quantity);
+		}
 	}
-	DebugLog(TEXT("Per room resources:"));
-	for (FResourceQuantity TmpResource : PerRoomResources)
-	{
-		DebugLog(FString::Printf(TEXT("     %s: %f"), *TmpResource.ResourceType.Code.ToString(), TmpResource.Quantity));
-	}
-#endif
 
 	// Add the exit cells
 	DropRoomCoords.Append(TemplateGrid.EndCells);
@@ -76,7 +75,8 @@ void UResourceDropperBase::DistributeResources(UPARAM(ref) FRandomStream& RandSt
 	// Now go and set all the picked room templates' resources.
 	for (FVector2D DropRoomCoord : DropRoomCoords)
 	{
-		if (TemplateGrid.Grid.Contains(DropRoomCoord.X)) {
+		if (TemplateGrid.Grid.Contains(DropRoomCoord.X)) 
+		{
 			TmpRoom = TemplateGrid.Grid[DropRoomCoord.X].RowRooms.Find(DropRoomCoord.Y);
 			if (TmpRoom != nullptr)
 			{
@@ -88,20 +88,18 @@ void UResourceDropperBase::DistributeResources(UPARAM(ref) FRandomStream& RandSt
 					TmpRoom->Resources = PerRoomResources;
 				}
 			}
-			else
-			{
-				// error log - should never happen.
+			else {
+				// error log ? - should never happen.
 			}
 		}
 	}
-
-	DebugLog(FString::Printf(TEXT("DistributeResources Done.")));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("DistributeResources Done."));
 }
 
 
 void UResourceDropperBase::DistributeSpecials(UPARAM(ref) FRandomStream& RandStream, const TArray<TSubclassOf<AActor>>& SpecialActorClasses, FRoomGridTemplate& TemplateGrid)
 {
-	DebugLog(FString::Printf(TEXT("DistributeSpecials start.")));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("DistributeSpecials start."));
 	TArray<FVector2D> EligibleCoords;
 	FRoomTemplate* TmpRoom = nullptr;
 	TArray<FRoomTemplate*> EligibleRooms;
@@ -111,21 +109,20 @@ void UResourceDropperBase::DistributeSpecials(UPARAM(ref) FRandomStream& RandStr
 	// URoomFunctionLibrary::GetRoomTemplateGridAsArrays(TemplateGrid, EligibleCoords, EligibleRooms, false);
 	if (EligibleCoords.Num() == 0)
 	{
-		DebugLog(FString::Printf(TEXT("ResourceDropperBase::DistributeSpecials - No eligible rooms found.")));
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("ResourceDropperBase::DistributeSpecials - No eligible rooms found."));
 		return;
 	}
+	// Grab references to all eligible rooms
 	for (FVector2D TmpCoords : EligibleCoords)
 	{
 		if (TemplateGrid.Grid.Contains(TmpCoords.X))
 		{
 			TmpRoom = TemplateGrid.Grid[TmpCoords.X].RowRooms.Find(TmpCoords.Y);
-			if (TmpRoom != nullptr)
-			{
+			if (TmpRoom != nullptr) {
 				EligibleRooms.Add(TmpRoom);
 			}
 		}
-	}
-	
+	}	
 	// Sort rooms from furthest-off-shortest path to closest, then by distance from start.
 	EligibleRooms.Sort([](const FRoomTemplate& A, const FRoomTemplate& B) {
 		if (A.DistanceToShortestPath == B.DistanceToShortestPath)
@@ -137,13 +134,13 @@ void UResourceDropperBase::DistributeSpecials(UPARAM(ref) FRandomStream& RandStr
 			return A.DistanceToShortestPath > B.DistanceToShortestPath;
 		}
 	});
-
-	for (FRoomTemplate* TmpTemplate : EligibleRooms)
+	if (bEnableClassDebugLog)
 	{
-		DebugLog(FString::Printf(TEXT("    Eligible room dist to shortest path: %d"), TmpTemplate->DistanceToShortestPath));
+		for (FRoomTemplate* TmpTemplate : EligibleRooms) {
+			UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("    Eligible room dist to shortest path: %d"), TmpTemplate->DistanceToShortestPath);
+		}
+		UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("    Distributing %d specials among %d eligible rooms."), SpecialActorClasses.Num(), EligibleRooms.Num());
 	}
-	DebugLog(FString::Printf(TEXT("    Distributing %d specials among %d eligible rooms."), SpecialActorClasses.Num(), EligibleRooms.Num()));
-
 	RoomIndex = 0;
 	for (TSubclassOf<AActor> CurSpecialActor : SpecialActorClasses)
 	{
@@ -154,13 +151,13 @@ void UResourceDropperBase::DistributeSpecials(UPARAM(ref) FRandomStream& RandStr
 			if (CurRoom && CurRoom->DistanceToStart != 0 && CurRoom->DistanceToEnd != 0) 
 			{
 				CurRoom->SpecialActors.Add(CurSpecialActor);
-				DebugLog(FString::Printf(TEXT("    Added special to room %d, %d"), (int32)EligibleCoords[RoomIndex].X, (int32)EligibleCoords[RoomIndex].Y));
+				UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("    Added special to room %d, %d"), (int32)EligibleCoords[RoomIndex].X, (int32)EligibleCoords[RoomIndex].Y);
 				bFound = true;
 			}
 			RoomIndex++;
 		}
 	}
-	DebugLog(FString::Printf(TEXT("DistributeSpecials Done.")));
+	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("DistributeSpecials Done."));
 }
 
 /*================ Private functions ============================*/

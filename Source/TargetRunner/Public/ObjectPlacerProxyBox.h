@@ -73,7 +73,7 @@ protected:
 		FVector DefaultExtentHint;
 
 	// Objects this placer has placed
-	// When in-editor, these objects will be destroyed when this placer instance is.
+	// When in-editor, these objects will be destroyed when this placer instance is destroyed.
 	UPROPERTY()
 		TArray<TWeakObjectPtr<AActor>> PlacedObjectRefs;
 

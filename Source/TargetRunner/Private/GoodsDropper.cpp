@@ -25,12 +25,9 @@ bool UGoodsDropper::AddDropTableDataToLibrary(UDataTable* GoodsDropTableData)
 	{
 		// Check that this is a table of FGoodsDropTable rows.
 		FGoodsDropTable* FirstTable = GoodsDropTableData->FindRow<FGoodsDropTable>(RowNames[0], "", false);
-		
-		if (FirstTable == nullptr)
-		{
+		if (FirstTable == nullptr) {
 			return false;
 		}
-
 		//DropTableLibraryComposite.ParentTables.AddUnique(GoodsDropTableData);
 		DropTableLibrary.AddUnique(GoodsDropTableData);
 	}
@@ -71,8 +68,7 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTable(const FGoodsDropTab
 		// Make a number of picks
 		TotalPicks = RandStream.RandRange(GoodsTable.MinWeightedPicks, GoodsTable.MaxWeightedPicks);
 		// Each pick is one item from the weighted list of items.
-		for (int i = 1; i <= TotalPicks; i++)
-		{
+		for (int i = 1; i <= TotalPicks; i++) {
 			AllGoods.Append(EvaluateGoodsDropChanceWeighted(GoodsTable.GoodsOddsList, QuantityScale));
 		}
 	}
@@ -95,8 +91,7 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropTableByName(const FName &
 	TArray<FGoodsQuantity> AllGoods;
 	const FGoodsDropTable* FoundDropTable = FindDropTableInLibrary(DropTableName);
 
-	if (FoundDropTable != nullptr)
-	{
+	if (FoundDropTable != nullptr) {
 		AllGoods = EvaluateGoodsDropTable(*FoundDropTable, QuantityScale);
 	}
 	else
@@ -118,7 +113,9 @@ const FGoodsDropTable* UGoodsDropper::FindDropTableInLibrary(const FName DropTab
 	{
 		FoundDropTable = Table->FindRow<FGoodsDropTable>(DropTableName, "", false);
 		// If we found the table, stop looking through library
-		if (FoundDropTable != nullptr) { break; }
+		if (FoundDropTable != nullptr) { 
+			break; 
+		}
 	}
 	return FoundDropTable;
 }
@@ -132,8 +129,7 @@ TArray<FGoodsQuantity> UGoodsDropper::EvaluateGoodsDropChanceWeighted(const TArr
 	float AccumWeight = 0.0f;
 	float Pick = 0.0f;
 
-	for (const FGoodsDropChance& DropChance : DropChances)
-	{
+	for (const FGoodsDropChance& DropChance : DropChances) {
 		TotalWeight += FMath::Abs<float>(DropChance.Chance);
 	}
 	if (TotalWeight <= 0.0f) { return AllGoods; }

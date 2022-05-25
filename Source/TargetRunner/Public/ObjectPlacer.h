@@ -102,6 +102,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FVector TraceBoxExtents;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+		bool bEnableClassDebug = false;
+
 protected:
 
 	// Root scene for the node

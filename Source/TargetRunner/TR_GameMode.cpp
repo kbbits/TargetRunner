@@ -24,8 +24,7 @@ ATR_GameMode::ATR_GameMode(const FObjectInitializer& OI)
 	GeneratorRandStream.Reset();
 	GridRandStream.Reset();
 	GoodsDropper = CreateDefaultSubobject<UGoodsDropper>(TEXT("GoodsDropper"));
-	if (GoodsDropper == nullptr)
-	{ 
+	if (GoodsDropper == nullptr) { 
 		UE_LOG(LogTRGame, Error, TEXT("TRGameMode constructor Could not create GoodsDropper.")); 
 	}
 }
@@ -85,8 +84,7 @@ void ATR_GameMode::SaveAllPlayerData()
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
 		PController = Cast<ATRPlayerControllerBase>(*Iterator);
-		if (IsValid(PController))
-		{
+		if (IsValid(PController)) {
 			PController->PersistentDataComponent->ServerSavePlayerData();
 		}
 	}
@@ -99,8 +97,7 @@ void ATR_GameMode::ReloadAllPlayerData()
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
 		PController = Cast<ATRPlayerControllerBase>(*Iterator);
-		if (IsValid(PController))
-		{
+		if (IsValid(PController)) {
 			PController->PersistentDataComponent->ServerLoadPlayerData();
 		}
 	}
@@ -212,8 +209,7 @@ void ATR_GameMode::GetClutterDropResources(TArray<FResourceQuantity>& DroppedRes
 			if (CurGoods.Quantity > 0.0f)
 			{
 				UResourceFunctionLibrary::ResourceTypeForCode(CurGoods.Name, TmpResourceType);
-				if (TmpResourceType.IsValid())
-				{
+				if (TmpResourceType.IsValid()) {
 					DroppedResources.Add(FResourceQuantity(TmpResourceType, CurGoods.Quantity * (FMath::Pow(DifficultyLevel, ClutterResourceLevelScaleExp))));
 				}
 			}

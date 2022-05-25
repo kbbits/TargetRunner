@@ -42,6 +42,10 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
         float MaxRoomPercent;
 
+    // Print debug info to logs
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+        bool bEnableClassDebugLog = false;
+
 protected:
 
     // The total resources to distribute amongst room templates.
@@ -60,22 +64,8 @@ public:
     virtual void DistributeResources(UPARAM(ref) FRandomStream& RandStream, const TArray<FResourceQuantity>& TotalLevelResources, FRoomGridTemplate& TemplateGrid);
 
     // This will distribute one instance of each actor sub-class across the grid.
-    // Default implementation distributes specials across the grid, attempting to place them off of the shortest start->finish path.
+    // Default implementation distributes specials across the grid, attempting to place them away from the shortest start->finish path.
     // Sublcasses override this to implement different logic for special actor distriution.
-    virtual void DistributeSpecials(UPARAM(ref) FRandomStream& RandStream, const TArray<TSubclassOf<AActor>>& SpecialActorClasses, FRoomGridTemplate& TemplateGrid);
-
-protected:
-
-    // Debug
-#if WITH_EDITORONLY_DATA
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-        bool bEnableClassDebugLog = false;
-#endif
-#if WITH_EDITOR
-    FORCEINLINE void DebugLog(const FString& LogString) { if (bEnableClassDebugLog) { UE_LOG(LogTRGame, Log, TEXT("%s"), *LogString); } };
-#else
-    FORCEINLINE void DebugLog(const FString& LogString) { };
-#endif
-
+    virtual void DistributeSpecials(UPARAM(ref) FRandomStream& RandStream, const TArray<TSubclassOf<AActor>>& SpecialActorClasses, FRoomGridTemplate& TemplateGrid);   
 
 };

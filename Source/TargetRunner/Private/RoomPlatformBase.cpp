@@ -73,10 +73,10 @@ void ARoomPlatformBase::OnRep_WallTemplate_Implementation()
 void ARoomPlatformBase::OnRep_RoomTemplate_Implementation()
 {
 	if (GetLocalRole() < ROLE_Authority) {
-		UE_LOG(LogTRGame, Log, TEXT("OnRep_RoomTemplate - called on client"));
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("OnRep_RoomTemplate - called on client"));
 	}
 	else {
-		UE_LOG(LogTRGame, Log, TEXT("OnRep_RoomTemplate - called on server"));
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("OnRep_RoomTemplate - called on server"));
 	}
 	int32 RoomCellSubdivision;
 	ARoomPlatformGridMgr* RoomGridManager;
@@ -280,19 +280,19 @@ bool ARoomPlatformBase::SpawnContents_Implementation()
 	{
 		if (!SpawnResources())
 		{
-			UE_LOG(LogTRGame, Log, TEXT("RoomPlatformBase %s SpawnResources failed"), *GetName());
+			UE_LOG(LogTRGame, Error, TEXT("RoomPlatformBase %s SpawnResources failed"), *GetName());
 			return false;
 		}
 		DestroyResourcePlacers();
 		if (!SpawnSpecials())
 		{
-			UE_LOG(LogTRGame, Log, TEXT("RoomPlatformBase %s SpawnSpecials failed"), *GetName());
+			UE_LOG(LogTRGame, Error, TEXT("RoomPlatformBase %s SpawnSpecials failed"), *GetName());
 			return false;
 		}
 		DestroySpecialPlacers();
 		if (!SpawnClutter())
 		{
-			UE_LOG(LogTRGame, Log, TEXT("RoomPlatformBase %s SpawnClutter failed"), *GetName());
+			UE_LOG(LogTRGame, Error, TEXT("RoomPlatformBase %s SpawnClutter failed"), *GetName());
 			return false;
 		}		
 		DestroyClutterPlacers();
@@ -343,13 +343,11 @@ bool ARoomPlatformBase::SpawnSpecials_Implementation()
 		{
 			Placer->DefaultClassToPlace = Itr->Get();
 			NewSpecialActor = Placer->PlaceOne(PlatformRandStream, this, bSuccess);
-			if (NewSpecialActor)
-			{
+			if (NewSpecialActor) {
 				PlatformActorCache.Add(FName(FString::Printf(TEXT("SpecialActor_%d"), Itr.GetIndex())), NewSpecialActor);
 			}
 		}
-		else
-		{
+		else {
 			UE_LOG(LogTRGame, Warning, TEXT("%s - SpawnSpecials invalid placer for %s in room (%d, %d)"), *GetNameSafe(this), *GetNameSafe(Itr->Get()), GridX, GridY);
 		}
 		Placers.RemoveAt(Index);
@@ -368,7 +366,7 @@ bool ARoomPlatformBase::SpawnClutter_Implementation()
 	FRandomStream RandStream;
 	RandStream.GenerateNewSeed();
 
-	UE_LOG(LogTRGame, Log, TEXT("%s - SpawnClutter in room (%d, %d)"), *GetNameSafe(this), GridX, GridY);
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("%s - SpawnClutter in room (%d, %d)"), *GetNameSafe(this), GridX, GridY);
 
 	// Find all the clutter object placers.
 	PlatformControlZone->GetOverlappingActors(Placers, AObjectPlacerProxyBoxClutter::StaticClass());
@@ -389,8 +387,8 @@ bool ARoomPlatformBase::SpawnClutter_Implementation()
 			}
 			//NewClutterActor = Placer->PlaceOne(PlatformRandStream, this, bSuccess);
 			NewClutterActors = Placer->PlaceAll(RandStream, nullptr);
-			for (AActor* NewClutterActor : NewClutterActors)
-			{
+			// Add the clutter actors to our actor ref cache
+			for (AActor* NewClutterActor : NewClutterActors) {
 				PlatformActorCache.Add(FName(FString::Printf(TEXT("Clutter_%s"), *FGuid::NewGuid().ToString())), NewClutterActor);
 			}
 		}
@@ -406,7 +404,8 @@ bool ARoomPlatformBase::AllTrackedRoomComponentsSetup()
 	{
 		// Check all the room components with valid refs
 		RoomComponent = SpawnedRoomComponents[i];
-		if (RoomComponent.IsValid()) {
+		if (RoomComponent.IsValid()) 
+		{
 			// Check that ISMs are copied
 			if (!RoomComponent.Get()->AllISMsCopiedOut()) {
 				return false;
@@ -432,7 +431,8 @@ int32 ARoomPlatformBase::GetTrackedRoomComponentActors(TArray<ARoomComponentActo
 	{
 		// Get all the room components with valid refs
 		RoomComponent = SpawnedRoomComponents[i];
-		if (RoomComponent.IsValid() && IsValid(RoomComponent.Get())) {
+		if (RoomComponent.IsValid() && IsValid(RoomComponent.Get())) 
+		{
 			RoomComponentActors.Add(RoomComponent.Get());
 			NumValid++;
 		}
@@ -449,7 +449,8 @@ int32 ARoomPlatformBase::DestroyTrackedRoomComponents()
 	{
 		// Destroy all the room components with valid refs
 		RoomComponent = SpawnedRoomComponents[i];
-		if (RoomComponent.IsValid()) {
+		if (RoomComponent.IsValid()) 
+		{
 			RoomComponent.Get()->DestroyRCACollections();
 			RoomComponent.Get()->Destroy();
 			NumDestroyed++;
@@ -462,8 +463,7 @@ int32 ARoomPlatformBase::DestroyTrackedRoomComponents()
 
 ARoomPlatformBase* ARoomPlatformBase::GetConnectedNeighbor(const ETRDirection Direction)
 {
-	if (MyGridManager == nullptr)
-	{
+	if (MyGridManager == nullptr) {
 		GetGridManager();
 	}
 	bool bConnected = false;
@@ -516,8 +516,7 @@ void ARoomPlatformBase::DestroyResourcePlacers_Implementation(const bool bDestro
 	GetComponents(CACs, false);
 	for (UChildActorComponent* CAC : CACs)
 	{
-		if (CAC->GetChildActorClass().Get()->IsChildOf(AObjectPlacerResource::StaticClass()))
-		{
+		if (CAC->GetChildActorClass().Get()->IsChildOf(AObjectPlacerResource::StaticClass())) {
 			CAC->SetChildActorClass(nullptr);
 		}
 	}
@@ -546,8 +545,7 @@ void ARoomPlatformBase::DestroySpecialPlacers_Implementation(const bool bDestroy
 	GetComponents(CACs, false);
 	for (UChildActorComponent* CAC : CACs)
 	{
-		if (CAC->GetChildActorClass().Get()->IsChildOf(AObjectPlacerSpecialActor::StaticClass()))
-		{
+		if (CAC->GetChildActorClass().Get()->IsChildOf(AObjectPlacerSpecialActor::StaticClass())) {
 			CAC->SetChildActorClass(nullptr);
 		}
 	}
@@ -576,8 +574,7 @@ void ARoomPlatformBase::DestroyClutterPlacers_Implementation(const bool bDestroy
 	GetComponents(CACs, false);
 	for (UChildActorComponent* CAC : CACs)
 	{
-		if (CAC->GetChildActorClass().Get()->IsChildOf(AObjectPlacerProxyBoxClutter::StaticClass()))
-		{
+		if (CAC->GetChildActorClass().Get()->IsChildOf(AObjectPlacerProxyBoxClutter::StaticClass())) {
 			CAC->SetChildActorClass(nullptr);
 		}
 	}

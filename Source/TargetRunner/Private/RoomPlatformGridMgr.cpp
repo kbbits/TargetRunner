@@ -276,7 +276,8 @@ void ARoomPlatformGridMgr::DestroyGridImpl()
 	}
 }
 
-
+// Spawns all rooms and contents in one synchronus bunch.
+// This is currently overridden in BP, this base class implementation is not currently used.
 void ARoomPlatformGridMgr::SpawnRooms_Implementation()
 {
 	TArray<int32> RowNums;
@@ -335,15 +336,14 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 		OldRoom->DestroyPlatform();
 		OldRoom = nullptr;
 	}
-
+	// Spawn params
 	ARoomPlatformBase* NewRoom;
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParams.Owner = this;
 	ATR_GameMode* GameMode = Cast<ATR_GameMode>(GetWorld()->GetAuthGameMode());
-
 	UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("%s SpawnRoom - Spanwing room actor for X:%d Y:%d."), *this->GetName(), (int32)GridCoords.X, (int32)GridCoords.Y);
-	
+	// Get the room template from the room grid
 	FRoomGridRow* GridRow = RoomGridTemplate.Grid.Find(GridCoords.X);
 	if (GridRow == nullptr) { 
 		UE_LOG(LogTRGame, Error, TEXT("%s - Could not find grid row %d"), *this->GetName(), (int32)GridCoords.X); 
@@ -372,7 +372,6 @@ void ARoomPlatformGridMgr::SpawnRoom_Implementation(FVector2D GridCoords)
 			//NewRoom->PlatformRandStream.Initialize(DefaultGridRandStream.RandRange(1, INT_MAX - 1));
 			RoomTemplate->RoomRandSeed = DefaultGridRandStream.RandRange(1, INT_MAX - 1);
 		}
-
 		// Build the WallTemplate -- and array of WallState enums
 		// Create appropriate wall state arrays representing the used wall types, sized according to RoomCellSubdivision.
 		FRandomStream TmpPlatformRandStream;

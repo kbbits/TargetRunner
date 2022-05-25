@@ -42,8 +42,7 @@ APlatformGridMgr* APlatformBase::GetGridManager()
 	{
 		TArray<AActor*> FoundManagers;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlatformGridMgr::StaticClass(), FoundManagers);
-		if (FoundManagers.Num() > 0)
-		{
+		if (FoundManagers.Num() > 0) {
 			MyGridManager = Cast<APlatformGridMgr>(FoundManagers[0]);
 		}
 	}
@@ -98,8 +97,7 @@ void APlatformBase::StasisSleepActors_Implementation()
 	for (AActor* CurActor : PlatformActors)
 	{
 		StasisObject = Cast<IStasisObject>(CurActor);
-		if (StasisObject && StasisObject->Execute_GetStasisState(CurActor) != ETRStasisState::InStasis)
-		{
+		if (StasisObject && StasisObject->Execute_GetStasisState(CurActor) != ETRStasisState::InStasis) {
 			StasisObject->Execute_StasisSleep(CurActor);
 		}
 	}
@@ -117,8 +115,7 @@ void APlatformBase::StasisWakeActors_Implementation()
 		for (AActor* CurActor : PlatformActors)
 		{
 			StasisObject = Cast<IStasisObject>(CurActor);
-			if (StasisObject && StasisObject->Execute_GetStasisState(CurActor) != ETRStasisState::Awake)
-			{
+			if (StasisObject && StasisObject->Execute_GetStasisState(CurActor) != ETRStasisState::Awake) {
 				StasisObject->Execute_StasisWake(CurActor);
 			}
 		}
