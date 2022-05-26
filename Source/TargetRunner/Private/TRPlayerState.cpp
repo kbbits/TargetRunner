@@ -149,6 +149,11 @@ void ATRPlayerState::GetPlayerSaveData_Implementation(FPlayerSaveData& SaveData)
 
 void ATRPlayerState::UpdateFromPlayerSaveData_Implementation(const FPlayerSaveData& SaveData)
 {
+	if (!SaveData.PlayerGuid.IsValid())
+	{
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - SaveDat GUID invalid. Not updating Player State."));
+		return;
+	}
 	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRPlayerState - UpdateFromPlayerSaveData - Current guid %s. Save data info %s : %s."), *PlayerGuid.ToString(EGuidFormats::Digits), *SaveData.ProfileName.ToString(), *SaveData.PlayerGuid.ToString(EGuidFormats::Digits));
 	PlayerGuid = SaveData.PlayerGuid;		// replicated
 	ProfileName = SaveData.ProfileName;		// replicated

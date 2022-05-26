@@ -2,6 +2,7 @@
 
 #include "Engine/DataTable.h"
 #include "GameFramework/GameMode.h"
+#include "TRGameOptions.h"
 #include "GameModeRecordData.h"
 #include "GlobalGameSaveData.generated.h"
 
@@ -17,6 +18,7 @@ struct FGlobalGameSaveData : public FTableRowBase
 	GENERATED_BODY()
 
 public:
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float LastSelectedSaveSlot;
 
@@ -28,6 +30,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		float GameDifficulty;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		FTRGameOptions GameOptions;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		TArray<FGameModeRecordData> GameModeRecords;

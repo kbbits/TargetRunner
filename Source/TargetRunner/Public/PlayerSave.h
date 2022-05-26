@@ -18,6 +18,9 @@ class TARGETRUNNER_API UPlayerSave : public USaveGame
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		int32 SaveVersionNumber;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
 		FPlayerSaveData PlayerSaveData;
 	
 };

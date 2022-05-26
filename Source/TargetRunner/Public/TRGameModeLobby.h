@@ -39,7 +39,8 @@ public:
 
 protected:
 
-	int32 TotalPlayerControllersForTravel;
+	UPROPERTY(BlueprintReadOnly)
+		int32 TotalPlayerControllersForTravel;
 
 public:
 

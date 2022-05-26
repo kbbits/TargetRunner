@@ -87,7 +87,7 @@ void ATRPlayerControllerBase::SeamlessTravelFrom(class APlayerController* OldPC)
 		// Get data from old controller. Allow player state to be null on this call. We don't have one yet. 
 		// It's travelling properites are handled in it's own CopyProperties.
 		OldTRPlayerController->GetPlayerSaveData(TmpSaveData, true);
-		// Update current controller with that data
+		// Update current controller with that data. This won't update PlayerState since GUID will be invalid.
 		UpdateFromPlayerSaveData(TmpSaveData);
 		// Some data not saved in SaveData
 		FactionId = OldTRPlayerController->FactionId;
@@ -1187,16 +1187,23 @@ bool ATRPlayerControllerBase::UpdateFromPlayerSaveData_Implementation(const FPla
 	}
 	OnEquippedToolsChanged.Broadcast();
 	// Update PlayerState
-	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
-	if (TRPlayerState)
+	if (SaveData.PlayerGuid.IsValid())
 	{
-		TRPlayerState->UpdateFromPlayerSaveData(SaveData);
-		return true;
+		ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(PlayerState);
+		if (TRPlayerState)
+		{
+			TRPlayerState->UpdateFromPlayerSaveData(SaveData);
+			return true;
+		}
+		else
+		{
+			UE_LOG(LogTRGame, Error, TEXT("UpdateFromPlayerSaveData - Player state not found."));
+			return false;
+		}
 	}
-	else
-	{
-		UE_LOG(LogTRGame, Error, TEXT("UpdateFromPlayerSaveData - Player state not found."));
-		return false;
-	}	
+	else {
+		UE_LOG(LogTRGame, Warning, TEXT("UpdateFromPlayerSaveData - Player GUID in save file not valid. Not updating Player State."));
+	}
+	return true;
 }
 
