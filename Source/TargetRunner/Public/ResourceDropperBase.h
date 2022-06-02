@@ -11,7 +11,7 @@
 /**
  *
  */
-UCLASS(BlueprintType, Blueprintable, Config=Game)
+UCLASS(BlueprintType, Blueprintable, Config = Game)
 class TARGETRUNNER_API UResourceDropperBase : public UObject
 {
     GENERATED_BODY()
@@ -19,7 +19,7 @@ class TARGETRUNNER_API UResourceDropperBase : public UObject
 public:
     // Constructor for defaults
     UResourceDropperBase();
-        
+
 public:
 
     // The minimum percent of total level resources to reserve for the exit
@@ -42,6 +42,12 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
         float MaxRoomPercent;
 
+    // The percent +/- of resources, 0.0 - 1.0, that will be distributed amongst rooms.
+    // ex: 0.2 = Each room will have up to 20% more or less of each resource (calculated per-resource type) than 
+    // the original PerRoomResource counts. Total resources will remain the same. They're just mixed around a bit amongst the rooms.
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
+        float RoomResourceVariance = 0.2f;
+
     // Print debug info to logs
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
         bool bEnableClassDebugLog = false;
@@ -52,20 +58,20 @@ protected:
     // This is not set directly. It is set in the call to DistributeResources();
     //TArray<FResourceQuantity> TotalResources;
 
-    // The random stream we are using to generate the LevelTemplate and content.
-    //FRandomStream ResourceStream;
-
 
 // ###  Functions ###
 
 public:
-    
+
     // Sublcasses override this to implement different logic for resource distriution.
     virtual void DistributeResources(UPARAM(ref) FRandomStream& RandStream, const TArray<FResourceQuantity>& TotalLevelResources, FRoomGridTemplate& TemplateGrid);
 
     // This will distribute one instance of each actor sub-class across the grid.
     // Default implementation distributes specials across the grid, attempting to place them away from the shortest start->finish path.
     // Sublcasses override this to implement different logic for special actor distriution.
-    virtual void DistributeSpecials(UPARAM(ref) FRandomStream& RandStream, const TArray<TSubclassOf<AActor>>& SpecialActorClasses, FRoomGridTemplate& TemplateGrid);   
+    virtual void DistributeSpecials(UPARAM(ref) FRandomStream& RandStream, const TArray<TSubclassOf<AActor>>& SpecialActorClasses, FRoomGridTemplate& TemplateGrid);
+
+    // Given a single PerRoomResource, generates an array of RoomResources each with the resource distribution varied by the RoomResourceVariance.
+    virtual void GeneratePerRoomResources(UPARAM(ref) FRandomStream& RandStream, UPARAM(ref) FRoomGridTemplate& TemplateGrid, const TArray<FResourceQuantity>& PerRoomResourcesOrig, const TArray<FIntPoint>& RoomCoords, TMap<FIntPoint, TArray<FResourceQuantity>>& RoomResources);
 
 };

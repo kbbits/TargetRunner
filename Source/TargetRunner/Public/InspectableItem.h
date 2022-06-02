@@ -23,11 +23,19 @@ class TARGETRUNNER_API IInspectableItem
 
 public:
 
-	// Get the item's DisplayName
+	// Called by the inspector when it begins inspecting
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
+		void OnBeginInspect();
+
+	// Called by the inspector when it ends inspecting
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
+		void OnEndInspect();
+
+	// Inspector calls to get the item's DisplayName
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
 		FText GetItemDisplayName();
 
-	// Gets the item's inspect info
+	// Inspector calls to get the item's full inspect info
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
 		FInspectInfo GetInspectInfo();
 };

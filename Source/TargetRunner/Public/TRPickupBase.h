@@ -51,7 +51,7 @@ public:
 		void OnRep_PickupAwards();
 	void OnRep_PickupAwards_Implementation();
 
-	// ICollectablePickup interface functions
+	//========= ICollectablePickup interface functions
 
 	/** Get the PickupAwards to collect. 
 	 *  Default implementation : if !bCollected it returns all PickupAwards otherwise returns empty set. */
@@ -71,7 +71,15 @@ public:
 		void NotifyPickupCollected();
 	virtual void NotifyPickupCollected_Implementation();
 
-	// IInspectableItem interface functions
+	//======== IInspectableItem interface functions
+
+	// Base class does nothing
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Inspectable Item")
+		void OnBeginInspect();
+
+	// Base class does nothing.
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Inspectable Item")
+		void OnEndInspect();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
 		FText GetItemDisplayName();
@@ -79,7 +87,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inspectable Item")
 		FInspectInfo GetInspectInfo();
 
-	// ICollectableResource interface functions
+	//======== ICollectableResource interface functions
 
 	// Get the resource goods to collect. Default implementation: if !bCollected it returns all PickupAwards.PickupGoods otherwise returns empty array.
 	//UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Resource Collecting")

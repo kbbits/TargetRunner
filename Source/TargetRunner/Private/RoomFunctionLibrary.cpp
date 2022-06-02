@@ -58,6 +58,30 @@ int32 URoomFunctionLibrary::GetAllRoomTemplateCoords(const FRoomGridTemplate& Ro
 	return RoomCoords.Num();
 }
 
+int32 URoomFunctionLibrary::GetAllRoomTemplateCoordsInt(const FRoomGridTemplate& RoomGridTemplate, TArray<FIntPoint>& RoomCoords, const bool bIncludeBlackout)
+{
+	TArray<int32> RowNums;
+	TArray<int32> ColNums;
+	RoomGridTemplate.Grid.GenerateKeyArray(RowNums);
+	for (int32 RowNum : RowNums)
+	{
+		const FRoomGridRow* Row = RoomGridTemplate.Grid.Find(RowNum);
+		ColNums.Empty(Row->RowRooms.Num());
+		Row->RowRooms.GenerateKeyArray(ColNums);
+		for (int32 ColNum : ColNums)
+		{
+			const FRoomTemplate* Room = RoomGridTemplate.Grid.Find(RowNum)->RowRooms.Find(ColNum);
+			if (Room != nullptr)
+			{
+				if (bIncludeBlackout || !Room->bIsBlackout) {
+					RoomCoords.Add(FIntPoint(RowNum, ColNum));
+				}
+			}
+		}
+	}
+	return RoomCoords.Num();
+}
+
 
 bool URoomFunctionLibrary::GetRoom(FRoomGridTemplate RoomGridTemplate, const FIntPoint& RoomCoords, FRoomTemplate& Room)
 {

@@ -87,6 +87,16 @@ void ATRPickupBase::NotifyPickupCollected_Implementation()
 }
 
 
+void ATRPickupBase::OnBeginInspect_Implementation()
+{
+}
+
+
+void ATRPickupBase::OnEndInspect_Implementation()
+{
+}
+
+
 FText ATRPickupBase::GetItemDisplayName_Implementation()
 {
 	if (PickupAwards.PickupItems.Num() > 0)

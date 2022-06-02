@@ -28,6 +28,9 @@ public:
         static ETRDirection OppositeDirection(const ETRDirection Direction);
 
 	UFUNCTION(BlueprintPure)
+		static TArray<FIntPoint> VectorsToIntPoints(const TArray<FVector2D>& Vector2DArray);
+
+	UFUNCTION(BlueprintPure)
 		static const FMeshOption& PickMeshOption(UPARAM(ref) FRandomStream& RandStream, const TArray<FMeshOption>& MeshOptions);
 
 	// For an array where each item has a Weight (float) property that is > 0.0, this will pick one item from the array.

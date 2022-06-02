@@ -27,10 +27,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Room Template Functions")
 		static int32 GetRoomTemplateCount(const FRoomGridTemplate& RoomGridTemplate, const bool bIncludeBlackout = false);
 
-	// Gets an array of all coordinates of room templates in the grid.
+	// Gets an array of all coordinates (as Vector2d) of room templates in the grid.
 	// Returns the count of all room templates in the grid.
 	UFUNCTION(BlueprintPure, Category = "Room Template Functions")
 		static int32 GetAllRoomTemplateCoords(const FRoomGridTemplate& RoomGridTemplate, TArray<FVector2D>& RoomCoords, const bool bIncludeBlackout = false);
+
+	// Gets an array of all coordinates (as IntPoint) of room templates in the grid.
+	// Returns the count of all room templates in the grid.
+	UFUNCTION(BlueprintPure, Category = "Room Template Functions")
+		static int32 GetAllRoomTemplateCoordsInt(const FRoomGridTemplate& RoomGridTemplate, TArray<FIntPoint>& RoomCoords, const bool bIncludeBlackout = false);
 
 	// Gets an array of all coordinates of room templates in the grid and a paired array of all the room templates.
 	// Returns the count of all room templates in the grid.

@@ -15,15 +15,13 @@ bool UResourceFunctionLibrary::ContainsAnyQuantity(const TArray<FResourceQuantit
 {
 	if (TestQuantity <= 0.0f)
 	{
-		for (FResourceQuantity TmpQuantity : ResourceQuantities)
-		{
+		for (FResourceQuantity TmpQuantity : ResourceQuantities) {
 			if (TmpQuantity.Quantity > 0.0f) { return true; }
 		}
 	}
 	else
 	{
-		for (FResourceQuantity TmpQuantity : ResourceQuantities)
-		{
+		for (FResourceQuantity TmpQuantity : ResourceQuantities) {
 			if (TmpQuantity.Quantity >= TestQuantity) { return true; }
 		}
 	}
@@ -34,8 +32,7 @@ bool UResourceFunctionLibrary::ContainsAnyQuantity(const TArray<FResourceQuantit
 float UResourceFunctionLibrary::GetResourceQuantity(const TArray<FResourceQuantity>& ResourceQuantities, const FResourceType OfThisType)
 {
 	float QuantityTotal = 0.0f;
-	for (FResourceQuantity CurQuantity : ResourceQuantities)
-	{
+	for (FResourceQuantity CurQuantity : ResourceQuantities) {
 		if (CurQuantity.ResourceType == OfThisType) { QuantityTotal += CurQuantity.Quantity; }
 	}
 	return QuantityTotal;
@@ -170,13 +167,10 @@ TArray<FResourceQuantity> UResourceFunctionLibrary::AddResourceQuantities(const 
 {
 	TArray<FResourceQuantity> TotalResources;
 	bool bFound = false;
-	if (QuantitiesOne.Num() + QuantitiesTwo.Num() == 0)
-	{
+	if (QuantitiesOne.Num() + QuantitiesTwo.Num() == 0) {
 		return TotalResources;
 	}
-
 	TotalResources.Reserve(QuantitiesOne.Num() + QuantitiesTwo.Num());
-
 	// Go through first array of quantities.  Do this only to ensure no dupe entries.
 	for (FResourceQuantity TmpQuantity : QuantitiesOne)
 	{
@@ -191,13 +185,12 @@ TArray<FResourceQuantity> UResourceFunctionLibrary::AddResourceQuantities(const 
 			}
 		}
 		// Didn't find it in totals, then add an entry
-		if (!bFound)
-		{
+		if (!bFound) {
 			TotalResources.Add(TmpQuantity);
 		}
 	}
 	// Go through second array of quantities
-	for (FResourceQuantity TmpQuantity : QuantitiesOne)
+	for (FResourceQuantity TmpQuantity : QuantitiesTwo)
 	{
 		bFound = false;
 		for (int32 i = 0; !bFound && i < TotalResources.Num(); i++)
@@ -210,12 +203,10 @@ TArray<FResourceQuantity> UResourceFunctionLibrary::AddResourceQuantities(const 
 			}
 		}
 		// Didn't find it in totals, then add an entry
-		if (!bFound)
-		{
+		if (!bFound) {
 			TotalResources.Add(TmpQuantity);
 		}
 	}
-
 	return TotalResources;
 }
 
@@ -226,8 +217,7 @@ bool UResourceFunctionLibrary::SubtractResourceQuantities(const TArray<FResource
 	bool bHasNegative = false;
 	float NewQuantity;
 	TArray<FResourceQuantity> TmpTotalResources = QuantitiesOne;
-	if (QuantitiesTwo.Num() == 0 || (bAllowUnderflow && QuantitiesOne.Num() == 0))
-	{
+	if (QuantitiesTwo.Num() == 0 || (bAllowUnderflow && QuantitiesOne.Num() == 0)) {
 		return true;
 	}
 	// Subtract each entry in QuantitiesTwo 
@@ -245,8 +235,7 @@ bool UResourceFunctionLibrary::SubtractResourceQuantities(const TArray<FResource
 					TmpTotalResources[i].Quantity = 0.0f;
 					bHasNegative = true;
 				}
-				else
-				{
+				else {
 					TmpTotalResources[i].Quantity = NewQuantity;
 				}
 				bFound = true;
@@ -272,8 +261,7 @@ bool UResourceFunctionLibrary::SubtractResourceQuantities(const TArray<FResource
 		// Only include entries for non-zero quantities.
 		for (FResourceQuantity TotQuantity : TmpTotalResources)
 		{
-			if (TotQuantity.Quantity > 0.0f)
-			{
+			if (TotQuantity.Quantity > 0.0f) {
 				TotalResources.Add(TotQuantity);
 			}
 		}
@@ -295,12 +283,29 @@ void UResourceFunctionLibrary::MultiplyResourceQuantity(const TArray<FResourceQu
 	}
 }
 
+
+void UResourceFunctionLibrary::StripZeroQuantities(TArray<FResourceQuantity>& Quantities)
+{
+	TArray<int32> StripIndexes;
+	for (int32 i = 0; i < Quantities.Num(); i++)
+	{
+		if (Quantities[i].Quantity == 0.0f) {
+			StripIndexes.Add(i);
+		}
+	}
+	for (int32 i = StripIndexes.Num() - 1; i >= 0; i--)	{
+		Quantities.RemoveAt(StripIndexes[i], 1, i == 0);
+	}
+}
+
+
 FName UResourceFunctionLibrary::GoodsNameForResource(const FResourceType& ResourceType)
 {
 	return ResourceType.Code;
 	//if (!ResourceType.SubType.IsNone()) { return ResourceType.SubType; }
 	//return ResourceType.Type.IsNone() ? ResourceType.Category : ResourceType.Type;
 }
+
 
 void UResourceFunctionLibrary::ResourceTypeForCode(const FName& ResourceCode, FResourceType& ResourceType)
 {
@@ -315,16 +320,17 @@ void UResourceFunctionLibrary::ResourceTypeForCode(const FName& ResourceCode, FR
 			CodeStrings.IsValidIndex(2) ? FName(*CodeStrings[2]) : FName()  /* SubType */
 		);
 	}
-	else
-	{
+	else {
 		ResourceType = FResourceType();
 	}
 }
+
 
 void UResourceFunctionLibrary::ResourceTypeForData(const FResourceTypeData& ResourceData, FResourceType& ResourceType)
 {
 	ResourceTypeForCode(ResourceData.Code, ResourceType);
 }
+
 
 int32 UResourceFunctionLibrary::ResourceDataInTier(const UDataTable* ResourceDataTable, const float MinTier, const float MaxTier, TArray<FResourceTypeData>& ResourceData)
 {
@@ -334,7 +340,8 @@ int32 UResourceFunctionLibrary::ResourceDataInTier(const UDataTable* ResourceDat
 	for (FName RowName : RowNames)
 	{
 		PickedRow = ResourceDataTable->FindRow<FResourceTypeData>(RowName, "", false);
-		if (PickedRow == nullptr) {
+		if (PickedRow == nullptr) 
+		{
 			UE_LOG(LogTRGame, Error, TEXT("%s - ResourcesDataInTier - ResourceDataTable does not contain ResourceTypeData rows."));
 			break;
 		}
@@ -348,6 +355,7 @@ int32 UResourceFunctionLibrary::ResourceDataInTier(const UDataTable* ResourceDat
 	return FoundCnt;
 }
 
+
 int32 UResourceFunctionLibrary::ResourceDataByTier(const UDataTable* ResourceDataTable, const float MinTier, const float MaxTier, TMap<int32, FResourceTypeDataCollection>& ResourceDataByTier)
 {
 	TArray<FResourceTypeData> TierResources;
@@ -356,8 +364,7 @@ int32 UResourceFunctionLibrary::ResourceDataByTier(const UDataTable* ResourceDat
 	{
 		for (FResourceTypeData Resource : TierResources)
 		{
-			if (!ResourceDataByTier.Contains((int32)Resource.Tier))
-			{
+			if (!ResourceDataByTier.Contains((int32)Resource.Tier)) {
 				ResourceDataByTier.Add((int32)Resource.Tier, FResourceTypeDataCollection());
 			}
 			ResourceDataByTier.Find((int32)Resource.Tier)->Data.Add(Resource);

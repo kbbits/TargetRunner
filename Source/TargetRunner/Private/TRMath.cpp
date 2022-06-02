@@ -61,6 +61,17 @@ ETRDirection UTRMath::OppositeDirection(const ETRDirection Direction)
 }
 
 
+TArray<FIntPoint> UTRMath::VectorsToIntPoints(const TArray<FVector2D>& Vector2DArray)
+{
+	TArray<FIntPoint> Points;
+	Points.Reserve(Vector2DArray.Num());
+	for (FVector2D Vec : Vector2DArray) {
+		Points.Add(Vec.IntPoint());
+	}
+	return Points;
+}
+
+
 const FMeshOption& UTRMath::PickMeshOption(UPARAM(ref) FRandomStream& RandStream, const TArray<FMeshOption>& MeshOptions)
 {
 	return *PickOneFromWeightedList<FMeshOption>(RandStream, MeshOptions);

@@ -54,3 +54,15 @@ public:
 		return true;
 	}
 };
+
+
+USTRUCT(BlueprintType)
+struct FResourceQuantitySet 
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame)
+		TArray<FResourceQuantity> Resources;
+};

@@ -51,4 +51,5 @@ public:
 	// Must be >= 0
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		int32 GridExtentMaxY;
-};
+
+ };

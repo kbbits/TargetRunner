@@ -71,6 +71,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static void MultiplyResourceQuantity(const TArray<FResourceQuantity>& Quantities, const float Multiplier, const bool bTruncate, TArray<FResourceQuantity>& MultipliedQuantities);
 
+	// Removes any ResourceQuantities that have Quantity == 0.0;
+	UFUNCTION(BlueprintCallable, Category = "Resource Functions")
+		static void StripZeroQuantities(TArray<FResourceQuantity>& Quantities);
+
 	// Helper to get the Goods.Name for the specified ResourceType
 	// This currently maps the Resource.Code to Goods.Name.
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")

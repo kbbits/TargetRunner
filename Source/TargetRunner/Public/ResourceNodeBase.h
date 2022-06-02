@@ -162,7 +162,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnNodeDestroyed OnNodeDestroyed;
 
-	// IExtractableResource interface functions
+	//======= IExtractableResource interface functions
 
 	// Gets the current quanties of resources available in this entity.
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Extractable Resource")
@@ -175,7 +175,15 @@ public:
 	virtual float GetResourceQuantity_Implementation(const FResourceType& ResourceType);
 
 	
-	// IInspectableItem interface functions
+	//=======  IInspectableItem interface functions
+
+	// Base class does nothing
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Inspectable Item")
+		void OnBeginInspect();
+
+	// Base class does nothing.
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Inspectable Item")
+		void OnEndInspect();
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Inspectable Item")
 		FText GetItemDisplayName();

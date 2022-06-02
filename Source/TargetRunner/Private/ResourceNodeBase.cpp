@@ -269,6 +269,16 @@ float AResourceNodeBase::GetResourceQuantity_Implementation(const FResourceType&
 }
 
 
+void AResourceNodeBase::OnBeginInspect_Implementation()
+{
+}
+
+
+void AResourceNodeBase::OnEndInspect_Implementation()
+{
+}
+
+
 FText AResourceNodeBase::GetItemDisplayName_Implementation()
 {
 	if (TotalResources.Num() == 0) { return FText(); }
