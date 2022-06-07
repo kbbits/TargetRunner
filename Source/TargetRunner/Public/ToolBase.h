@@ -171,11 +171,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FNamedGoodsQuantitySet CostValue;
 
-	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostMultiplier
+	// Cost multiplier when upgrading a damage rate by 1 percent. Default is 1.0
 	UPROPERTY(EditDefaultsOnly)
 		FTRNamedFloat UpgradeDamageCostMultiplier;
 
-	// Cost to upgrade an extraction rate by 1 percent = (BuyValue / 100) * UpgradeExtractionCostMultiplier
+	// Cost multiplier when upgrading an extraction rate by 1 percent. Default is 1.0
 	UPROPERTY(EditDefaultsOnly)
 		FTRNamedFloat UpgradeExtractionCostMultiplier;
 
@@ -190,6 +190,9 @@ protected:
 	// Modifiers applied by this tool when it is activated.
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Weapons")
 		FNamedModifierSet ActivateModifiers;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Player Weapons")
+		bool bEnableClassDebug = false;
 
 public:
 
@@ -215,6 +218,10 @@ public:
 	// Cost of the tool in the tool market
 	UFUNCTION(BlueprintPure)
 		FORCEINLINE TArray<FGoodsQuantity> GetCostValue() { return CostValue.GoodsQuantitySet.Goods; }
+
+	// Returns the calculated upgrade cost to upgrade this tool's given damage/extraction rate by the given percent
+	UFUNCTION(BlueprintPure)
+		FGoodsQuantitySet GetUpgradeCost(const float UpgradePercent, const ETRToolUpgrade UpgradeType, const FResourceType& ResourceRateType);
 
 	// Cost to upgrade a damage rate by 1 percent = (BuyValue / 100) * UpgradeDamageCostMultplier
 	UFUNCTION(BlueprintPure)

@@ -18,6 +18,11 @@ class TARGETRUNNER_API UTRMath : public UBlueprintFunctionLibrary
 
 public:
 
+	// Computes the summation, ex: Summation(5) = 1+2+3+4+5 = 10,  Summation(6) = 1+2+3+4+5+6 = 16
+	// But supports non-whole numbers. ex: Summation(5.5) = 13	
+	UFUNCTION(BlueprintPure)
+		static float Summation(const float Value);
+
     UFUNCTION(BlueprintPure)
         static FVector2D DirectionToOffsetVector(const ETRDirection Direction);
 

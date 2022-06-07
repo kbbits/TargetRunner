@@ -48,6 +48,11 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
         float RoomResourceVariance = 0.2f;
 
+    // The minimum resources allowed to remain in a room when distributing resources. If the quantity of resources
+    // is below this minimum, then all of the resources will be moved (instead of leaving a tiny quantity).
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Config)
+        float MinRemainingRoomResources = 10.0f;
+
     // Print debug info to logs
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
         bool bEnableClassDebugLog = false;

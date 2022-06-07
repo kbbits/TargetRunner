@@ -11,6 +11,12 @@ bool UResourceFunctionLibrary::IsResourceTypeValid(const FResourceType& Resource
 }
 
 
+bool UResourceFunctionLibrary::IsCategory(const FResourceType& ResourceType)
+{ 
+	return ResourceType.IsCategory(); 
+}
+
+
 bool UResourceFunctionLibrary::ContainsAnyQuantity(const TArray<FResourceQuantity>& ResourceQuantities, const float TestQuantity)
 {
 	if (TestQuantity <= 0.0f)
@@ -284,18 +290,16 @@ void UResourceFunctionLibrary::MultiplyResourceQuantity(const TArray<FResourceQu
 }
 
 
-void UResourceFunctionLibrary::StripZeroQuantities(TArray<FResourceQuantity>& Quantities)
+TArray<FResourceQuantity> UResourceFunctionLibrary::StripZeroQuantities(const TArray<FResourceQuantity>& Quantities)
 {
-	TArray<int32> StripIndexes;
+	TArray<FResourceQuantity> StrippedQuantities;
 	for (int32 i = 0; i < Quantities.Num(); i++)
 	{
-		if (Quantities[i].Quantity == 0.0f) {
-			StripIndexes.Add(i);
+		if (Quantities[i].Quantity != 0.0f) {
+			StrippedQuantities.Add(Quantities[i]);
 		}
 	}
-	for (int32 i = StripIndexes.Num() - 1; i >= 0; i--)	{
-		Quantities.RemoveAt(StripIndexes[i], 1, i == 0);
-	}
+	return StrippedQuantities;
 }
 
 

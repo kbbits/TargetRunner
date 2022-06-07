@@ -113,4 +113,7 @@ public:
 
 public:
 	FORCEINLINE bool IsValid() const { return !(Code == NAME_None || Category == NAME_None || Type == NAME_None); }
+
+	/** Is this resource type a Category resource type. i.e. it has no specific type. ex: Code=Metal Category=Metal Type=None  */
+	FORCEINLINE bool IsCategory() const { return (Code != NAME_None && Category != NAME_None && Type == NAME_None); }
 };

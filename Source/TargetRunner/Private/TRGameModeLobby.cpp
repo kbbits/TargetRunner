@@ -107,7 +107,6 @@ bool ATRGameModeLobby::GetLevelUpDataForPlayer(const ATRPlayerControllerBase* Pl
 	if (!IsValid(LevelUpTable)) { return false; }
 	ATRPlayerState* PlayerState = PlayerController->GetPlayerState<ATRPlayerState>();
 	if (PlayerState == nullptr) { return false; }
-	// Check data table row type
 	return GetLevelUpData(PlayerState->ExperienceLevel + 1, LevelUpData);
 }
 

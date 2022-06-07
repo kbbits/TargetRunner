@@ -3,6 +3,16 @@
 
 #include "TRMath.h"
 
+
+float UTRMath::Summation(const float Value)
+{
+	if (Value <= 0.0f) { return 0.0f; }
+	if (Value <= 1.0f) { return Value; }
+	float TruncVal = FMath::TruncToFloat(Value);
+	return ((TruncVal * (TruncVal + 1)) / 2.0f) + (FMath::Fractional(Value) * (TruncVal + 1.0f));
+
+};
+
 FVector2D UTRMath::DirectionToOffsetVector(const ETRDirection Direction)
 {
 	switch (Direction)

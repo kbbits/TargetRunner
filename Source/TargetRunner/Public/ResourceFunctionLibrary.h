@@ -27,6 +27,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static bool IsResourceTypeValid(const FResourceType& ResourceType);
 
+	// Is this resource type a Category resource type. i.e. it has no specific type. ex: Code=Metal Category=Metal Type=None 
+	UFUNCTION(BlueprintPure, Category = "Resource Functions")
+		static bool IsCategory(const FResourceType& ResourceType);
+
 	// Does the array of FResourceQuantities have any resource with a quantity >= TestQuantity?
 	// Default value of TestQuantity = 0.0 checks if the array has any quantity > 0.
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
@@ -71,9 +75,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Resource Functions")
 		static void MultiplyResourceQuantity(const TArray<FResourceQuantity>& Quantities, const float Multiplier, const bool bTruncate, TArray<FResourceQuantity>& MultipliedQuantities);
 
-	// Removes any ResourceQuantities that have Quantity == 0.0;
+	// Removes any ResourceQuantities that have Quantity == 0.0.
+	// Returns the stripped quantities
 	UFUNCTION(BlueprintCallable, Category = "Resource Functions")
-		static void StripZeroQuantities(TArray<FResourceQuantity>& Quantities);
+		static TArray<FResourceQuantity> StripZeroQuantities(const TArray<FResourceQuantity>& Quantities);
 
 	// Helper to get the Goods.Name for the specified ResourceType
 	// This currently maps the Resource.Code to Goods.Name.

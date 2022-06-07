@@ -242,6 +242,9 @@ void UResourceDropperBase::GeneratePerRoomResources(UPARAM(ref) FRandomStream& R
 				}
 				else {
 					MoveQuantity = FMath::TruncToFloat(RoomResources[SortedCoords[OtherRoomIndex]][q].Quantity * MovePercent);
+					if (RoomResources[SortedCoords[OtherRoomIndex]][q].Quantity - MoveQuantity < MinRemainingRoomResources) {
+						MoveQuantity = RoomResources[SortedCoords[OtherRoomIndex]][q].Quantity;
+					}
 				}				
 				UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("      Pulling %.2f pct = %.1f from %s"), MovePercent, MoveQuantity, *SortedCoords[OtherRoomIndex].ToString());
 			}
@@ -253,6 +256,9 @@ void UResourceDropperBase::GeneratePerRoomResources(UPARAM(ref) FRandomStream& R
 				}
 				else {
 					MoveQuantity = FMath::TruncToFloat(TmpRoomQuantities[q].Quantity * MovePercent);
+					if (TmpRoomQuantities[q].Quantity - MoveQuantity < MinRemainingRoomResources) {
+						MoveQuantity = TmpRoomQuantities[q].Quantity * -1.0f;
+					}
 				}				
 				UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("      Pushing %.2f pct = %.1f to %s"), -MovePercent, -MoveQuantity, *SortedCoords[OtherRoomIndex].ToString());
 			}
@@ -271,11 +277,10 @@ void UResourceDropperBase::GeneratePerRoomResources(UPARAM(ref) FRandomStream& R
 	for (FIntPoint DropRoomCoord : SortedCoords)
 	{
 		TArray<FResourceQuantity>& TmpRoomResources = RoomResources[DropRoomCoord];
-		// Remove any zero quantites from these final counts
-		UResourceFunctionLibrary::StripZeroQuantities(TmpRoomResources);
 		TmpRoom = URoomFunctionLibrary::GetRoom(TemplateGrid, DropRoomCoord);
 		if (TmpRoom != nullptr) {
-			TmpRoom->Resources = TmpRoomResources;
+			// Remove any zero quantites from these final counts
+			TmpRoom->Resources = UResourceFunctionLibrary::StripZeroQuantities(TmpRoomResources);
 			if (bEnableClassDebugLog)
 			{
 				UE_CLOG(bEnableClassDebugLog, LogTRGame, Log, TEXT("  %s"), *DropRoomCoord.ToString());

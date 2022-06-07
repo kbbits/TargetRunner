@@ -3,6 +3,8 @@
 
 #include "ToolBase.h"
 #include "..\Public\ToolBase.h"
+#include "TRMath.h"
+#include "GoodsFunctionLibrary.h"
 #include "ResourceRateFilterSet.h"
 #include "NamedPrimitiveTypes.h"
 
@@ -35,6 +37,64 @@ UToolBase::UToolBase()
 
 	EquipModifiers.Name = EQUIP_MODS_NAME;
 	ActivateModifiers.Name = ACTIVATE_MODS_NAME;
+}
+
+
+FGoodsQuantitySet UToolBase::GetUpgradeCost(const float UpgradePercent, const ETRToolUpgrade UpgradeType, const FResourceType& ResourceRateType)
+{
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("ToolBase::GetUpgradeCost for %s %s on %s"), *ResourceRateType.Code.ToString(), UpgradeType == ETRToolUpgrade::DamageRate ? TEXT("Damage") : TEXT("Extraction"), *DisplayName.ToString());
+	FResourceRateFilter* FoundRate = nullptr;
+	float CostMultiplier = 1;
+	if (UpgradeType == ETRToolUpgrade::DamageRate)
+	{
+		FoundRate = BaseDamageRates.FindByPredicate([ResourceRateType](FResourceRateFilter DamageRate) {
+			return DamageRate.ResourceTypeFilter == ResourceRateType;
+		});
+		CostMultiplier = GetUpgradeDamageCostMultiplier();
+	}
+	else if (UpgradeType == ETRToolUpgrade::ExtractionRate)
+	{
+		FoundRate = BaseResourceExtractionRates.FindByPredicate([ResourceRateType](FResourceRateFilter ExtractionRate) {
+			return ExtractionRate.ResourceTypeFilter == ResourceRateType;
+		});
+		CostMultiplier = GetUpgradeDamageCostMultiplier();
+	}
+	if (FoundRate == nullptr) {
+		UE_LOG(LogTRGame, Error, TEXT("ToolBase::GetUpgradeCost - Cannot find resource rate for type %s"), *ResourceRateType.Code.ToString());
+		return FGoodsQuantitySet();
+	}
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("  Current rate: %.2f"), FoundRate->Rate);
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("  Upgrade amount: %.2f"), UpgradePercent);
+	TArray<FGoodsQuantity> BaseCost = GetCostValue();
+	if (!ResourceRateType.IsCategory())	{
+		// Upgrade cost have a base cost of 2x
+		CostMultiplier = CostMultiplier * 2.0f;
+	}
+	else {
+		// Upgrades on category types are 10x the normal cost * the normal base cost of 2x;
+		CostMultiplier = CostMultiplier * 20.0f;
+	}
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("  Base cost multiplier: %.2f"), CostMultiplier);
+	// Now determine incremental cost
+	FGoodsQuantitySet TotalCost;
+	// Current formula: cost goes up by base cost (not including the base 2x) for each 100% rate increase. 
+	//   ie. 2xcost for 1.0 to 2.0, 3xcost for 2.0 to 3.0 , etc.
+	// That is, the cost magnitude goes up by the Summation of (the rate going to - 1)
+	float MagRate = FoundRate->Rate > 1.0f ? FoundRate->Rate - 1.0f : 0.0f;
+	float Magnitude = UTRMath::Summation(MagRate + UpgradePercent) - UTRMath::Summation(MagRate);
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("  Current mag mult: %.2f"), UTRMath::Summation(MagRate));
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("  New mag mult: %.2f"), UTRMath::Summation(MagRate + UpgradePercent));
+	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("  Net mag mult: %.2f"), Magnitude);
+	CostMultiplier = CostMultiplier * Magnitude;
+	TotalCost.Goods = UGoodsFunctionLibrary::MultiplyGoodsQuantities(BaseCost, CostMultiplier, true);
+	if (bEnableClassDebug)
+	{
+		UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("  Final cost:"));
+		for (FGoodsQuantity GQ : TotalCost.Goods) {
+			UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("    %s %.2f"), *GQ.Name.ToString(), GQ.Quantity);
+		}
+	}
+	return TotalCost;
 }
 
 
@@ -93,8 +153,7 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 	auto UpdateAttr = [ToolData](FAttributeData& AData)
 	{
 		const FAttributeData* FoundData = FindInNamedArray<FAttributeData>(ToolData.AttributeData.Attributes, AData.Name);
-		if (FoundData)
-		{
+		if (FoundData) {
 			AData = *FoundData;
 		}
 	};
@@ -102,8 +161,7 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 	auto UpdateFloatAttr = [ToolData](const FName& Name, float& FloatValue)
 	{
 		const FTRNamedFloat* FoundFloat = FindInNamedArray<FTRNamedFloat>(ToolData.AttributeData.FloatAttributes, Name);
-		if (FoundFloat)
-		{
+		if (FoundFloat)	{
 			FloatValue = FoundFloat->Quantity;
 		}
 	};
@@ -111,8 +169,7 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 	auto UpdateNamedFloatAttr = [ToolData](FTRNamedFloat& NamedFloat)
 	{
 		const FTRNamedFloat* FoundFloat = FindInNamedArray<FTRNamedFloat>(ToolData.AttributeData.FloatAttributes, NamedFloat.Name);
-		if (FoundFloat)
-		{
+		if (FoundFloat)	{
 			NamedFloat.Quantity = FoundFloat->Quantity;
 		}
 	};
@@ -120,8 +177,7 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 	auto UpdateNamedIntAttr = [ToolData](FTRNamedInt& NamedInt)
 	{
 		const FTRNamedInt* FoundInt = FindInNamedArray<FTRNamedInt>(ToolData.AttributeData.IntAttributes, NamedInt.Name);
-		if (FoundInt)
-		{
+		if (FoundInt) {
 			NamedInt.Quantity = FoundInt->Quantity;
 		}
 	};
@@ -129,8 +185,7 @@ void UToolBase::UpdateFromToolData_Implementation(const FToolData& ToolData)
 	auto UpdateNamedGoodsQuantitySetAttr = [ToolData](FNamedGoodsQuantitySet& NamedGoodsQuantitySet)
 	{
 		const FNamedGoodsQuantitySet* FoundGoodsSet = FindInNamedArray<FNamedGoodsQuantitySet>(ToolData.AttributeData.GoodsQuantitiesAttributes, NamedGoodsQuantitySet.Name);
-		if (FoundGoodsSet)
-		{
+		if (FoundGoodsSet) {
 			NamedGoodsQuantitySet.GoodsQuantitySet = FoundGoodsSet->GoodsQuantitySet;
 		}
 	};

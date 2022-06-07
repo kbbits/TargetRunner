@@ -774,13 +774,13 @@ void ATRPlayerControllerBase::ServerUpgradeTool_Implementation(const FGuid ToolG
 	}
 	if (UpgradeType == ETRToolUpgrade::DamageRate)
 	{
-		FoundRate = FoundTool->BaseDamageRates.FindByPredicate([&](FResourceRateFilter DamageRate) {
+		FoundRate = FoundTool->BaseDamageRates.FindByPredicate([RateDelta](FResourceRateFilter DamageRate) {
 			return DamageRate.ResourceTypeFilter == RateDelta.ResourceTypeFilter;
 		});
 	} 
 	else if (UpgradeType == ETRToolUpgrade::ExtractionRate)
 	{
-		FoundRate = FoundTool->BaseResourceExtractionRates.FindByPredicate([&](FResourceRateFilter DamageRate) {
+		FoundRate = FoundTool->BaseResourceExtractionRates.FindByPredicate([RateDelta](FResourceRateFilter DamageRate) {
 			return DamageRate.ResourceTypeFilter == RateDelta.ResourceTypeFilter;
 		});
 	}
@@ -833,13 +833,13 @@ void ATRPlayerControllerBase::ClientUpgradeTool_Implementation(const FGuid ToolG
 	}
 	if (UpgradeType == ETRToolUpgrade::DamageRate)
 	{
-		FoundRate = FoundTool->BaseDamageRates.FindByPredicate([&](FResourceRateFilter DamageRate) {
+		FoundRate = FoundTool->BaseDamageRates.FindByPredicate([RateDelta](FResourceRateFilter DamageRate) {
 			return DamageRate.ResourceTypeFilter == RateDelta.ResourceTypeFilter;
 		});
 	}
 	else if (UpgradeType == ETRToolUpgrade::ExtractionRate)
 	{
-		FoundRate = FoundTool->BaseResourceExtractionRates.FindByPredicate([&](FResourceRateFilter DamageRate) {
+		FoundRate = FoundTool->BaseResourceExtractionRates.FindByPredicate([RateDelta](FResourceRateFilter DamageRate) {
 			return DamageRate.ResourceTypeFilter == RateDelta.ResourceTypeFilter;
 		});
 	}
