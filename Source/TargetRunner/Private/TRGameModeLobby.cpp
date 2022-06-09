@@ -2,6 +2,7 @@
 
 
 #include "TRGameModeLobby.h"
+#include "TRGameInstance.h"
 #include "TRPlayerControllerBase.h"
 #include "TRPlayerState.h"
 #include "PlayerLevelUpData.h"
@@ -13,14 +14,42 @@ ATRGameModeLobby::ATRGameModeLobby()
 }
 
 
+void ATRGameModeLobby::SetSelectedLevelTemplate(const FName LevelId)
+{
+	UTRGameInstance* GameInst = GetWorld()->GetGameInstance<UTRGameInstance>();
+	if (GameInst) {
+		if (!GameInst->LevelTemplatesMap.Contains(LevelId)) {
+			UE_LOG(LogTRGame, Error, TEXT("GameModeLobby::SetSelectedLevelTemplate - Level template with id %s does not exist in templates map"), *LevelId.ToString());
+			return;
+		}
+	}
+	else {
+		UE_LOG(LogTRGame, Error, TEXT("GameModeLobby::SetSelectedLevelTemplate - Cannot get game instance."));
+		return;
+	}
+	FLevelTemplate& NewTemplate = GameInst->LevelTemplatesMap.FindRef(LevelId)->LevelTemplate;
+	if (NewTemplate.LevelSeed == 0) { UE_LOG(LogTRGame, Warning, TEXT("GameModeLobby - SetSelectedLevelTemplate - Template has 0 seed.")); }
+	// Set it on server
+	GameInst->SetSelectedLevelTemplate(NewTemplate);
+	ATRPlayerControllerBase* PController = nullptr;
+	// Relay the selection to all clients (non-local controllers)
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		PController = Cast<ATRPlayerControllerBase>(*Iterator);
+		if (IsValid(PController) && !PController->IsLocalController()) {
+			PController->PersistentDataComponent->ClientSetSelectedLevelTemplate(NewTemplate);
+		}
+	}
+}
+
+
 void ATRGameModeLobby::SaveAllPlayerData()
 {
 	ATRPlayerControllerBase* PController = nullptr;
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
 		PController = Cast<ATRPlayerControllerBase>(*Iterator);
-		if (IsValid(PController))
-		{
+		if (IsValid(PController)) {
 			PController->PersistentDataComponent->ServerSavePlayerData();
 		}
 	}
@@ -33,8 +62,7 @@ void ATRGameModeLobby::ReloadAllPlayerData()
 	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
 	{
 		PController = Cast<ATRPlayerControllerBase>(*Iterator);
-		if (IsValid(PController))
-		{
+		if (IsValid(PController)) {
 			PController->PersistentDataComponent->ServerLoadPlayerData();
 		}
 	}
@@ -49,7 +77,6 @@ int32 ATRGameModeLobby::GetMarketDataForPlayer(const ATRPlayerControllerBase* Ma
 	}
 	ATRPlayerState* PlayerState = MarketPlayerController->GetPlayerState<ATRPlayerState>();
 	const FGoodsPurchaseItem* PurchaseItem = nullptr;
-
 	if (PlayerState == nullptr) { 
 		UE_LOG(LogTRGame, Warning, TEXT("TRGameModeLobby::GetMarketDataForPlayer - PlayerState is not valid"));
 		return 0; 
@@ -72,15 +99,13 @@ int32 ATRGameModeLobby::GetToolMarketDataForPlayer(const ATRPlayerControllerBase
 	if (!IsValid(ToolsMarketTable)) { return 0; }
 	ATRPlayerState* PlayerState = MarketPlayerController->GetPlayerState<ATRPlayerState>();
 	const FToolPurchaseItem* PurchaseItem = nullptr;
-
 	if (PlayerState == nullptr) { return 0; }
 	// Type-Safety
 	check(ToolsMarketTable->GetRowStruct()->IsChildOf(FToolPurchaseItem::StaticStruct()));
 	for (const TPair<FName, uint8*>& RowItr : ToolsMarketTable->GetRowMap())
 	{
 		PurchaseItem = reinterpret_cast<const FToolPurchaseItem*>(RowItr.Value);
-		if (PurchaseItem->LevelAvailable <= PlayerState->ExperienceLevel)
-		{
+		if (PurchaseItem->LevelAvailable <= PlayerState->ExperienceLevel) {
 			ToolMarketGoods.Add(*PurchaseItem);
 		}
 	}

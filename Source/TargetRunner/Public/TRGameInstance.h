@@ -14,6 +14,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLevelTemplatesSaved, const bool, bSuccessful);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSelectedLevelTemplateChanged, const FLevelTemplate&, NewSelectedLevelTemplate);
+
 /**
  * Most functions are to be called on the server only.
  */
@@ -43,7 +45,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TSubclassOf<ULevelForgeBase> DefaultLevelForgeClass;
 
-	// Map of all level templates with LevelId as key. Will be different on each client/server.
+	// Map of all level templates with LevelId as key. Will initially be different on each client/server but 
+	// server gets a copy of all clients' unlocked level templates when they connect.
 	UPROPERTY(BlueprintReadWrite)
 		TMap<FName, ULevelTemplateContext*> LevelTemplatesMap;
 
@@ -56,14 +59,18 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnLevelTemplatesSaved OnLevelTemplatesSaved;
 
+	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
+		FOnSelectedLevelTemplateChanged OnSelectedLevelTemplateChanged;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 		bool bEnableClassDebug = false;
 
 protected:
 
-	// Level Template selected by user to be used for next game match. Will be set in TRGameState.
+	// Level Template selected by user to be used for next game match. Set by TRGameModeLobby.
 	// Between lobby and main game this keeps the selected level template.
-	UPROPERTY(BlueprintSetter=SetSelectedLevelTemplate, BlueprintGetter=GetSelectedLevelTemplate)
+	// Note: on clients' end, the level template may not exist in the local map of templates. This is expected.
+	UPROPERTY()
 		FLevelTemplate SelectedLevelTemplate;
 
 

@@ -43,6 +43,10 @@ protected:
 		int32 TotalPlayerControllersForTravel;
 
 public:
+	
+	// Set selected level template in all client GameInstances.
+	UFUNCTION(BlueprintCallable)
+		void SetSelectedLevelTemplate(const FName LevelId);
 
 	/*---------- Player save/load --------------------*/
 

@@ -89,7 +89,8 @@ void UTRPersistentDataComponent::ServerGenerateNewLevelTemplate_Implementation(c
 				ServerUnlockLevelTemplateForPlayer(NewTemplate->LevelTemplate.LevelId);
 			}
 			else
-			{		
+			{	
+				// Call to replicate to client
 				ServerLoadLevelTemplatesData();
 				//LevelTemplatesPage.Add(NewTemplate->ToStruct());
 				//LevelTemplatesRepTrigger++; 
@@ -242,18 +243,39 @@ bool UTRPersistentDataComponent::ClientUnlockLevelTemplateForPlayer_Validate(con
 }
 
 
-void UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Implementation(const FLevelTemplate& LevelTemplate)
+void UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Implementation(const FName LevelId)
+{
+	ATRGameModeLobby* GameMode = Cast<ATRGameModeLobby>(UGameplayStatics::GetGameMode(GetOwner()));
+	if (GameMode) {
+		GameMode->SetSelectedLevelTemplate(LevelId);
+	}
+	//UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
+	//if (GameInst) {
+	//	GameInst->SetSelectedLevelTemplate(LevelTemplate);		
+	//}
+	//else {
+	//	UE_LOG(LogTRGame, Error, TEXT("ServerSetLevelTemplateForPlay - Could not get game instance."));
+	//}
+}
+
+bool UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Validate(const FName LevelId)
+{
+	return true;
+}
+
+
+void UTRPersistentDataComponent::ClientSetSelectedLevelTemplate_Implementation(const FLevelTemplate& LevelTemplate)
 {
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
 	if (GameInst) {
-		GameInst->SetSelectedLevelTemplate(LevelTemplate);		
+		GameInst->SetSelectedLevelTemplate(LevelTemplate);
 	}
 	else {
-		UE_LOG(LogTRGame, Error, TEXT("ServerSetLevelTemplateForPlay - Could not get game instance."));
+		UE_LOG(LogTRGame, Error, TEXT("ClientSetLevelTemplateForPlay - Could not get game instance."));
 	}
 }
 
-bool UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Validate(const FLevelTemplate& LevelTemplate)
+bool UTRPersistentDataComponent::ClientSetSelectedLevelTemplate_Validate(const FLevelTemplate& LevelTemplate)
 {
 	return true;
 }

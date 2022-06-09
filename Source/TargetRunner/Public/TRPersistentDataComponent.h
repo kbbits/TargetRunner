@@ -138,7 +138,11 @@ public:
 	
 	// [Server]
 	UFUNCTION(Server, Reliable, BlueprintCallable, WithValidation)
-		void ServerSetLevelTemplateForPlay(const FLevelTemplate& LevelTemplate);
+		void ServerSetLevelTemplateForPlay(const FName LevelId);
+
+	// [Client]
+	UFUNCTION(Client, Reliable, BlueprintCallable, WithValidation)
+		void ClientSetSelectedLevelTemplate(const FLevelTemplate& LevelTemplate);
 
 	// Player Save Data
 

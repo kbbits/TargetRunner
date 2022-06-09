@@ -70,6 +70,7 @@ void UTRGameInstance::AddLevelTemplate(const FLevelTemplate& LevelTemplate)
 void UTRGameInstance::SetSelectedLevelTemplate(const FLevelTemplate& LevelTemplate)
 {
 	SelectedLevelTemplate = LevelTemplate;
+	OnSelectedLevelTemplateChanged.Broadcast(SelectedLevelTemplate);
 	// Debug log
 	UE_CLOG(bEnableClassDebug, LogTRGame, Log, TEXT("TRGameInstance - Set level template %s seed: %s"), *LevelTemplate.DisplayName.ToString(), *LevelTemplate.LevelId.ToString());
 }

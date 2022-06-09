@@ -32,8 +32,11 @@ FName ATR_GameState::GetGoodsNameForResource(const FResourceType& ResourceType)
 
 bool ATR_GameState::GetResourceTypeData(const FResourceType& ForResourceType, FResourceTypeData& ResourceData)
 {
-	if (!IsValid(ResourceTypeDataTable)) { return false; }
-
+	if (!IsValid(ResourceTypeDataTable)) 
+	{ 
+		UE_LOG(LogTRGame, Error, TEXT("GameState::GetResourceTypeData - ResourceTypeDataTable is invalid."));
+		return false; 
+	}
 	FResourceTypeData* ResourceDataRow = ResourceTypeDataTable->FindRow<FResourceTypeData>(ForResourceType.Code, "", false);
 	if (ResourceDataRow)
 	{
