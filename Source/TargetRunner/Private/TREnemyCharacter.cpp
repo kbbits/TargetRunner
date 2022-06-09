@@ -59,13 +59,11 @@ void ATREnemyCharacter::Tick(float DeltaTime)
 			if (MyTarget)
 			{
 				Distance = GetDistanceTo(MyTarget);
-				if (GetMinAttackRange() <= Distance && Distance <= GetMaxAttackRange())
-				{
+				if (GetMinAttackRange() <= Distance && Distance <= GetMaxAttackRange()) {
 					bTargetInRange = true;
 				}
 			}
-			else
-			{
+			else {
 				bAimOnTarget = false;
 			}
 		}
@@ -104,7 +102,7 @@ void ATREnemyCharacter::OnRep_StasisState_Implementation(ETRStasisState OldState
 			AIController->SetActorTickEnabled(true);
 			if (AIController->GetBrainComponent()) {
 				AIController->GetBrainComponent()->StartLogic();
-			}
+			}			
 			// Handle components?
 			//UE_LOG(LogTRGame, Log, TEXT("TREnemyCharacter - Stasis Awakened: %s"), *GetNameSafe(this));
 		}
@@ -142,8 +140,7 @@ void ATREnemyCharacter::ResetAttributesToMax_Implementation()
 {
 	TArray<UActorAttributeComponent*> AttributeComps;
 	GetComponents<UActorAttributeComponent>(AttributeComps);
-	for (UActorAttributeComponent* Attr : AttributeComps)
-	{
+	for (UActorAttributeComponent* Attr : AttributeComps) {
 		Attr->ResetToMax();
 	}
 }
@@ -177,8 +174,7 @@ ATREnemyAIController* ATREnemyCharacter::GetTRAIController()
 {
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		if (!IsValid(TRAIController))
-		{
+		if (!IsValid(TRAIController)) {
 			TRAIController = Cast<ATREnemyAIController>(GetController());
 		}
 	}
@@ -204,9 +200,10 @@ TArray<FResourceQuantity> ATREnemyCharacter::GetResourceQuantities_Implementatio
 float ATREnemyCharacter::GetResourceQuantity_Implementation(const FResourceType& ResourceType)
 {
 	float QuantityTotal = 0.0f;
-	for (FResourceQuantity CurQuantity : ResourcesOnDestroy)
-	{
-		if (CurQuantity.ResourceType == ResourceType) { QuantityTotal += CurQuantity.Quantity; }
+	for (FResourceQuantity CurQuantity : ResourcesOnDestroy) {
+		if (CurQuantity.ResourceType == ResourceType) { 
+			QuantityTotal += CurQuantity.Quantity; 
+		}
 	}
 	return QuantityTotal;
 }
