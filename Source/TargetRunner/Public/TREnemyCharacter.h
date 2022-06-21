@@ -32,7 +32,7 @@ public:
 
 	// Has this character had it's attribute values adjusted (scaled) by level?
 	// This will be false before ScaleToLevel() is called and true afterwards.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, SaveGame)
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, SaveGame)
 		bool bScaleUpApplied;
 
 	// Class of weapon this character will use. 

@@ -1,67 +1,66 @@
 # TargetRunner
 [Working title]
 
-VR and First Person multiplayer target shooting. Written in c++ and Blueprint. Tested with HTC Vive.
+First Person multiplayer target shooting, resource collecting and crafting. Written in c++ and Blueprint.
 UnrealEngine 4.26
 
 ![FP view](./ProjectDoc/Images/tr_cap01.png)
 
 ## Narrative
-You are an agent responsible for locating and eliminating anomalies in the cyberspace of an ancient system called The Ether. Each time you run through a subsystem you send a sliver of yourself into your avatar. This allows you to operate within the Ether. This sliver, your Animus, is the internal energy of a soul that makes you, “you” and separates you from the endless hive mind of The Ether in which you operate. 
+Reality has shattered. You exist in the timeless Ether. Fragments of worlds from different times and places still exist, scattered throughout the Ether.
+By visiting these fragments you can collect materials from these slices of reality. With these materials you can hopefully reboot the universe. Each time you run through a frament you send a sliver of yourself. This allows you to exist in these fragments, outside of the Ether. This sliver, your Animus, is the internal energy of a soul that makes you “you” and separates you from the endless hive mind of The Ether in which you operate. 
 
-You have a limited amount of Animus and it constantly dissipates into the Ether while you possess your avatar. You must navigate the platforms of the Ether and reach the exit sync before you run out of Animus while eliminating anomalies you encounter. If your Animus depletes, you will lose control of your avatar as the will of the Ether replaces your own.  
+You have a limited amount of Animus and it constantly dissipates back into the Ether while you explore reality fragments. You must navigate the fragments and reach an exit portal. Along the way you will collect resources and defeat the strange entities that occupy these fragments. If your Animus depletes, you will lose contact with the fragment and be drawn back to the Ether, leaving all of your collected resources behind.  
 
-But you will have other avatars. And you will take endless runs through The Ether. That is what you are. That is why you are.  Isn’t it?
+But you will take endless runs through the Ether. That is what you are. That is why you are -- to rebuild reality.
 
 ## Gameplay
-Make your way through the platforms to collect the keys (gold and magenta columns). Use the keys to open the Exit Sync (green column) before your Animus drains away.
+Make your way through the procedurally generated levels to collect resources and locate the exit portal before your Animus drains away. Craft and upgrade weapons and equipment in your forge.
 
-Each platform contains one or more Anomaly Ejectors. Each ejector must complete its cycle before neighboring platforms are unlocked. Shoot waiting Anomaly Ejectors and they will begin their cycle right away.
+Standard WASD control in first-person mode. Q and E to cycle through equipped weapons. Spacebar to jump.
 
-Standard WASD control in first-person mode.
-
-Press 'F' or down on right motion controller d-pad to change weapon mods.  All mods are currently available: standard shot, bomb shot, rapid-fire and magnum.  Some weapon mods consume special ammo types.
+Weapons mods currently available: standard shot, bomb AOE shot, rapid-fire, magnum and a flare gun.  Some weapon mods consume special ammo types.
 
 ## Study Project
 This project is part of my learning process and serves to demonstrate familiarity with various concecpts including:
  - c++ actor components, data driven scene generation and pickup drops, grid manager actor, others.
- - Multiplayer concepts including session creation, replication, server level load transition
- - First-person and VR support in PlayerController and Pawn.
- - Data driven pickup goods
+ - Multiplayer concepts including session creation, server level load transition, replication of relevant entities/actions/anims.
+   Currenly supports connection via IP or LAN play.
+ - Procedural level generation based on level templates supporting block set themes, resource tiers and difficulty levels
+ - Instanced static meshes used for level geometry, managed through custom room component system.
+ - Custom BP editor tool for creating room components used in level generation.
+ - Data driven (drop table based) pickup goods
  - Goods inventory actor component (ammo and pickup inventory)
- - VR HUD rendered to HMD stereo layer
+ - Instanced weapons/equipment, individually rename-able and upgradable. 
+ - Resource type system affecting damage and extraction rates of weapons, based on resource type of the entity hit.
 
-![Aerial view](./ProjectDoc/Images/big_view1.png)
+![Fight for resources](./ProjectDoc/Images/tr_cap02.png)
 
 ## TODO 
 ### Functionality
- - Complete multiplayer with a full online subsystem to allow unique client player identification
-     - Proper save game for client players
- - Armory to allow spending earned goods (shards, etc.) to purchase ammo and unlock weapon mods between levels
- - Improve "End of Run" summary - include more of the available stats, goods, high scores, etc.
- - Upgrade (tree?) for long-term progression including movement rate, jump height, jump aerial control, max energy, max animus, weapon fire rate, damage, projectile speed, etc.
-     - Upgrade via level unlock and redemption of collected goods.
- - Improved between level/lobby flow
- - More varieties of anomaly types (enemy targets)
- - Special target shooting objectives that reward the keys and other goods drops. (boss fights?)
- - GUI for High scores and improve tracking of high scores
- - Run Tracker: a visual representation of your journey through The Ether. A tally of successful runs for each level unlocked (1-100).
- - More shootable targets and clutter
- - Additional scenery meshes and scene templates
- - Game spash screen and home menu
- - Game options
- 
-
-### Needed Improvements
- - Improve enemy drone behavior
+ - Improve lighting
+ - More, higher tier, resource types
+ - More weapon types and re-balance upgrade progression
+ - Extend career progression for long-term progression including movement rate, jump height, jump aerial control, max energy, max animus, max equippable weapons/equipment, etc.
+ - More environment variety, deco and clutter
+ - Assets for each weapon. (get rid of default gun mesh, etc.)
+ - Additional scenery meshes and scene template themes.
+ - BGM for each template theme
+ - Player character mesh for third-person view in multiplayer.
+ - More varieties of enemies and special actors
+ - Special objectives that reward special resource types. (boss fights?)
+ - Homeworld: Change lobby level to act as player "base". Craftable parts to place around your base that unlock/improve gameplay elements. Move crafting/refining to these entities instead of via lobby menu.
+ - Run Tracker: a visual representation of your journey through The Ether. A tally of successful runs for each location fragment.
  - More sound assets
  - More FX and improve existing
- - Better UMG styling. i.e. any styling at all. :)
-
- ![FP view](./ProjectDoc/Images/tr_cap02.png)
+ - Better UMG styling. Much better :)
 
  ![FP view](./ProjectDoc/Images/tr_cap03.png)
 
- ![FP view](./ProjectDoc/Images/tr_cap04.png)
+ ![Player Inventory](./ProjectDoc/Images/tr_inv01.png)
+
+ ![Weapon Crafting](./ProjectDoc/Images/tr_weapCraft01.png)
+
+ ![Weapon Upgrade](./ProjectDoc/Images/tr_weapUpg01.png)
 
 
