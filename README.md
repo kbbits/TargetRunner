@@ -4,6 +4,8 @@
 First Person multiplayer target shooting, resource collecting and crafting. Written in c++ and Blueprint.
 UnrealEngine 4.26
 
+My original VR version [here](./ProjectDoc/OriginalVersion/README.md).
+
 ![FP view](./ProjectDoc/Images/tr_cap01.png)
 
 ## Narrative
