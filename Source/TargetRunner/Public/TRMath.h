@@ -58,7 +58,8 @@ public:
 		if (TotalWeightedChance <= 0.0f) {
 			return nullptr;
 		}
-		PickedWeight = FMath::FRandRange(0.0, TotalWeightedChance);
+		//PickedWeight = FMath::FRandRange(0.0, TotalWeightedChance);
+		PickedWeight = RandStream.FRandRange(0.0f, TotalWeightedChance);
 		//UE_LOG(LogMMGame, Log, TEXT("PickOne total weight: %f  picked weight %f"), TotalWeightedChance, PickedWeight);
 		// Iterate through our list of items until we find the first one where the overall PickedWeight is less than our cumulative total weight of items iterated so far.
 		for (const T& WeightedItem : WeightedItems)
@@ -94,7 +95,8 @@ public:
 		if (TotalWeightedChance <= 0.0f) {
 			return nullptr;
 		}
-		PickedWeight = FMath::FRandRange(0.0, TotalWeightedChance);
+		//PickedWeight = FMath::FRandRange(0.0, TotalWeightedChance);
+		PickedWeight = RandStream.FRandRange(0.0f, TotalWeightedChance);
 		//UE_LOG(LogMMGame, Log, TEXT("PickOne total weight: %f  picked weight %f"), TotalWeightedChance, PickedWeight);
 		// Iterate through our list of items until we find the first one where the overall PickedWeight is less than our cumulative total weight of items iterated so far.
 		for (const T& WeightedItem : WeightedItems)

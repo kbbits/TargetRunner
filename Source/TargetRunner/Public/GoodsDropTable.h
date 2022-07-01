@@ -7,7 +7,10 @@
 #include "GoodsDropTable.generated.h"
 
 /**
- * 
+ * Each goods drop table is a collection of goods drop chances.
+ * Note: when evaluated, a goods drop chance in a goods drop table may reference other goods drop tables. This allows the designer to 
+ * set up some goods drop tables as categories of goods and other goods drop tables that have chances of including results from those
+ * categorized goods drop tables.
  */
 USTRUCT(BlueprintType)
 struct TARGETRUNNER_API FGoodsDropTable : public FTableRowBase

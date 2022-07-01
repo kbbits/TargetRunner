@@ -34,7 +34,7 @@ public:
 
 
 	// Transform a goods quantity range to a goods quantity. 
-	// If optional QuantityScale is provided, the quantity will be mapped from min to max according to the scale (0-1) instead of determining randomly.
+	// If optional QuantityScale is provided, the quantity will be mapped from min to max according to the scale (0.0 to 1.0) instead of determining randomly.
 	UFUNCTION(BlueprintCallable, Category = "Goods")
 		static FGoodsQuantity GoodsQuantityFromRange(UPARAM(ref) FRandomStream& RandStream, const FGoodsQuantityRange& QuantityRange, const float QuantityScale = -1.0f /* 0.0 - 1.0 */);
 
@@ -111,7 +111,7 @@ public:
 			return FoundGoods->Quantity;
 		}
 		bFound = false;
-		return 0.f;
+		return 0.0f;
 	}
 
 

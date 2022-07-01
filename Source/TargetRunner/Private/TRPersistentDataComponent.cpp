@@ -136,7 +136,7 @@ void UTRPersistentDataComponent::ServerLoadLevelTemplatesData_Implementation()
 		GameInst->LoadLevelTemplatesData();
 		if (GameInst->bLevelTemplatesLoaded)
 		{
-			// TODO: implement paging of results. Currenty putting them all in here.
+			// TODO: implement paging of results. Currenty putting them all in here. 
 			TArray<ULevelTemplateContext*> TmpLTCArray;
 			GameInst->LevelTemplatesMap.GenerateValueArray(TmpLTCArray);
 			LevelTemplatesPage.Empty();
@@ -166,40 +166,37 @@ bool UTRPersistentDataComponent::ServerLoadLevelTemplatesData_Validate()
 void UTRPersistentDataComponent::ServerUnlockLevelTemplateForPlayer_Implementation(const FName LevelId)
 {
 	UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
-	if (GameInst)
+	if (GameInst == nullptr) { return; }
+	ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
+	if (TRPlayerController == nullptr) { return; }
+	ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
+	if (TRPlayerState) 
 	{
-		ATRPlayerControllerBase* TRPlayerController = Cast<ATRPlayerControllerBase>(GetOwner());
-		if (TRPlayerController)
+		ULevelTemplateContext* UnlockedTemplate = GameInst->UnlockLevelTemplateForPlayer(LevelId, TRPlayerState->PlayerGuid);
+		if (UnlockedTemplate)
 		{
-			ATRPlayerState* TRPlayerState = Cast<ATRPlayerState>(TRPlayerController->PlayerState);
-			if (TRPlayerState) {
-				ULevelTemplateContext* UnlockedTemplate = GameInst->UnlockLevelTemplateForPlayer(LevelId, TRPlayerState->PlayerGuid);
-				if (UnlockedTemplate)
-				{
-					if (!TRPlayerController->IsLocalController()) {
-						ClientUnlockLevelTemplateForPlayer(UnlockedTemplate->LevelTemplate, TRPlayerState->PlayerGuid);
-					}
-					TArray<ULevelTemplateContext*> TmpLTCArray;
-					GameInst->LevelTemplatesMap.GenerateValueArray(TmpLTCArray);
-					LevelTemplatesPage.Empty();
-					LevelTemplatesPage.Append(ULevelTemplateContext::ToStructArray(TmpLTCArray));
-					LevelTemplatesRepTrigger++;
-					if (bEnableClassDebug)
-					{
-						UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - level template %s unlocked for player %s"), *LevelId.ToString(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
-						for (FLevelTemplateContextStruct TmpLTCS : LevelTemplatesPage) {
-							UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - template now has %s player records: %d"), *TmpLTCS.LevelTemplate.LevelId.ToString(), TmpLTCS.PlayerRecords.Num());
-						}
-					}
-					// Manually call rep_notify on server
-					if (GetOwnerRole() == ROLE_Authority) { 
-						OnRep_LevelTemplatesPageLoaded(); 
-					}
-				}
-				else {
-					UE_LOG(LogTRGame, Error, TEXT("UTRPersistentDataComponent - Could not unlock level template %s for player %s"), *LevelId.ToString(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+			if (!TRPlayerController->IsLocalController()) {
+				ClientUnlockLevelTemplateForPlayer(UnlockedTemplate->LevelTemplate, TRPlayerState->PlayerGuid);
+			}
+			TArray<ULevelTemplateContext*> TmpLTCArray;
+			GameInst->LevelTemplatesMap.GenerateValueArray(TmpLTCArray);
+			LevelTemplatesPage.Empty();
+			LevelTemplatesPage.Append(ULevelTemplateContext::ToStructArray(TmpLTCArray));
+			LevelTemplatesRepTrigger++;
+			if (bEnableClassDebug)
+			{
+				UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - level template %s unlocked for player %s"), *LevelId.ToString(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+				for (FLevelTemplateContextStruct TmpLTCS : LevelTemplatesPage) {
+					UE_LOG(LogTRGame, Log, TEXT("UTRPersistentDataComponent - template now has %s player records: %d"), *TmpLTCS.LevelTemplate.LevelId.ToString(), TmpLTCS.PlayerRecords.Num());
 				}
 			}
+			// Manually call rep_notify on server
+			if (GetOwnerRole() == ROLE_Authority) { 
+				OnRep_LevelTemplatesPageLoaded(); 
+			}
+		}
+		else {
+			UE_LOG(LogTRGame, Error, TEXT("UTRPersistentDataComponent - Could not unlock level template %s for player %s"), *LevelId.ToString(), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
 		}
 	}
 }
@@ -249,12 +246,8 @@ void UTRPersistentDataComponent::ServerSetLevelTemplateForPlay_Implementation(co
 	if (GameMode) {
 		GameMode->SetSelectedLevelTemplate(LevelId);
 	}
-	//UTRGameInstance* GameInst = Cast<UTRGameInstance>(UGameplayStatics::GetGameInstance(GetOwner()));
-	//if (GameInst) {
-	//	GameInst->SetSelectedLevelTemplate(LevelTemplate);		
-	//}
 	//else {
-	//	UE_LOG(LogTRGame, Error, TEXT("ServerSetLevelTemplateForPlay - Could not get game instance."));
+	//	UE_LOG(LogTRGame, Error, TEXT("ServerSetLevelTemplateForPlay - Could not get game mode."));
 	//}
 }
 
@@ -381,6 +374,7 @@ TArray<FString> UTRPersistentDataComponent::GetAllSaveProfileFilenames()
 	}
 	return TArray<FString>();
 }
+
 
 TArray<FPlayerSaveData> UTRPersistentDataComponent::GetAllSaveProfileData()
 {
@@ -513,7 +507,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerDataByGuid_Implementation(const
 	if (ForcePlayerGuid.IsValid())
 	{
 		if (TRPlayerState->PlayerGuid.IsValid() && ForcePlayerGuid != TRPlayerState->PlayerGuid) {
-			UE_LOG(LogTRGame, Error, TEXT("ServerLoadPlayerDataByGuid - Incoming GUID %s does not match existing GUID %s"), *ForcePlayerGuid.ToString(EGuidFormats::Digits), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
+			UE_LOG(LogTRGame, Warning, TEXT("ServerLoadPlayerDataByGuid - Incoming GUID %s does not match existing GUID %s"), *ForcePlayerGuid.ToString(EGuidFormats::Digits), *TRPlayerState->PlayerGuid.ToString(EGuidFormats::Digits));
 		}
 		TRPlayerState->PlayerGuid = ForcePlayerGuid;
 	}
@@ -601,7 +595,7 @@ void UTRPersistentDataComponent::ServerLoadPlayerDataByGuid_Implementation(const
 		}
 		else
 		{
-			// Get data from live entities
+			// Get data for clients from live entities on server
 			FPlayerSaveData NewSaveData;
 			TRPlayerController->GetPlayerSaveData(NewSaveData);
 			// Call client to update data
@@ -822,8 +816,6 @@ void UTRPersistentDataComponent::ServerPlayerDataFromClient_Implementation(const
 	}
 	// Save the data we just got.
 	SavePlayerDataInternal();
-	// Call standard load of data to trigger normal notications etc.
-	// ServerLoadPlayerData();
 	// Call notification about new player data loaded
 	OnPlayerDataLoaded.Broadcast();
 }
@@ -858,6 +850,7 @@ bool UTRPersistentDataComponent::ServerDeletePlayerProfile_Validate(const FGuid 
 }
 
 
+// TODO: Need to paginate data once we have more market data.
 void UTRPersistentDataComponent::ServerRetrieveGoodsMarketData_Implementation()
 {
 	TArray<FGoodsPurchaseItem> MarketGoods;
@@ -894,6 +887,7 @@ bool UTRPersistentDataComponent::ClientEchoGoodsMarketData_Validate(const TArray
 }
 
 
+// TODO: Need to paginate data
 void UTRPersistentDataComponent::ServerRetrieveToolsMarketData_Implementation()
 {
 	TArray<FToolPurchaseItem> ToolsMarketItems;

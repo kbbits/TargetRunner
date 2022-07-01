@@ -148,7 +148,7 @@ protected:
     // Determines if a joining blocker can be placed. i.e. a "joining blocker" is a blocking cell between two or more other blocking cells.
     // If BlockingNeighbors is empty, this will call GetBlockingNeighbors().
     // If this returns true then the appropriate cell group number will be popuated > 0.
-    // If this returns false and this is an invalid place for a new blocked cell and GroupNumber will = 0.
+    // If this returns false then this is an invalid place for a new blocked cell and GroupNumber will = 0.
     bool GetBlockingCellGroupNumber(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& BlockingNeighbors, int32& GroupNumber);
 
     bool AllGroupCellsAdjacent(const FVector2D& Coords, const TMap<ETRDirection, UGridTemplateCell*>& BlockingNeighbors);
