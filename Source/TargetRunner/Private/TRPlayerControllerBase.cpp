@@ -22,6 +22,7 @@ ATRPlayerControllerBase::ATRPlayerControllerBase()
 	GoodsInventory = CreateDefaultSubobject<UInventoryActorComponent>(TEXT("GoodsInventory"));
 	if (GoodsInventory)	{
 		AddOwnedComponent(GoodsInventory);
+		GoodsInventory->SetIsReplicated(true);
 	}
 	PersistentDataComponent = CreateDefaultSubobject<UTRPersistentDataComponent>(TEXT("PersistentDataComponent"));
 	if (PersistentDataComponent) {

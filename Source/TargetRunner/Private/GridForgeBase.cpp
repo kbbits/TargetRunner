@@ -466,132 +466,6 @@ void UGridForgeBase::GetCellNeighbors(const FVector2D& Coords, TMap<ETRDirection
 			}			
 		}
 	}
-
-	/*
-	Cell = GetCell(Coords + FVector2D(1, 0), bFound);
-	if (Cell != nullptr) { NeighborCells.Add(ETRDirection::North, Cell); }
-	else 
-	{
-		if (!IsInGrid(Coords + FVector2D(1, 0))) 
-		{
-			Cell = NewObject<UGridTemplateCell>(this);
-			Cell->CellState = ETRGridCellState::Blocked;
-			Cell->X = (int32)Coords.X + 1;
-			Cell->Y = (int32)Coords.Y;
-			Cell->Group = -1;
-		}
-		NeighborCells.Add(ETRDirection::North, Cell);
-	}
-	
-	Cell = GetCell(Coords + FVector2D(0, 1), bFound);
-	if (Cell != nullptr) { NeighborCells.Add(ETRDirection::East, Cell); }
-	else 
-	{
-		if (!IsInGrid(Coords + FVector2D(0, 1)))
-		{
-			Cell = NewObject<UGridTemplateCell>(this);
-			Cell->CellState = ETRGridCellState::Blocked;
-			Cell->X = (int32)Coords.X;
-			Cell->Y = (int32)Coords.Y + 1;
-			Cell->Group = -1;
-		}
-		NeighborCells.Add(ETRDirection::East, Cell);
-	}
-
-	Cell = GetCell(Coords + FVector2D(-1, 0), bFound);
-	if (Cell != nullptr) { NeighborCells.Add(ETRDirection::South, Cell); }
-	else 
-	{
-		if (!IsInGrid(Coords + FVector2D(-1, 0)))
-		{
-			Cell = NewObject<UGridTemplateCell>(this);
-			Cell->CellState = ETRGridCellState::Blocked;
-			Cell->X = (int32)Coords.X - 1;
-			Cell->Y = (int32)Coords.Y;
-			Cell->Group = -1;
-		}
-		NeighborCells.Add(ETRDirection::South, Cell);
-	}
-	
-	Cell = GetCell(Coords + FVector2D(0, -1), bFound);
-	if (Cell != nullptr) { NeighborCells.Add(ETRDirection::West, Cell); }
-	else 
-	{
-		if (!IsInGrid(Coords + FVector2D(0, -1)))
-		{
-			Cell = NewObject<UGridTemplateCell>(this);
-			Cell->CellState = ETRGridCellState::Blocked;
-			Cell->X = (int32)Coords.X;
-			Cell->Y = (int32)Coords.Y - 1;
-			Cell->Group = -1;
-		}
-		NeighborCells.Add(ETRDirection::West, Cell);
-	}
-
-	if (bIncludeDiagonal)
-	{
-		// Diagonals
-		Cell = GetCell(Coords + FVector2D(1, -1), bFound);
-		if (Cell != nullptr) { NeighborCells.Add(ETRDirection::NorthWest, Cell); }
-		else
-		{
-			if (!IsInGrid(Coords + FVector2D(1, -1)))
-			{
-				Cell = NewObject<UGridTemplateCell>(this);
-				Cell->CellState = ETRGridCellState::Blocked;
-				Cell->X = (int32)Coords.X + 1;
-				Cell->Y = (int32)Coords.Y - 1;
-				Cell->Group = -1;
-			}
-			NeighborCells.Add(ETRDirection::NorthWest, Cell);
-		}
-
-		Cell = GetCell(Coords + FVector2D(1, 1), bFound);
-		if (Cell != nullptr) { NeighborCells.Add(ETRDirection::NorthEast, Cell); }
-		else
-		{
-			if (!IsInGrid(Coords + FVector2D(1, 1)))
-			{
-				Cell = NewObject<UGridTemplateCell>(this);
-				Cell->CellState = ETRGridCellState::Blocked;
-				Cell->X = (int32)Coords.X + 1;
-				Cell->Y = (int32)Coords.Y + 1;
-				Cell->Group = -1;
-			}
-			NeighborCells.Add(ETRDirection::NorthEast, Cell);
-		}
-
-		Cell = GetCell(Coords + FVector2D(-1, 1), bFound);
-		if (Cell != nullptr) { NeighborCells.Add(ETRDirection::SouthEast, Cell); }
-		else
-		{
-			if (!IsInGrid(Coords + FVector2D(-1, 1)))
-			{
-				Cell = NewObject<UGridTemplateCell>(this);
-				Cell->CellState = ETRGridCellState::Blocked;
-				Cell->X = (int32)Coords.X - 1;
-				Cell->Y = (int32)Coords.Y + 1;
-				Cell->Group = -1;
-			}
-			NeighborCells.Add(ETRDirection::SouthEast, Cell);
-		}
-
-		Cell = GetCell(Coords + FVector2D(-1, -1), bFound);
-		if (Cell != nullptr) { NeighborCells.Add(ETRDirection::SouthWest, Cell); }
-		else
-		{
-			if (!IsInGrid(Coords + FVector2D(-1, -1)))
-			{
-				Cell = NewObject<UGridTemplateCell>(this);
-				Cell->CellState = ETRGridCellState::Blocked;
-				Cell->X = (int32)Coords.X - 1;
-				Cell->Y = (int32)Coords.Y - 1;
-				Cell->Group = -1;
-			}
-			NeighborCells.Add(ETRDirection::SouthWest, Cell);
-		}
-	}
-	*/
 }
 
 void UGridForgeBase::GetCellNeighbors(const UGridTemplateCell& Cell, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells, const bool bIncludeDiagonal)
@@ -859,7 +733,7 @@ bool UGridForgeBase::AllGroupCellsAdjacent(const FVector2D& Coords, const TMap<E
 				// Special case: Don't count as repeat hit if moving from anchored group directly to wall
 				if (AnchoredCellGroups.Contains(CurrentGroup) && CurCell->Group == -1)
 				{
-					// Just change group group
+					// Just change group 
 					CurrentGroup = CurCell->Group;
 					if (bIsOrthogonal) { LastOrthogonalGroup = CurCell->Group; }
 					continue;
@@ -1016,7 +890,7 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream)
 	// End cell will be along X = GridExtentMaxX row - padding.
 	if (RoomGridTemplate.StartCells.Num() == 0)
 	{	
-		DebugLog(TEXT("GridForgePrim - Picking start cell."));
+		DebugLog(TEXT("GridForgeBase - Picking start cell."));
 		// A percent chance to pad along grid extents.
 		PadX = WidthX > 5 ? WidthX / 5 : 0;
 		PadY = WidthY / 5;
@@ -1028,7 +902,7 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream)
 		{
 			PotentialCells.Empty();
 			UnavailableCellCount = 0;
-			DebugLog(FString::Printf(TEXT("GridForgePrim - Trying with padding X:%d Y:%d"), PadX, PadY));
+			DebugLog(FString::Printf(TEXT("GridForgeBase - Trying with padding X:%d Y:%d"), PadX, PadY));
 			// Create an array of cell availability.  True if cell is available, false if not.
 			for (int32 Y = RoomGridTemplate.GridExtentMinY + PadY; Y <= RoomGridTemplate.GridExtentMaxY - PadY; Y++)
 			{
@@ -1070,8 +944,8 @@ void UGridForgeBase::PickStartAndEndCells(UPARAM(ref) FRandomStream& RandStream)
 		int32 CurCellNumber = 0;
 		FVector2D StartCoords;
 
-		DebugLog(FString::Printf(TEXT("GridForgePrim - Using padding X:%d Y:%d. UnavailableCellCount:%d RemainingCellCount:%d"), PadX, PadY, UnavailableCellCount, RemainingCellCount));
-		DebugLog(FString::Printf(TEXT("GridForgePrim - Picked start cell %d"), PickedCellNumber));
+		DebugLog(FString::Printf(TEXT("GridForgeBase - Using padding X:%d Y:%d. UnavailableCellCount:%d RemainingCellCount:%d"), PadX, PadY, UnavailableCellCount, RemainingCellCount));
+		DebugLog(FString::Printf(TEXT("GridForgeBase - Picked start cell %d"), PickedCellNumber));
 
 		for (int32 Y = 0; Y <= WidthY - (2 * PadY); Y++)
 		{

@@ -15,5 +15,5 @@ FToolData::FToolData()
 
 bool FToolData::IsValid() const
 {
-	return (ToolClass->IsValidLowLevelFast() && AttributeData.ItemGuid.IsValid());
+	return (ToolClass != nullptr && AttributeData.ItemGuid.IsValid());
 }

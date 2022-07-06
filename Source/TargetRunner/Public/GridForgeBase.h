@@ -142,6 +142,7 @@ protected:
     UFUNCTION(BlueprintCallable)
         void GetBlockedCellNeighbors(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& NeighborCells);
 
+    // NO LONGER USED
     // if it retuns true (can place) then the new blocking cell group number is populated.
     bool CanPlaceBlockingCell(const FVector2D& Coords, TMap<ETRDirection, UGridTemplateCell*>& FoundBlockingNeighbors);
 

@@ -14,6 +14,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryChanged, const TArray<F
 * Manages an actor's inventory of goods. 
 * Replication of inventory content is managed by all changes going through server. Each of those changes is 
 * replicated to owning client via RPCs called from the ServerXxxx functions.
+* 
+* TODO: Consider changing inventory and snapshot to TMap since we are no longer looking at replicating the inventory array itself.
 */
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class TARGETRUNNER_API UInventoryActorComponent : public UActorComponent
@@ -28,6 +30,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "EventDispatchers")
 		FOnInventoryChanged OnInventoryChanged;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+		bool bEnableClassDebug;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (TitleProperty = "Name"))
 		TArray<FGoodsQuantity> Inventory;
@@ -35,8 +40,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, meta = (TitleProperty = "Name"))
 		TArray<FGoodsQuantity> SnapshotInventory;
 
-	// Any goods name that matches one of these strings will be filtered out of saveable goods in GeSaveableGoods()
-	// TODO: This should probably be moved to a single location, e.g. GameMode.
+	// Any goods name that matches one of these strings will be filtered out of saveable goods in GetSaveableGoods()
+	// TODO: This should probably be moved to a different location, e.g. GameMode.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<FString> UnsaveableGoodsFilters;
 
@@ -55,7 +60,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	// [Any]
+	// [Any - Should not usually be called directly]
 	// Does the work of adjusting local inventory. Called by the replicated AddSubtractGoods functions.
 	//Returns true if adjustment could be made, false otherwise(ex: if amount to remove is > current inventory)
 	//   bNegateGoodsQuantities - Set this to true to have each goods quantity multiplied by -1.0. (to simplify removing goods using postitive goods quantities)
@@ -74,7 +79,7 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerAddSubtractGoods(const FGoodsQuantity& GoodsDelta, const bool bNegateGoodsQuantities, const bool bAddtoSnapshot = false);
 
-	// [Any]
+	// [Any - Should not usually be called directly]
 	// Does the work of add/subtract quantities from local inventory. The other replicated AddSubtractGoodsArray functions call this.
 	// Returns true if all adjustments could be made, false otherwise(ex: if amount to remove is > current inventory)
 	//  bNegateGoodsQuantities - Set this to true to have each goods quantity multiplied by -1.0. (to simplify removing goods using postitive goods quantities)
@@ -93,14 +98,14 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerAddSubtractGoodsArray(const TArray<FGoodsQuantity>& GoodsDeltas, const bool bNegateGoodsQuantities,  const bool bAddToSnapshot = false);
 
-	// [Both]
+	// [Any - Not usually called directly]
 	// Non-replicated function that does the work of setting the inventory values.
 	// The replicated "XxxxSetInventory" functions call this.
 	UFUNCTION()
 		void SetInventoryInternal(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods);
 
 	// [Server]
-	// Sets the contents of inventory. Usually don't need to call this manually - useful to reset state after a load. 
+	// Sets the contents of inventory. Usually don't need to call this manually - but is useful to reset state after a load. 
 	// This will call client if needed to handle replication.
 	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation)
 		void ServerSetInventory(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods);
@@ -110,7 +115,6 @@ public:
 	// Updates client side quantities - sets quantity to new quantity also sets snapshot inventory to new snapshot quantities.
 	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientSetInventory(const TArray<FGoodsQuantity>& NewGoods, const TArray<FGoodsQuantity>& NewSnapshotGoods);
-
 
 	// [Client]
 	// Called from ServerAddSubtractGoods()
