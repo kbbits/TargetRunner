@@ -2,6 +2,8 @@
 
 ### My original VR version is [here](https://github.com/kbbits/TRVR).
 
+## For more complete documentation see: [Overview](https://deepthoughtgaming.com/target-runner/) and [Tech Notes](https://deepthoughtgaming.com/target-runner/target-runner-tech-notes/)
+
 First Person multiplayer target shooting, resource collecting and crafting. Written in c++ and Blueprint.
 UnrealEngine 4.26
 
