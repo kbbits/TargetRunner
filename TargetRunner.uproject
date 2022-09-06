@@ -48,7 +48,7 @@
 		},
 		{
 			"Name": "RamaSaveSystem",
-			"Enabled": true,
+			"Enabled": false,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/6c81d0b2b68f445cb24616fa39a462c2"
 		},
 		{
